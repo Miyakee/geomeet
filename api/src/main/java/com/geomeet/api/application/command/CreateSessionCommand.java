@@ -1,9 +1,14 @@
 package com.geomeet.api.application.command;
 
+import lombok.Builder;
+import lombok.Getter;
+
 /**
  * Command object for create session use case.
  * Represents the input for the create session operation.
  */
+@Getter
+@Builder
 public class CreateSessionCommand {
 
     private final Long initiatorId;
@@ -15,8 +20,10 @@ public class CreateSessionCommand {
         this.initiatorId = initiatorId;
     }
 
-    public Long getInitiatorId() {
-        return initiatorId;
+    public static CreateSessionCommand of(Long initiatorId) {
+        return CreateSessionCommand.builder()
+            .initiatorId(initiatorId)
+            .build();
     }
 }
 

@@ -1,9 +1,14 @@
 package com.geomeet.api.application.command;
 
+import lombok.Builder;
+import lombok.Getter;
+
 /**
  * Command object for login use case.
  * Represents the input for the login operation.
  */
+@Getter
+@Builder
 public class LoginCommand {
 
     private final String usernameOrEmail;
@@ -20,12 +25,11 @@ public class LoginCommand {
         this.password = password;
     }
 
-    public String getUsernameOrEmail() {
-        return usernameOrEmail;
-    }
-
-    public String getPassword() {
-        return password;
+    public static LoginCommand of(String usernameOrEmail, String password) {
+        return LoginCommand.builder()
+            .usernameOrEmail(usernameOrEmail)
+            .password(password)
+            .build();
     }
 }
 

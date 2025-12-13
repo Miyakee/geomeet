@@ -33,13 +33,13 @@ public class CreateSessionUseCase {
         Session savedSession = sessionRepository.save(session);
 
         // Return result
-        return new CreateSessionResult(
-            savedSession.getId(),
-            savedSession.getSessionId().getValue(),
-            savedSession.getInitiatorId(),
-            savedSession.getStatus().getValue(),
-            savedSession.getCreatedAt().toString()
-        );
+        return CreateSessionResult.builder()
+            .sessionId(savedSession.getId())
+            .sessionIdString(savedSession.getSessionId().getValue())
+            .initiatorId(savedSession.getInitiatorId())
+            .status(savedSession.getStatus().getValue())
+            .createdAt(savedSession.getCreatedAt().toString())
+            .build();
     }
 }
 

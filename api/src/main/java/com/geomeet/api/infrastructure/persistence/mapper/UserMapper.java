@@ -32,18 +32,17 @@ public class UserMapper {
         if (domain == null) {
             return null;
         }
-        UserEntity entity = new UserEntity(
-            domain.getUsername().getValue(),
-            domain.getEmail().getValue(),
-            domain.getPasswordHash().getValue()
-        );
-        entity.setId(domain.getId());
-        entity.setActive(domain.getActive());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
-        entity.setCreatedBy(domain.getCreatedBy());
-        entity.setUpdatedBy(domain.getUpdatedBy());
-        return entity;
+        return UserEntity.builder()
+            .id(domain.getId())
+            .username(domain.getUsername().getValue())
+            .email(domain.getEmail().getValue())
+            .passwordHash(domain.getPasswordHash().getValue())
+            .active(domain.getActive())
+            .createdAt(domain.getCreatedAt())
+            .updatedAt(domain.getUpdatedAt())
+            .createdBy(domain.getCreatedBy())
+            .updatedBy(domain.getUpdatedBy())
+            .build();
     }
 }
 

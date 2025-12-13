@@ -48,11 +48,11 @@ public class LoginUseCase {
         }
 
         // Return login result
-        return new LoginResult(
-            user.getId(),
-            user.getUsername().getValue(),
-            user.getEmail().getValue()
-        );
+        return LoginResult.builder()
+            .userId(user.getId())
+            .username(user.getUsername().getValue())
+            .email(user.getEmail().getValue())
+            .build();
     }
 }
 

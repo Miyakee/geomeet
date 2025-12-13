@@ -35,17 +35,17 @@ public class SessionController {
         // Extract user ID from JWT token (set by JwtAuthenticationFilter)
         Long initiatorId = (Long) authentication.getPrincipal();
 
-        CreateSessionCommand command = new CreateSessionCommand(initiatorId);
+        CreateSessionCommand command = CreateSessionCommand.of(initiatorId);
         CreateSessionResult result = createSessionUseCase.execute(command);
 
-        CreateSessionResponse response = new CreateSessionResponse(
-            result.getSessionId(),
-            result.getSessionIdString(),
-            result.getInitiatorId(),
-            result.getStatus(),
-            result.getCreatedAt(),
-            "Session created successfully"
-        );
+        CreateSessionResponse response = CreateSessionResponse.builder()
+            .id(result.getSessionId())
+            .sessionId(result.getSessionIdString())
+            .initiatorId(result.getInitiatorId())
+            .status(result.getStatus())
+            .createdAt(result.getCreatedAt())
+            .message("Session created successfully")
+            .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

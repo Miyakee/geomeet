@@ -35,7 +35,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
-            LoginCommand command = new LoginCommand(
+            LoginCommand command = LoginCommand.of(
                 request.getUsernameOrEmail(),
                 request.getPassword()
             );
@@ -44,16 +44,16 @@ public class AuthController {
 
             String token = jwtTokenService.generateToken(result.getUserId(), result.getUsername());
 
-            LoginResponse response = new LoginResponse(
-                token,
-                result.getUsername(),
-                result.getEmail(),
-                "Login successful"
-            );
+            LoginResponse response = LoginResponse.builder()
+                .token(token)
+                .username(result.getUsername())
+                .email(result.getEmail())
+                .message("Login successful")
+                .build();
 
             return ResponseEntity.ok(response);
         } catch (DomainException e) {
-            ErrorResponse errorResponse = new ErrorResponse(
+            ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Authentication Failed",
                 e.getMessage(),

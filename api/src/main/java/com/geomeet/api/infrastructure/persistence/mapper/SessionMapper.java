@@ -30,17 +30,16 @@ public class SessionMapper {
         if (domain == null) {
             return null;
         }
-        SessionEntity entity = new SessionEntity(
-            domain.getSessionId().getValue(),
-            domain.getInitiatorId(),
-            domain.getStatus().getValue()
-        );
-        entity.setId(domain.getId());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
-        entity.setCreatedBy(domain.getCreatedBy());
-        entity.setUpdatedBy(domain.getUpdatedBy());
-        return entity;
+        return SessionEntity.builder()
+            .id(domain.getId())
+            .sessionId(domain.getSessionId().getValue())
+            .initiatorId(domain.getInitiatorId())
+            .status(domain.getStatus().getValue())
+            .createdAt(domain.getCreatedAt())
+            .updatedAt(domain.getUpdatedAt())
+            .createdBy(domain.getCreatedBy())
+            .updatedBy(domain.getUpdatedBy())
+            .build();
     }
 }
 

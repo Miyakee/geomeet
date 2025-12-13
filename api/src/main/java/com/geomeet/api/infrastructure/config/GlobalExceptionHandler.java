@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         });
 
         String message = "Validation failed: " + errors.toString();
-        ErrorResponse errorResponse = new ErrorResponse(
+        ErrorResponse errorResponse = ErrorResponse.of(
             HttpStatus.BAD_REQUEST.value(),
             "Validation Error",
             message,
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
         DomainException ex,
         WebRequest request
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
+        ErrorResponse errorResponse = ErrorResponse.of(
             HttpStatus.UNAUTHORIZED.value(),
             "Authentication Failed",
             ex.getMessage(),
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
         DomainException ex,
         WebRequest request
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
+        ErrorResponse errorResponse = ErrorResponse.of(
             HttpStatus.BAD_REQUEST.value(),
             "Domain Error",
             ex.getMessage(),
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
         Exception ex,
         WebRequest request
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
+        ErrorResponse errorResponse = ErrorResponse.of(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             "Internal Server Error",
             ex.getMessage(),
