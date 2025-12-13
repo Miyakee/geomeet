@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.min.js
+
+# Config files
+vite.config.ts
+tsconfig*.json
+
+# Generated files
+*.d.ts
+vite-env.d.ts
+
+# Public assets
+public/
+
+# Logs
+*.log
+
