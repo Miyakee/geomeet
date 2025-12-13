@@ -1,7 +1,7 @@
 -- Flyway migration script: Create users table
 -- Version: 1
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS USERS (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON USERS(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON USERS(email);
 
 -- Create function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -28,7 +28,7 @@ $$ language 'plpgsql';
 
 -- Create trigger to automatically update updated_at on row update
 CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON users
+    BEFORE UPDATE ON USERS
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
