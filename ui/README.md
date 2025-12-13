@@ -29,7 +29,7 @@ VITE_API_BASE_URL=http://localhost:8080
 npm run dev
 ```
 
-The application will start on `http://localhost:5173`
+The application will start on `http://localhost:3000`
 
 ## Features
 
