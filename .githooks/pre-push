@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# Pre-push hook to run code quality checks
+# This hook runs checks based on which directories have been modified
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Running pre-push checks...${NC}"
+
+# Get the remote and branch name
+remote="$1"
+url="$2"
+
+# Initialize variables
+all_changed_files=""
+has_input=false
+
+# Read the ref information from stdin
+# Format: <local-ref> SP <local-sha1> SP <remote-ref> SP <remote-sha1> LF
+while IFS= read -r local_ref local_sha remote_ref remote_sha 2>/dev/null || true; do
+    # Check if we have valid input
+    if [ -z "$local_ref" ] && [ -z "$local_sha" ]; then
+        break
+    fi
+    has_input=true
+    # Skip if this is a delete operation
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        continue
+    fi
+    
+    # Determine the range of commits to check
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        # New branch: check all commits
+        range="$local_sha"
+    else
+        # Existing branch: check commits between remote and local
+        range="$remote_sha..$local_sha"
+    fi
+    
+    # Get changed files in the commits being pushed
+    changed_files=$(git diff --name-only --diff-filter=ACM "$range" 2>/dev/null || git diff --name-only --diff-filter=ACM "$local_sha" 2>/dev/null || echo "")
+    
+    # Append to all_changed_files
+    if [ -n "$changed_files" ]; then
+        all_changed_files="$all_changed_files"$'\n'"$changed_files"
+    fi
+done
+
+# If no input was provided (e.g., manual execution), check HEAD vs remote
+if [ "$has_input" = false ]; then
+    # Try to get the remote branch for current branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [ -n "$current_branch" ]; then
+        remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name "@{upstream}" 2>/dev/null || echo "")
+        if [ -n "$remote_branch" ]; then
+            remote_sha=$(git rev-parse "$remote_branch" 2>/dev/null || echo "")
+            local_sha=$(git rev-parse HEAD 2>/dev/null || echo "")
+            if [ -n "$remote_sha" ] && [ -n "$local_sha" ] && [ "$remote_sha" != "$local_sha" ]; then
+                changed_files=$(git diff --name-only --diff-filter=ACM "$remote_sha..$local_sha" 2>/dev/null || echo "")
+            else
+                # Fallback: check staged and unstaged changes
+                changed_files=$(git diff --name-only --diff-filter=ACM HEAD 2>/dev/null || echo "")
+            fi
+        else
+            # No upstream, check all changes
+            changed_files=$(git diff --name-only --diff-filter=ACM HEAD 2>/dev/null || echo "")
+        fi
+    fi
+else
+    # Use all collected changed files
+    changed_files=$(echo "$all_changed_files" | grep -v '^$' | sort -u)
+fi
+
+# Check if api or ui directories have changes
+api_changed=false
+ui_changed=false
+
+while IFS= read -r file; do
+    if [[ "$file" == api/* ]]; then
+        api_changed=true
+    fi
+    if [[ "$file" == ui/* ]]; then
+        ui_changed=true
+    fi
+done <<< "$changed_files"
+
+# If no relevant changes, skip checks
+if [ "$api_changed" = false ] && [ "$ui_changed" = false ]; then
+    echo -e "${GREEN}No changes in api/ or ui/ directories. Skipping checks.${NC}"
+    exit 0
+fi
+
+# Run backend checks if api changed
+if [ "$api_changed" = true ]; then
+    echo -e "${YELLOW}API changes detected. Running backend checks...${NC}"
+    
+    cd api || exit 1
+    
+    echo -e "${YELLOW}Running Checkstyle...${NC}"
+    if ! ./gradlew checkstyleMain checkstyleTest; then
+        echo -e "${RED}Checkstyle checks failed!${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running PMD...${NC}"
+    if ! ./gradlew pmdMain pmdTest; then
+        echo -e "${RED}PMD checks failed!${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running SpotBugs...${NC}"
+    if ! ./gradlew spotbugsMain spotbugsTest; then
+        echo -e "${RED}SpotBugs checks failed!${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running tests...${NC}"
+    if ! ./gradlew test; then
+        echo -e "${RED}Tests failed!${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}Backend checks passed!${NC}"
+    cd ..
+fi
+
+# Run frontend checks if ui changed
+if [ "$ui_changed" = true ]; then
+    echo -e "${YELLOW}UI changes detected. Running frontend checks...${NC}"
+    
+    cd ui || exit 1
+    
+    echo -e "${YELLOW}Running ESLint...${NC}"
+    if ! npm run lint; then
+        echo -e "${RED}ESLint checks failed!${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running tests...${NC}"
+    # Check if test script exists
+    if npm run | grep -q "test"; then
+        if ! npm test -- --watchAll=false; then
+            echo -e "${RED}Tests failed!${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}No test script found. Skipping tests.${NC}"
+    fi
+    
+    echo -e "${GREEN}Frontend checks passed!${NC}"
+    cd ..
+fi
+
+echo -e "${GREEN}All pre-push checks passed!${NC}"
+exit 0
+
