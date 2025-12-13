@@ -4,11 +4,16 @@ import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
 import com.geomeet.api.domain.valueobject.Username;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * User aggregate root.
  * This is the main entity in the User aggregate.
  */
+@Getter
+@Setter(AccessLevel.PACKAGE)
 public class User {
 
     private Long id;
@@ -105,79 +110,5 @@ public class User {
      */
     public boolean canAuthenticate() {
         return this.active != null && this.active;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public Username getUsername() {
-        return username;
-    }
-
-    public Email getEmail() {
-        return email;
-    }
-
-    public PasswordHash getPasswordHash() {
-        return passwordHash;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters (only for infrastructure layer reconstruction)
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    void setUsername(Username username) {
-        this.username = username;
-    }
-
-    void setEmail(Email email) {
-        this.email = email;
-    }
-
-    void setPasswordHash(PasswordHash passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
     }
 }

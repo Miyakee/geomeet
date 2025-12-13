@@ -30,8 +30,14 @@ public class SessionId {
         return new SessionId(UUID.randomUUID().toString());
     }
 
-    public static SessionId fromString(String sessionId) {
-        return new SessionId(sessionId);
+
+    /**
+     * Factory method to create SessionId from a string value.
+     * @param value the string value of the session ID
+     * @return a SessionId instance
+     */
+    public static SessionId fromString(String value) {
+        return new SessionId(value);
     }
 }
 

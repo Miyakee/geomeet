@@ -3,11 +3,16 @@ package com.geomeet.api.domain.entity;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Session aggregate root.
  * Represents a meeting session that can be joined by multiple users.
  */
+@Getter
+@Setter(AccessLevel.PACKAGE)
 public class Session {
 
     private Long id;
@@ -81,72 +86,6 @@ public class Session {
      */
     public boolean isActive() {
         return this.status == SessionStatus.ACTIVE;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public SessionId getSessionId() {
-        return sessionId;
-    }
-
-    public Long getInitiatorId() {
-        return initiatorId;
-    }
-
-    public SessionStatus getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    // Setters (only for infrastructure layer reconstruction)
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    void setSessionId(SessionId sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    void setInitiatorId(Long initiatorId) {
-        this.initiatorId = initiatorId;
-    }
-
-    void setStatus(SessionStatus status) {
-        this.status = status;
-    }
-
-    void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
     }
 }
 
