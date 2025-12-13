@@ -15,40 +15,42 @@ import org.springframework.stereotype.Component;
 public class UserRepositoryImpl implements UserRepository {
 
     private final JpaUserRepository jpaUserRepository;
+    private final UserMapper userMapper;
 
-    public UserRepositoryImpl(JpaUserRepository jpaUserRepository) {
+    public UserRepositoryImpl(JpaUserRepository jpaUserRepository, UserMapper userMapper) {
         this.jpaUserRepository = jpaUserRepository;
+        this.userMapper = userMapper;
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
         return jpaUserRepository.findByUsername(username)
-            .map(UserMapper::toDomain);
+            .map(userMapper::toDomain);
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
         return jpaUserRepository.findByEmail(email)
-            .map(UserMapper::toDomain);
+            .map(userMapper::toDomain);
     }
 
     @Override
     public Optional<User> findByUsernameOrEmail(String usernameOrEmail) {
         return jpaUserRepository.findByUsernameOrEmail(usernameOrEmail)
-            .map(UserMapper::toDomain);
+            .map(userMapper::toDomain);
     }
 
     @Override
     public User save(User user) {
-        UserEntity entity = UserMapper.toEntity(user);
+        UserEntity entity = userMapper.toEntity(user);
         UserEntity savedEntity = jpaUserRepository.save(entity);
-        return UserMapper.toDomain(savedEntity);
+        return userMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<User> findById(Long id) {
         return jpaUserRepository.findById(id)
-            .map(UserMapper::toDomain);
+            .map(userMapper::toDomain);
     }
 }
 

@@ -16,28 +16,30 @@ import org.springframework.stereotype.Component;
 public class SessionRepositoryImpl implements SessionRepository {
 
     private final JpaSessionRepository jpaSessionRepository;
+    private final SessionMapper sessionMapper;
 
-    public SessionRepositoryImpl(JpaSessionRepository jpaSessionRepository) {
+    public SessionRepositoryImpl(JpaSessionRepository jpaSessionRepository, SessionMapper sessionMapper) {
         this.jpaSessionRepository = jpaSessionRepository;
+        this.sessionMapper = sessionMapper;
     }
 
     @Override
     public Session save(Session session) {
-        SessionEntity entity = SessionMapper.toEntity(session);
+        SessionEntity entity = sessionMapper.toEntity(session);
         SessionEntity savedEntity = jpaSessionRepository.save(entity);
-        return SessionMapper.toDomain(savedEntity);
+        return sessionMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<Session> findBySessionId(SessionId sessionId) {
         return jpaSessionRepository.findBySessionId(sessionId.getValue())
-            .map(SessionMapper::toDomain);
+            .map(sessionMapper::toDomain);
     }
 
     @Override
     public Optional<Session> findById(Long id) {
         return jpaSessionRepository.findById(id)
-            .map(SessionMapper::toDomain);
+            .map(sessionMapper::toDomain);
     }
 }
 

@@ -4,13 +4,16 @@ import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import com.geomeet.api.infrastructure.persistence.entity.SessionEntity;
+import org.mapstruct.Mapper;
 
 /**
  * Mapper to convert between Domain Session aggregate and JPA SessionEntity.
+ * Uses MapStruct for automatic mapping generation.
  */
-public class SessionMapper {
+@Mapper(componentModel = "spring")
+public interface SessionMapper {
 
-    public static Session toDomain(SessionEntity entity) {
+    default Session toDomain(SessionEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -26,7 +29,7 @@ public class SessionMapper {
         );
     }
 
-    public static SessionEntity toEntity(Session domain) {
+    default SessionEntity toEntity(Session domain) {
         if (domain == null) {
             return null;
         }
@@ -42,4 +45,3 @@ public class SessionMapper {
             .build();
     }
 }
-

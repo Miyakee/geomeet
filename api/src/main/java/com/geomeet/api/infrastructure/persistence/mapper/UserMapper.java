@@ -5,13 +5,16 @@ import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
 import com.geomeet.api.domain.valueobject.Username;
 import com.geomeet.api.infrastructure.persistence.entity.UserEntity;
+import org.mapstruct.Mapper;
 
 /**
  * Mapper to convert between Domain User aggregate and JPA UserEntity.
+ * Uses MapStruct for automatic mapping generation.
  */
-public class UserMapper {
+@Mapper(componentModel = "spring")
+public interface UserMapper {
 
-    public static User toDomain(UserEntity entity) {
+    default User toDomain(UserEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -28,7 +31,7 @@ public class UserMapper {
         );
     }
 
-    public static UserEntity toEntity(User domain) {
+    default UserEntity toEntity(User domain) {
         if (domain == null) {
             return null;
         }
@@ -45,4 +48,3 @@ public class UserMapper {
             .build();
     }
 }
-
