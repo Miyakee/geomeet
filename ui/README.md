@@ -15,13 +15,15 @@ React + TypeScript + Vite frontend application with Material UI.
 npm install
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure Environment Variables (Optional)
 
-Create a `.env` file in the `ui` directory:
+For production builds, create a `.env` file in the `ui` directory:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080
 ```
+
+**Note**: In development mode, Vite automatically proxies `/api` requests to `http://localhost:8080`, so no CORS issues occur.
 
 ### 3. Start Development Server
 
@@ -30,6 +32,8 @@ npm run dev
 ```
 
 The application will start on `http://localhost:3000`
+
+**CORS Solution**: The Vite dev server is configured to proxy all `/api/*` requests to the backend (`http://localhost:8080`), eliminating CORS issues during development.
 
 ## Features
 
