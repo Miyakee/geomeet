@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock, Email } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoginRequest } from '../services/api';
 
 const LoginPage = () => {
@@ -25,6 +25,7 @@ const LoginPage = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +38,18 @@ const LoginPage = () => {
         password,
       };
       await login(credentials);
-      navigate('/dashboard');
+      
+      // Check if there's a redirect parameter
+      const redirect = searchParams.get('redirect');
+      const sessionId = searchParams.get('sessionId');
+      
+      if (redirect === '/join' && sessionId) {
+        navigate(`/join?sessionId=${sessionId}`);
+      } else if (redirect) {
+        navigate(redirect);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);

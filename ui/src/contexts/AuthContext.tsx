@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isInitialized: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,15 +32,17 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Check for stored token on mount
+    // Check for stored token on mount (synchronous check)
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setIsInitialized(true);
   }, []);
 
   const login = async (credentials: LoginRequest) => {
@@ -73,6 +76,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         logout,
         isAuthenticated: !!token,
+        isInitialized,
       }}
     >
       {children}

@@ -1,27 +1,33 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  Avatar,
   Alert,
-  CircularProgress,
-  Divider,
+  Avatar,
+  Box,
+  Button,
   Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  IconButton,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { Logout, Person, Add, ContentCopy } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { sessionApi, CreateSessionResponse } from '../services/api';
+import {Add, ContentCopy, Logout, Person} from '@mui/icons-material';
+import {useAuth} from '../contexts/AuthContext';
+import {useNavigate} from 'react-router-dom';
+import {CreateSessionResponse, InviteLinkResponse, sessionApi} from '../services/api';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [session, setSession] = useState<CreateSessionResponse | null>(null);
+  const [inviteLink, setInviteLink] = useState<InviteLinkResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingInvite, setLoadingInvite] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -50,8 +56,54 @@ const DashboardPage = () => {
   const handleCopySessionId = () => {
     if (session?.sessionId) {
       navigator.clipboard.writeText(session.sessionId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  const handleCopyInviteLink = () => {
+    if (inviteLink?.inviteLink) {
+      const fullLink = `${window.location.origin}${inviteLink.inviteLink}`;
+      navigator.clipboard.writeText(fullLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCopyInviteCode = () => {
+    if (inviteLink?.inviteCode) {
+      navigator.clipboard.writeText(inviteLink.inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleGenerateInviteLink = async () => {
+    if (!session?.sessionId) return;
+    setLoadingInvite(true);
+    setError(null);
+    try {
+      const invite = await sessionApi.generateInviteLink(session.sessionId);
+      setInviteLink(invite);
+    } catch (err: any) {
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Failed to generate invite link. Please try again.');
+      }
+    } finally {
+      setLoadingInvite(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.sessionId && !inviteLink) {
+      handleGenerateInviteLink();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.sessionId]);
 
   return (
     <Container component="main" maxWidth="md">
@@ -160,6 +212,58 @@ const DashboardPage = () => {
                 <Alert severity="success" sx={{ mb: 2 }}>
                   {session.message}
                 </Alert>
+
+                {inviteLink && (
+                  <Box sx={{ width: '100%', mt: 3 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                      Invite Friends
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Invite Link:
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        value={`${window.location.origin}${inviteLink.inviteLink}`}
+                        InputProps={{
+                          readOnly: true,
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton onClick={handleCopyInviteLink} edge="end">
+                                <ContentCopy />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ mb: 2 }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Invite Code:
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        value={inviteLink.inviteCode}
+                        InputProps={{
+                          readOnly: true,
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton onClick={handleCopyInviteCode} edge="end">
+                                <ContentCopy />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Box>
+                    {copied && (
+                      <Alert severity="success" sx={{ mt: 1 }}>
+                        Copied to clipboard!
+                      </Alert>
+                    )}
+                  </Box>
+                )}
               </Box>
             </>
           )}

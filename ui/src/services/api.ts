@@ -55,6 +55,26 @@ export interface CreateSessionResponse {
   message: string;
 }
 
+export interface InviteLinkResponse {
+  sessionId: string;
+  inviteLink: string;
+  inviteCode: string;
+  message: string;
+}
+
+export interface JoinSessionRequest {
+  sessionId: string;
+}
+
+export interface JoinSessionResponse {
+  participantId: number;
+  sessionId: number;
+  sessionIdString: string;
+  userId: number;
+  joinedAt: string;
+  message: string;
+}
+
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.post<T>(url, data);
@@ -67,9 +87,21 @@ export const authApi = {
   },
 };
 
+// Helper function for GET requests
+async function getRequest<T>(url: string): Promise<T> {
+  const response = await apiClient.get<T>(url);
+  return response.data;
+}
+
 export const sessionApi = {
   createSession: async (): Promise<CreateSessionResponse> => {
     return postRequest<CreateSessionResponse>('/api/sessions', {});
+  },
+  generateInviteLink: async (sessionId: string): Promise<InviteLinkResponse> => {
+    return getRequest<InviteLinkResponse>(`/api/sessions/${sessionId}/invite`);
+  },
+  joinSession: async (sessionId: string): Promise<JoinSessionResponse> => {
+    return postRequest<JoinSessionResponse>('/api/sessions/join', { sessionId });
   },
 };
 

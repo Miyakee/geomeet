@@ -3,6 +3,7 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import JoinSessionPage from './pages/JoinSessionPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
@@ -29,6 +30,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/join"
+              element={
+                <ProtectedRoute>
+                  <JoinSessionPage />
                 </ProtectedRoute>
               }
             />

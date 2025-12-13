@@ -7,7 +7,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuth();
+
+  // Wait for auth state to initialize before redirecting
+  // This prevents false redirects when opening links in new tabs
+  if (!isInitialized) {
+    return null; // or a loading spinner
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
