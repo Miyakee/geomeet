@@ -1,27 +1,78 @@
-# React + TypeScript + Vite
+# GeoMeet UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite frontend application with Material UI.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+
+- npm or yarn
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 1. Install Dependencies
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+npm install
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### 2. Configure Environment Variables
+
+Create a `.env` file in the `ui` directory:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+### 3. Start Development Server
+
+```bash
+npm run dev
+```
+
+The application will start on `http://localhost:5173`
+
+## Features
+
+- **Login Page**: Material UI login form with username/email and password
+- **Dashboard**: Protected route showing user information after login
+- **Authentication**: JWT token-based authentication with localStorage
+- **Protected Routes**: Automatic redirect to login if not authenticated
+- **Error Handling**: User-friendly error messages
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable components
+│   └── ProtectedRoute.tsx
+├── contexts/            # React contexts
+│   └── AuthContext.tsx
+├── pages/               # Page components
+│   ├── LoginPage.tsx
+│   └── DashboardPage.tsx
+├── services/            # API services
+│   └── api.ts
+├── App.tsx              # Main app component
+└── main.tsx             # Entry point
+```
+
+## Default Test Users
+
+- **Admin**: `admin` / `admin123`
+- **Test User**: `testuser` / `test123`
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Technologies
+
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Material UI (MUI)** - Component library
+- **React Router** - Routing
+- **Axios** - HTTP client
+- **Vite** - Build tool
