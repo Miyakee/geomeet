@@ -42,10 +42,34 @@ export interface ErrorResponse {
   path: string;
 }
 
+export interface CreateSessionRequest {
+  // Empty - initiator ID comes from JWT token
+}
+
+export interface CreateSessionResponse {
+  id: number;
+  sessionId: string;
+  initiatorId: number;
+  status: string;
+  createdAt: string;
+  message: string;
+}
+
+// Helper function to ensure type safety
+async function postRequest<T>(url: string, data?: unknown): Promise<T> {
+  const response = await apiClient.post<T>(url, data);
+  return response.data;
+}
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials);
-    return response.data;
+    return postRequest<LoginResponse>('/api/auth/login', credentials);
+  },
+};
+
+export const sessionApi = {
+  createSession: async (): Promise<CreateSessionResponse> => {
+    return postRequest<CreateSessionResponse>('/api/sessions', {});
   },
 };
 
