@@ -19,7 +19,7 @@ public interface SessionMapper {
         }
         return Session.reconstruct(
             entity.getId(),
-            new SessionId(entity.getSessionId()),
+            SessionId.fromString(entity.getSessionId()),
             entity.getInitiatorId(),
             SessionStatus.fromString(entity.getStatus()),
             entity.getCreatedAt(),

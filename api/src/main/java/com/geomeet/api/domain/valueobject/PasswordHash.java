@@ -1,11 +1,16 @@
 package com.geomeet.api.domain.valueobject;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Password hash value object.
  * Represents an encrypted password hash.
  */
+@Getter
+@EqualsAndHashCode
+@ToString
 public class PasswordHash {
 
     private final String value;
@@ -15,27 +20,6 @@ public class PasswordHash {
             throw new IllegalArgumentException("Password hash cannot be null or empty");
         }
         this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        PasswordHash that = (PasswordHash) o;
-        return Objects.equals(value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override

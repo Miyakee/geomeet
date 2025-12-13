@@ -14,7 +14,7 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    default User toDomain(UserEntity entity) {
+    static User toDomain(UserEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -31,7 +31,7 @@ public interface UserMapper {
         );
     }
 
-    default UserEntity toEntity(User domain) {
+    static UserEntity toEntity(User domain) {
         if (domain == null) {
             return null;
         }

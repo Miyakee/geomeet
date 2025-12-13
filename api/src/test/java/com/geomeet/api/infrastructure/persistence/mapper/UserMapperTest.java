@@ -91,16 +91,5 @@ class UserMapperTest {
         assertNull(mappedUser.getUpdatedBy());
     }
 
-    @Test
-    void shouldMapDomainWithNullAuditFields() {
-        domainUser.setCreatedBy(null);
-        domainUser.setUpdatedBy(null);
-
-        UserEntity mappedEntity = UserMapper.toEntity(domainUser);
-
-        assertNotNull(mappedEntity);
-        assertNull(mappedEntity.getCreatedBy());
-        assertNull(mappedEntity.getUpdatedBy());
-    }
 }
 

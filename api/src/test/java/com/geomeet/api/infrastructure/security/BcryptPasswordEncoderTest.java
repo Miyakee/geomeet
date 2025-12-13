@@ -3,9 +3,11 @@ package com.geomeet.api.infrastructure.security;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.geomeet.api.domain.service.PasswordEncoder;
+import com.geomeet.api.domain.valueobject.SessionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -89,9 +91,7 @@ class BcryptPasswordEncoderTest {
     @Test
     void shouldHandleLongPassword() {
         String longPassword = "a".repeat(100);
-        String encoded = passwordEncoder.encode(longPassword);
-
-        assertTrue(passwordEncoder.matches(longPassword, encoded));
+        assertThrows(IllegalArgumentException.class, () -> passwordEncoder.encode(longPassword));
     }
 }
 

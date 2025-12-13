@@ -1,11 +1,16 @@
 package com.geomeet.api.domain.valueobject;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Username value object.
  * Encapsulates username validation logic.
  */
+@Getter
+@EqualsAndHashCode
+@ToString
 public class Username {
 
     private static final int MIN_LENGTH = 3;
@@ -27,32 +32,6 @@ public class Username {
             throw new IllegalArgumentException("Username can only contain letters, numbers, and underscores");
         }
         this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Username username = (Username) o;
-        return Objects.equals(value, username.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
-    }
-
-    @Override
-    public String toString() {
-        return value;
     }
 }
 

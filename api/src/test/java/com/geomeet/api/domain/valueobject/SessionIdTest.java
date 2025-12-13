@@ -22,7 +22,7 @@ class SessionIdTest {
     @Test
     void shouldCreateSessionIdFromString() {
         String uuid = "test-session-id";
-        SessionId sessionId = new SessionId(uuid);
+        SessionId sessionId = SessionId.fromString(uuid);
 
         assertNotNull(sessionId);
         assertEquals(uuid, sessionId.getValue());
@@ -30,24 +30,24 @@ class SessionIdTest {
 
     @Test
     void shouldThrowExceptionWhenSessionIdIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> new SessionId(null));
+        assertThrows(IllegalArgumentException.class, () ->  SessionId.fromString(null));
     }
 
     @Test
     void shouldThrowExceptionWhenSessionIdIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> new SessionId(""));
+        assertThrows(IllegalArgumentException.class, () ->  SessionId.fromString(""));
     }
 
     @Test
     void shouldThrowExceptionWhenSessionIdIsBlank() {
-        assertThrows(IllegalArgumentException.class, () -> new SessionId("   "));
+        assertThrows(IllegalArgumentException.class, () ->  SessionId.fromString("   "));
     }
 
     @Test
     void shouldBeEqualWhenSessionIdsAreSame() {
         String uuid = "test-session-id";
-        SessionId sessionId1 = new SessionId(uuid);
-        SessionId sessionId2 = new SessionId(uuid);
+        SessionId sessionId1 = SessionId.fromString(uuid);
+        SessionId sessionId2 = SessionId.fromString(uuid);
 
         assertEquals(sessionId1, sessionId2);
         assertEquals(sessionId1.hashCode(), sessionId2.hashCode());

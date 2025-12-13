@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -39,6 +40,7 @@ public class JwtTokenService {
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
+            .id(UUID.randomUUID().toString()) // Add unique ID to ensure different tokens
             .claims(claims)
             .subject(subject)
             .issuedAt(now)

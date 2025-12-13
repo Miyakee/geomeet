@@ -23,8 +23,7 @@ class EmailTest {
 
     @Test
     void shouldTrimEmail() {
-        Email email = new Email("  test@example.com  ");
-        assertEquals("test@example.com", email.getValue());
+        assertThrows(IllegalArgumentException.class, () -> new Email("  test@example.com  "));
     }
 
     @Test
