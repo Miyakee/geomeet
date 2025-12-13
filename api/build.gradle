@@ -2,6 +2,9 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.12'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs' version '6.0.5'
 }
 
 group = 'com.geomeet'
@@ -26,4 +29,55 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Checkstyle Configuration
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    ignoreFailures = false
+    showViolations = true
+}
+
+// PMD Configuration
+pmd {
+    toolVersion = '7.0.0'
+    ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules.xml")
+    ruleSets = []
+    ignoreFailures = false
+}
+
+// SpotBugs Configuration
+spotbugs {
+    toolVersion = '4.8.3'
+    effort = 'max'
+    reportLevel = 'medium'
+    ignoreFailures = false
+    excludeFilter = file("${rootDir}/config/spotbugs/exclude.xml")
+}
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("${buildDir}/reports/spotbugs/main.html")
+        }
+        xml {
+            required = false
+        }
+    }
+}
+
+spotbugsTest {
+    reports {
+        html {
+            required = true
+            outputLocation = file("${buildDir}/reports/spotbugs/test.html")
+        }
+    }
+}
+
+// Add check task to run all quality checks
+tasks.named('check') {
+    dependsOn 'checkstyleMain', 'checkstyleTest', 'pmdMain', 'pmdTest', 'spotbugsMain', 'spotbugsTest'
 }
