@@ -5,6 +5,7 @@ plugins {
     id 'checkstyle'
     id 'pmd'
     id 'com.github.spotbugs' version '6.0.5'
+    id 'jacoco'
 }
 
 group = 'com.geomeet'
@@ -52,6 +53,75 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    
+    violationRules {
+        // Overall coverage rule - 90% minimum
+        rule {
+            limit {
+                minimum = 0.90
+            }
+        }
+        
+        // Class-level coverage - 90% line coverage required
+        rule {
+            element = 'CLASS'
+            excludes = [
+                'com.geomeet.api.ApiApplication',
+                'com.geomeet.api.controller.*',
+                'com.geomeet.api.adapter.web.health.HealthController',
+                'com.geomeet.api.infrastructure.config.*',
+                'com.geomeet.api.domain.exception.DomainException',
+                'com.geomeet.api.application.command.*',
+                'com.geomeet.api.application.result.*',
+                'com.geomeet.api.adapter.web.auth.dto.*'
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+        }
+        
+        // Branch coverage - 90% branch coverage required
+        rule {
+            element = 'CLASS'
+            excludes = [
+                'com.geomeet.api.ApiApplication',
+                'com.geomeet.api.controller.*',
+                'com.geomeet.api.adapter.web.health.HealthController',
+                'com.geomeet.api.infrastructure.config.*',
+                'com.geomeet.api.domain.exception.DomainException',
+                'com.geomeet.api.application.command.*',
+                'com.geomeet.api.application.result.*',
+                'com.geomeet.api.adapter.web.auth.dto.*'
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+        }
+    }
 }
 
 // Checkstyle Configuration
@@ -102,5 +172,5 @@ spotbugsTest {
 
 // Add check task to run all quality checks
 tasks.named('check') {
-    dependsOn 'checkstyleMain', 'checkstyleTest', 'pmdMain', 'pmdTest', 'spotbugsMain', 'spotbugsTest'
+    dependsOn 'checkstyleMain', 'checkstyleTest', 'pmdMain', 'pmdTest', 'spotbugsMain', 'spotbugsTest', 'jacocoTestCoverageVerification'
 }
