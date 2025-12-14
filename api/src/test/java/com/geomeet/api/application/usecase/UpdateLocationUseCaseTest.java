@@ -38,6 +38,9 @@ class UpdateLocationUseCaseTest {
     @Mock
     private ParticipantLocationRepository participantLocationRepository;
 
+    @Mock
+    private BroadcastLocationUpdateUseCase broadcastLocationUpdateUseCase;
+
     private UpdateLocationUseCase updateLocationUseCase;
 
     private Long userId;
@@ -55,7 +58,8 @@ class UpdateLocationUseCaseTest {
         updateLocationUseCase = new UpdateLocationUseCase(
             sessionRepository,
             sessionParticipantRepository,
-            participantLocationRepository
+            participantLocationRepository,
+            broadcastLocationUpdateUseCase
         );
 
         userId = 1L;
@@ -199,6 +203,7 @@ class UpdateLocationUseCaseTest {
         verify(sessionParticipantRepository).findBySessionIdAndUserId(sessionDbId, userId);
         verify(participantLocationRepository).findByParticipantId(participant.getId());
         verify(participantLocationRepository).save(any(ParticipantLocation.class));
+        verify(broadcastLocationUpdateUseCase).execute(any(UpdateLocationResult.class));
     }
 
     @Test
@@ -218,6 +223,7 @@ class UpdateLocationUseCaseTest {
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionParticipantRepository, never()).findBySessionIdAndUserId(anyLong(), anyLong());
         verify(participantLocationRepository, never()).save(any(ParticipantLocation.class));
+        verify(broadcastLocationUpdateUseCase, never()).execute(any());
     }
 
     @Test
@@ -247,6 +253,7 @@ class UpdateLocationUseCaseTest {
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionParticipantRepository, never()).findBySessionIdAndUserId(anyLong(), anyLong());
         verify(participantLocationRepository, never()).save(any(ParticipantLocation.class));
+        verify(broadcastLocationUpdateUseCase, never()).execute(any());
     }
 
     @Test

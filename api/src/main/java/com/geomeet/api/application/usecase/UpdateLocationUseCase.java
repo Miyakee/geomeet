@@ -24,15 +24,18 @@ public class UpdateLocationUseCase {
     private final SessionRepository sessionRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
     private final ParticipantLocationRepository participantLocationRepository;
+    private final BroadcastLocationUpdateUseCase broadcastLocationUpdateUseCase;
 
     public UpdateLocationUseCase(
         SessionRepository sessionRepository,
         SessionParticipantRepository sessionParticipantRepository,
-        ParticipantLocationRepository participantLocationRepository
+        ParticipantLocationRepository participantLocationRepository,
+        BroadcastLocationUpdateUseCase broadcastLocationUpdateUseCase
     ) {
         this.sessionRepository = sessionRepository;
         this.sessionParticipantRepository = sessionParticipantRepository;
         this.participantLocationRepository = participantLocationRepository;
+        this.broadcastLocationUpdateUseCase = broadcastLocationUpdateUseCase;
     }
 
     /**
@@ -88,8 +91,8 @@ public class UpdateLocationUseCase {
         // Save location
         ParticipantLocation savedLocation = participantLocationRepository.save(participantLocation);
 
-        // Return result
-        return UpdateLocationResult.builder()
+        // Build result
+        UpdateLocationResult result = UpdateLocationResult.builder()
             .participantId(savedLocation.getParticipantId())
             .sessionId(savedLocation.getSessionId())
             .sessionIdString(session.getSessionId().getValue())
@@ -100,6 +103,11 @@ public class UpdateLocationUseCase {
             .updatedAt(savedLocation.getUpdatedAt().format(DATE_TIME_FORMATTER))
             .message("Location updated successfully")
             .build();
+
+        // Broadcast location update to all subscribers
+        broadcastLocationUpdateUseCase.execute(result);
+
+        return result;
     }
 }
 
