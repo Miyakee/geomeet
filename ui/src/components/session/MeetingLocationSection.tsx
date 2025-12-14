@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -14,11 +14,13 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Edit, LocationOn, Check, Close } from '@mui/icons-material';
+import { calculateHaversineDistance, formatDistance } from '../../utils/distanceCalculator';
 
 interface MeetingLocationSectionProps {
   meetingLocation: { latitude: number; longitude: number } | null;
   meetingLocationAddress?: string | null;
   loadingAddress?: boolean;
+  currentUserLocation?: { latitude: number; longitude: number } | null;
   isInitiator: boolean;
   onUpdateLocation: (latitude: number, longitude: number) => Promise<void>;
   loading?: boolean;
@@ -29,6 +31,7 @@ export const MeetingLocationSection = ({
   meetingLocation,
   meetingLocationAddress,
   loadingAddress = false,
+  currentUserLocation,
   isInitiator,
   onUpdateLocation,
   loading = false,
@@ -150,6 +153,12 @@ export const MeetingLocationSection = ({
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
               <strong>Coordinates:</strong> {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
             </Typography>
+            {currentUserLocation && (
+              <DistanceDisplay
+                currentLocation={currentUserLocation}
+                meetingLocation={meetingLocation}
+              />
+            )}
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">
@@ -213,6 +222,32 @@ export const MeetingLocationSection = ({
         </DialogActions>
       </Dialog>
     </>
+  );
+};
+
+/**
+ * Component to display distance from current user location to meeting location
+ */
+interface DistanceDisplayProps {
+  currentLocation: { latitude: number; longitude: number };
+  meetingLocation: { latitude: number; longitude: number };
+}
+
+const DistanceDisplay = ({ currentLocation, meetingLocation }: DistanceDisplayProps) => {
+  const distance = useMemo(() => {
+    return calculateHaversineDistance(
+      currentLocation.latitude,
+      currentLocation.longitude,
+      meetingLocation.latitude,
+      meetingLocation.longitude
+    );
+  }, [currentLocation.latitude, currentLocation.longitude, meetingLocation.latitude, meetingLocation.longitude]);
+
+  return (
+    <Typography variant="body2" color="primary" sx={{ mt: 1, fontWeight: 'medium' }}>
+      <LocationOn sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+      Distance from your location: {formatDistance(distance)}
+    </Typography>
   );
 };
 

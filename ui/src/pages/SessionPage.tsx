@@ -316,6 +316,10 @@ const SessionPage = () => {
             meetingLocation={meetingLocation}
             meetingLocationAddress={meetingLocationAddress}
             loadingAddress={loadingMeetingLocationAddress}
+            currentUserLocation={currentLocation ? {
+              latitude: currentLocation.coords.latitude,
+              longitude: currentLocation.coords.longitude,
+            } : null}
             isInitiator={isInitiator}
             onUpdateLocation={updateMeetingLocation}
             loading={updatingMeetingLocation}
