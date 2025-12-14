@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.time.LocalDateTime;
@@ -105,6 +107,121 @@ class SessionTest {
         Session session = Session.create(initiatorId);
         session.end();
         assertFalse(session.isActive());
+    }
+
+    @Test
+    void shouldUpdateMeetingLocationSuccessfully() {
+        // Given
+        Session session = Session.create(initiatorId);
+        Location newLocation = Location.of(1.3521, 103.8198);
+        LocalDateTime originalUpdatedAt = session.getUpdatedAt();
+
+        // When
+        session.updateMeetingLocation(initiatorId, newLocation);
+
+        // Then
+        assertNotNull(session.getMeetingLocation());
+        assertEquals(1.3521, session.getMeetingLocation().getLatitude().getValue());
+        assertEquals(103.8198, session.getMeetingLocation().getLongitude().getValue());
+        assertTrue(session.getUpdatedAt().isAfter(originalUpdatedAt) || 
+                   session.getUpdatedAt().equals(originalUpdatedAt));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingMeetingLocationForEndedSession() {
+        // Given
+        Session session = Session.create(initiatorId);
+        session.end();
+        Location newLocation = Location.of(1.3521, 103.8198);
+
+        // When & Then
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            session.updateMeetingLocation(initiatorId, newLocation);
+        });
+
+        assertEquals("Cannot update meeting location for an ended session", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNonInitiatorTriesToUpdateMeetingLocation() {
+        // Given
+        Session session = Session.create(initiatorId);
+        Long nonInitiatorUserId = 999L;
+        Location newLocation = Location.of(1.3521, 103.8198);
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            session.updateMeetingLocation(nonInitiatorUserId, newLocation);
+        });
+
+        assertEquals("Only the session initiator can update the meeting location", exception.getMessage());
+        assertNull(session.getMeetingLocation());
+    }
+
+    @Test
+    void shouldUpdateMeetingLocationMultipleTimes() {
+        // Given
+        Session session = Session.create(initiatorId);
+        Location firstLocation = Location.of(1.3521, 103.8198);
+        Location secondLocation = Location.of(1.2903, 103.8520);
+
+        // When
+        session.updateMeetingLocation(initiatorId, firstLocation);
+        session.updateMeetingLocation(initiatorId, secondLocation);
+
+        // Then
+        assertNotNull(session.getMeetingLocation());
+        assertEquals(1.2903, session.getMeetingLocation().getLatitude().getValue());
+        assertEquals(103.8520, session.getMeetingLocation().getLongitude().getValue());
+    }
+
+    @Test
+    void shouldReconstructSessionWithMeetingLocation() {
+        // Given
+        Long id = 1L;
+        SessionId sessionId = SessionId.generate();
+        SessionStatus status = SessionStatus.ACTIVE;
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
+        LocalDateTime updatedAt = LocalDateTime.now();
+        String createdBy = "admin";
+        String updatedBy = "admin";
+        Location meetingLocation = Location.of(1.3521, 103.8198);
+
+        // When
+        Session session = Session.reconstruct(
+            id, sessionId, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, meetingLocation
+        );
+
+        // Then
+        assertNotNull(session);
+        assertEquals(id, session.getId());
+        assertEquals(sessionId, session.getSessionId());
+        assertEquals(initiatorId, session.getInitiatorId());
+        assertEquals(status, session.getStatus());
+        assertNotNull(session.getMeetingLocation());
+        assertEquals(1.3521, session.getMeetingLocation().getLatitude().getValue());
+        assertEquals(103.8198, session.getMeetingLocation().getLongitude().getValue());
+    }
+
+    @Test
+    void shouldReconstructSessionWithoutMeetingLocation() {
+        // Given
+        Long id = 1L;
+        SessionId sessionId = SessionId.generate();
+        SessionStatus status = SessionStatus.ACTIVE;
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
+        LocalDateTime updatedAt = LocalDateTime.now();
+        String createdBy = "admin";
+        String updatedBy = "admin";
+
+        // When
+        Session session = Session.reconstruct(
+            id, sessionId, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy
+        );
+
+        // Then
+        assertNotNull(session);
+        assertNull(session.getMeetingLocation());
     }
 }
 

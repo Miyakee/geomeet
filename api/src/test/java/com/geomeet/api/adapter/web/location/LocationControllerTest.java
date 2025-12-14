@@ -9,12 +9,17 @@ import static org.mockito.Mockito.when;
 import com.geomeet.api.adapter.web.location.dto.CalculateOptimalLocationResponse;
 import com.geomeet.api.adapter.web.location.dto.UpdateLocationRequest;
 import com.geomeet.api.adapter.web.location.dto.UpdateLocationResponse;
+import com.geomeet.api.adapter.web.location.dto.UpdateMeetingLocationRequest;
+import com.geomeet.api.adapter.web.location.dto.UpdateMeetingLocationResponse;
 import com.geomeet.api.application.command.CalculateOptimalLocationCommand;
 import com.geomeet.api.application.command.UpdateLocationCommand;
+import com.geomeet.api.application.command.UpdateMeetingLocationCommand;
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
 import com.geomeet.api.application.result.UpdateLocationResult;
+import com.geomeet.api.application.result.UpdateMeetingLocationResult;
 import com.geomeet.api.application.usecase.CalculateOptimalLocationUseCase;
 import com.geomeet.api.application.usecase.UpdateLocationUseCase;
+import com.geomeet.api.application.usecase.UpdateMeetingLocationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +38,9 @@ class LocationControllerTest {
 
     @Mock
     private CalculateOptimalLocationUseCase calculateOptimalLocationUseCase;
+
+    @Mock
+    private UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
 
     @Mock
     private Authentication authentication;
@@ -166,6 +174,43 @@ class LocationControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(result.getAccuracy(), response.getBody().getAccuracy());
+    }
+
+    @Test
+    void shouldUpdateMeetingLocationSuccessfully() {
+        // Given
+        UpdateMeetingLocationRequest request = new UpdateMeetingLocationRequest();
+        request.setLatitude(1.3521);
+        request.setLongitude(103.8198);
+
+        UpdateMeetingLocationResult result = UpdateMeetingLocationResult.builder()
+            .sessionId(100L)
+            .sessionIdString(sessionId)
+            .latitude(1.3521)
+            .longitude(103.8198)
+            .message("Meeting location updated successfully")
+            .build();
+
+        when(authentication.getPrincipal()).thenReturn(userId);
+        when(updateMeetingLocationUseCase.execute(any(UpdateMeetingLocationCommand.class)))
+            .thenReturn(result);
+
+        // When
+        ResponseEntity<UpdateMeetingLocationResponse> response = locationController.updateMeetingLocation(
+            sessionId, request, authentication
+        );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(result.getSessionId(), response.getBody().getSessionId());
+        assertEquals(result.getSessionIdString(), response.getBody().getSessionIdString());
+        assertEquals(result.getLatitude(), response.getBody().getLatitude());
+        assertEquals(result.getLongitude(), response.getBody().getLongitude());
+        assertEquals(result.getMessage(), response.getBody().getMessage());
+
+        verify(updateMeetingLocationUseCase).execute(any(UpdateMeetingLocationCommand.class));
     }
 }
 
