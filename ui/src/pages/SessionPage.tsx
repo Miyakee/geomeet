@@ -67,13 +67,18 @@ const SessionPage = () => {
     // Load initial session data
     loadSessionData();
 
-    // Setup WebSocket connection
-    setupWebSocket();
+    // Setup WebSocket connection after a short delay to ensure session data is loaded
+    const wsTimer = setTimeout(() => {
+      setupWebSocket();
+    }, 500);
 
     return () => {
       // Cleanup WebSocket connection
+      clearTimeout(wsTimer);
       if (stompClientRef.current) {
+        console.log('Cleaning up WebSocket connection');
         stompClientRef.current.deactivate();
+        stompClientRef.current = null;
       }
     };
   }, [sessionId]);
@@ -145,6 +150,12 @@ const SessionPage = () => {
       return;
     }
 
+    // Clean up existing connection if any
+    if (stompClientRef.current) {
+      stompClientRef.current.deactivate();
+      stompClientRef.current = null;
+    }
+
     // Determine WebSocket URL based on environment
     // In development, use relative path to leverage Vite proxy
     // In production, use the full API URL
@@ -159,19 +170,22 @@ const SessionPage = () => {
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      onConnect: () => {
-        console.log('WebSocket connected');
+      onConnect: (frame) => {
+        console.log('WebSocket connected, frame:', frame);
         // Subscribe to session updates
-        if (stompClientRef.current) {
-          stompClientRef.current.subscribe(`/topic/session/${sessionId}`, (message) => {
-            try {
-              const updatedSession: SessionDetailResponse = JSON.parse(message.body);
-              setSession(updatedSession);
-            } catch (err) {
-              console.error('Failed to parse WebSocket message:', err);
-            }
-          });
-        }
+        const subscription = client.subscribe(`/topic/session/${sessionId}`, (message) => {
+          try {
+            console.log('Raw WebSocket message:', message.body);
+            const updatedSession: SessionDetailResponse = JSON.parse(message.body);
+            console.log('Parsed session update:', updatedSession);
+            console.log('Participants count:', updatedSession.participants?.length);
+            setSession(updatedSession);
+          } catch (err) {
+            console.error('Failed to parse WebSocket message:', err);
+            console.error('Message body:', message.body);
+          }
+        });
+        console.log('Subscribed to /topic/session/' + sessionId, subscription);
       },
       onStompError: (frame) => {
         console.error('WebSocket STOMP error:', frame);
@@ -184,8 +198,8 @@ const SessionPage = () => {
       },
     });
 
-    client.activate();
     stompClientRef.current = client;
+    client.activate();
   };
 
   if (loading) {

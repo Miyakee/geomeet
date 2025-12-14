@@ -26,6 +26,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/health", "/").permitAll()
+                .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
                 .anyRequest().authenticated()
             );
 
