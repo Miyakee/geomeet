@@ -2,21 +2,25 @@ package com.geomeet.api.adapter.web.session;
 
 import com.geomeet.api.adapter.web.session.dto.CreateSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.CreateSessionResponse;
+import com.geomeet.api.adapter.web.session.dto.EndSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.InviteLinkResponse;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.ParticipantInfo;
 import com.geomeet.api.adapter.web.session.dto.SessionDetailResponse;
 import com.geomeet.api.application.command.CreateSessionCommand;
+import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.command.GenerateInviteLinkCommand;
 import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
+import com.geomeet.api.application.result.EndSessionResult;
 import com.geomeet.api.application.result.GenerateInviteLinkResult;
 import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.result.JoinSessionResult;
 import com.geomeet.api.application.usecase.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.CreateSessionUseCase;
+import com.geomeet.api.application.usecase.EndSessionUseCase;
 import com.geomeet.api.application.usecase.GenerateInviteLinkUseCase;
 import com.geomeet.api.application.usecase.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.JoinSessionUseCase;
@@ -24,6 +28,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,19 +49,22 @@ public class SessionController {
     private final GetSessionDetailsUseCase getSessionDetailsUseCase;
     private final GenerateInviteLinkUseCase generateInviteLinkUseCase;
     private final BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
+    private final EndSessionUseCase endSessionUseCase;
 
     public SessionController(
         CreateSessionUseCase createSessionUseCase,
         JoinSessionUseCase joinSessionUseCase,
         GetSessionDetailsUseCase getSessionDetailsUseCase,
         GenerateInviteLinkUseCase generateInviteLinkUseCase,
-        BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase
+        BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase,
+        EndSessionUseCase endSessionUseCase
     ) {
         this.createSessionUseCase = createSessionUseCase;
         this.joinSessionUseCase = joinSessionUseCase;
         this.getSessionDetailsUseCase = getSessionDetailsUseCase;
         this.generateInviteLinkUseCase = generateInviteLinkUseCase;
         this.broadcastSessionUpdateUseCase = broadcastSessionUpdateUseCase;
+        this.endSessionUseCase = endSessionUseCase;
     }
 
     @PostMapping
@@ -173,6 +181,34 @@ public class SessionController {
                     .build())
                 .collect(java.util.stream.Collectors.toList()))
             .participantCount(result.getParticipantCount())
+            .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * End a session.
+     * Only the session initiator can end the session.
+     */
+    @DeleteMapping("/{sessionId}")
+    public ResponseEntity<EndSessionResponse> endSession(
+        @PathVariable String sessionId,
+        Authentication authentication
+    ) {
+        // Extract user ID from JWT token
+        Long userId = (Long) authentication.getPrincipal();
+
+        // Execute use case
+        EndSessionCommand command = EndSessionCommand.of(sessionId, userId);
+        EndSessionResult result = endSessionUseCase.execute(command);
+
+        // Convert result to response DTO
+        EndSessionResponse response = EndSessionResponse.builder()
+            .sessionId(result.getSessionId())
+            .sessionIdString(result.getSessionIdString())
+            .status(result.getStatus())
+            .endedAt(result.getEndedAt())
+            .message(result.getMessage())
             .build();
 
         return ResponseEntity.ok(response);

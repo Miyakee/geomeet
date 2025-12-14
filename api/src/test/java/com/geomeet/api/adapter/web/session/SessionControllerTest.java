@@ -8,20 +8,24 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.adapter.web.session.dto.CreateSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.CreateSessionResponse;
+import com.geomeet.api.adapter.web.session.dto.EndSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.InviteLinkResponse;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.SessionDetailResponse;
 import com.geomeet.api.application.command.CreateSessionCommand;
+import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.command.GenerateInviteLinkCommand;
 import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
+import com.geomeet.api.application.result.EndSessionResult;
 import com.geomeet.api.application.result.GenerateInviteLinkResult;
 import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.result.JoinSessionResult;
 import com.geomeet.api.application.usecase.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.CreateSessionUseCase;
+import com.geomeet.api.application.usecase.EndSessionUseCase;
 import com.geomeet.api.application.usecase.GenerateInviteLinkUseCase;
 import com.geomeet.api.application.usecase.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.JoinSessionUseCase;
@@ -54,6 +58,9 @@ class SessionControllerTest {
     private BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
 
     @Mock
+    private EndSessionUseCase endSessionUseCase;
+
+    @Mock
     private Authentication authentication;
 
     private SessionController sessionController;
@@ -69,7 +76,8 @@ class SessionControllerTest {
             joinSessionUseCase,
             getSessionDetailsUseCase,
             generateInviteLinkUseCase,
-            broadcastSessionUpdateUseCase
+            broadcastSessionUpdateUseCase,
+            endSessionUseCase
         );
         initiatorId = 1L;
         sessionId = 100L;
@@ -236,6 +244,39 @@ class SessionControllerTest {
 
         verify(authentication).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
+    }
+
+    @Test
+    void shouldEndSessionSuccessfully() {
+        // Given
+        Long userId = 1L;
+        when(authentication.getPrincipal()).thenReturn(userId);
+
+        EndSessionResult result = EndSessionResult.builder()
+            .sessionId(100L)
+            .sessionIdString(sessionIdString)
+            .status("Ended")
+            .endedAt("2024-01-01T12:00:00")
+            .message("Session ended successfully")
+            .build();
+
+        when(endSessionUseCase.execute(any(EndSessionCommand.class))).thenReturn(result);
+
+        // When
+        ResponseEntity<EndSessionResponse> response = sessionController.endSession(sessionIdString, authentication);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(100L, response.getBody().getSessionId());
+        assertEquals(sessionIdString, response.getBody().getSessionIdString());
+        assertEquals("Ended", response.getBody().getStatus());
+        assertEquals("Session ended successfully", response.getBody().getMessage());
+        assertEquals("2024-01-01T12:00:00", response.getBody().getEndedAt());
+
+        verify(authentication).getPrincipal();
+        verify(endSessionUseCase).execute(any(EndSessionCommand.class));
     }
 }
 

@@ -145,6 +145,44 @@ describe('API Service', () => {
       expect(result.inviteCode).toBe('test-session-id');
       expect(mockGet).toHaveBeenCalledWith('/api/sessions/test-session-id/invite');
     });
+
+    it('should end session successfully', async () => {
+      const mockResponse = {
+        data: {
+          sessionId: 100,
+          sessionIdString: 'test-session-id',
+          status: 'Ended',
+          endedAt: '2024-01-01T12:00:00',
+          message: 'Session ended successfully',
+        },
+      };
+
+      mockDelete.mockResolvedValue(mockResponse);
+
+      const result = await sessionApi.endSession('test-session-id');
+
+      expect(result.sessionId).toBe(100);
+      expect(result.sessionIdString).toBe('test-session-id');
+      expect(result.status).toBe('Ended');
+      expect(result.endedAt).toBe('2024-01-01T12:00:00');
+      expect(result.message).toBe('Session ended successfully');
+      expect(mockDelete).toHaveBeenCalledWith('/api/sessions/test-session-id');
+    });
+
+    it('should handle end session error', async () => {
+      const mockError = {
+        response: {
+          status: 403,
+          data: {
+            message: 'Only the session initiator can end the session',
+          },
+        },
+      };
+
+      mockDelete.mockRejectedValue(mockError);
+
+      await expect(sessionApi.endSession('test-session-id')).rejects.toEqual(mockError);
+    });
   });
 });
 
