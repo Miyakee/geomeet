@@ -23,7 +23,7 @@ import {
 import { Person, Group, ContentCopy, LocationOn } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useParams } from 'react-router-dom';
-import { sessionApi } from '../services/api';
+import { sessionApi, UpdateLocationResponse } from '../services/api';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
@@ -323,7 +323,7 @@ const SessionPage = () => {
       onConnect: (frame) => {
         console.log('WebSocket connected, frame:', frame);
         // Subscribe to session updates
-        const subscription = client.subscribe(`/topic/session/${sessionId}`, (message) => {
+        const sessionSubscription = client.subscribe(`/topic/session/${sessionId}`, (message) => {
           try {
             console.log('Raw WebSocket message:', message.body);
             const updatedSession: SessionDetailResponse = JSON.parse(message.body);
@@ -335,7 +335,32 @@ const SessionPage = () => {
             console.error('Message body:', message.body);
           }
         });
-        console.log('Subscribed to /topic/session/' + sessionId, subscription);
+        console.log('Subscribed to /topic/session/' + sessionId, sessionSubscription);
+
+        // Subscribe to location updates
+        const locationSubscription = client.subscribe(`/topic/session/${sessionId}/locations`, (message) => {
+          try {
+            console.log('Location update received:', message.body);
+            const locationUpdate: UpdateLocationResponse = JSON.parse(message.body);
+            console.log('Parsed location update:', locationUpdate);
+            // Update location state for the participant
+            setParticipantLocations((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(locationUpdate.userId, {
+                latitude: locationUpdate.latitude,
+                longitude: locationUpdate.longitude,
+                accuracy: locationUpdate.accuracy,
+                updatedAt: locationUpdate.updatedAt,
+              });
+              return newMap;
+            });
+            console.log('Location updated for participant:', locationUpdate.userId);
+          } catch (err) {
+            console.error('Failed to parse location update message:', err);
+            console.error('Message body:', message.body);
+          }
+        });
+        console.log('Subscribed to /topic/session/' + sessionId + '/locations', locationSubscription);
       },
       onStompError: (frame) => {
         console.error('WebSocket STOMP error:', frame);
