@@ -52,17 +52,12 @@ const JoinSessionPage = () => {
     setLoading(true);
     setError(null);
     try {
-      await sessionApi.joinSession(sessionId.trim());
+      const result = await sessionApi.joinSession(sessionId.trim());
       setSuccess(true);
-      // Clear sessionId from URL and state to prevent auto-join on refresh
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('sessionId');
-      setSessionId(''); // Clear state as well
-      navigate(`/join?${newSearchParams.toString()}`, { replace: true });
-      // Navigate to dashboard after showing success message
+      // Navigate to session page to see all participants
       setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 2000);
+        navigate(`/session/${result.sessionIdString}`, { replace: true });
+      }, 1000);
     } catch (err: any) {
       hasAttemptedJoin.current = false; // Allow retry on error
       console.error('Join session error:', err);

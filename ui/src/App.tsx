@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import JoinSessionPage from './pages/JoinSessionPage';
+import SessionPage from './pages/SessionPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
@@ -38,6 +39,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JoinSessionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/session/:sessionId"
+              element={
+                <ProtectedRoute>
+                  <SessionPage />
                 </ProtectedRoute>
               }
             />

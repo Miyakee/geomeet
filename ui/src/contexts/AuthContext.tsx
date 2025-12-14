@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { authApi, LoginRequest } from '../services/api';
 
 interface User {
+  id: number;
   username: string;
   email: string;
 }
@@ -29,6 +30,28 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helper function to decode JWT token and extract user ID
+const decodeToken = (token: string): { userId: number; username: string } | null => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const decoded = JSON.parse(jsonPayload);
+    return {
+      userId: decoded.userId || decoded.user_id,
+      username: decoded.sub || decoded.username,
+    };
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -40,7 +63,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      // If user doesn't have id, try to decode from token
+      if (!parsedUser.id && storedToken) {
+        const decoded = decodeToken(storedToken);
+        if (decoded) {
+          parsedUser.id = decoded.userId;
+          localStorage.setItem('user', JSON.stringify(parsedUser));
+        }
+      }
+      setUser(parsedUser);
     }
     setIsInitialized(true);
   }, []);
@@ -49,7 +81,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const response = await authApi.login(credentials);
       setToken(response.token);
+      
+      // Decode token to get user ID
+      const decoded = decodeToken(response.token);
       const userData = {
+        id: decoded?.userId || 0,
         username: response.username,
         email: response.email,
       };

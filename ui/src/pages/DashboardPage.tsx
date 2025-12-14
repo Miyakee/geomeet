@@ -40,6 +40,8 @@ const DashboardPage = () => {
     try {
       const createdSession = await sessionApi.createSession();
       setSession(createdSession);
+      // Navigate to session page
+      navigate(`/session/${createdSession.sessionId}`);
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);

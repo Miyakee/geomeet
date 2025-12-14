@@ -75,6 +75,25 @@ export interface JoinSessionResponse {
   message: string;
 }
 
+export interface ParticipantInfo {
+  participantId: number;
+  userId: number;
+  username: string;
+  email: string;
+  joinedAt: string;
+}
+
+export interface SessionDetailResponse {
+  id: number;
+  sessionId: string;
+  initiatorId: number;
+  initiatorUsername: string;
+  status: string;
+  createdAt: string;
+  participants: ParticipantInfo[];
+  participantCount: number;
+}
+
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.post<T>(url, data);
@@ -102,6 +121,9 @@ export const sessionApi = {
   },
   joinSession: async (sessionId: string): Promise<JoinSessionResponse> => {
     return postRequest<JoinSessionResponse>('/api/sessions/join', { sessionId });
+  },
+  getSessionDetails: async (sessionId: string): Promise<SessionDetailResponse> => {
+    return getRequest<SessionDetailResponse>(`/api/sessions/${sessionId}`);
   },
 };
 
