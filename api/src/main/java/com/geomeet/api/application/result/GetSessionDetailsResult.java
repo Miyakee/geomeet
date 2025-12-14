@@ -20,6 +20,8 @@ public class GetSessionDetailsResult {
     private final String createdAt;
     private final List<ParticipantInfo> participants;
     private final Long participantCount;
+    private final Double meetingLocationLatitude;
+    private final Double meetingLocationLongitude;
 
     /**
      * Participant information within the result.

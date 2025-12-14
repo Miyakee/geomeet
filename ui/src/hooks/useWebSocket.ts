@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { UpdateLocationResponse, CalculateOptimalLocationResponse } from '../services/api';
+import { UpdateLocationResponse, CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
 import { reverseGeocode } from '../services/geocodingService';
 import { SessionDetailResponse, ParticipantLocation } from '../types/session';
 import SockJS from 'sockjs-client';
@@ -11,6 +11,7 @@ interface UseWebSocketProps {
   onLocationUpdate: (location: ParticipantLocation, userId: number) => void;
   onAddressUpdate: (address: string, userId: number) => void;
   onOptimalLocationUpdate?: (optimalLocation: CalculateOptimalLocationResponse) => void;
+  onMeetingLocationUpdate?: (meetingLocation: UpdateMeetingLocationResponse) => void;
 }
 
 export const useWebSocket = ({
@@ -19,6 +20,7 @@ export const useWebSocket = ({
   onLocationUpdate,
   onAddressUpdate,
   onOptimalLocationUpdate,
+  onMeetingLocationUpdate,
 }: UseWebSocketProps) => {
   const stompClientRef = useRef<Client | null>(null);
 
@@ -97,6 +99,19 @@ export const useWebSocket = ({
               }
             });
           }
+
+          // Subscribe to meeting location updates
+          if (onMeetingLocationUpdate) {
+            client.subscribe(`/topic/session/${sessionId}/meeting-location`, (message) => {
+              try {
+                const meetingLocation: UpdateMeetingLocationResponse = JSON.parse(message.body);
+                console.log('Parsed meeting location update:', meetingLocation);
+                onMeetingLocationUpdate(meetingLocation);
+              } catch (err) {
+                console.error('Failed to parse meeting location message:', err);
+              }
+            });
+          }
         },
         onStompError: (frame) => {
           console.error('WebSocket STOMP error:', frame);
@@ -125,6 +140,6 @@ export const useWebSocket = ({
         stompClientRef.current = null;
       }
     };
-  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate]);
+  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate, onMeetingLocationUpdate]);
 };
 

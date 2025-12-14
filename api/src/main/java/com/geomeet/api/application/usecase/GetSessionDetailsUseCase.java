@@ -103,6 +103,8 @@ public class GetSessionDetailsUseCase {
             .createdAt(session.getCreatedAt().format(DATE_TIME_FORMATTER))
             .participants(participantInfos)
             .participantCount((long) participantInfos.size())
+            .meetingLocationLatitude(session.getMeetingLocation() != null ? session.getMeetingLocation().getLatitude().getValue() : null)
+            .meetingLocationLongitude(session.getMeetingLocation() != null ? session.getMeetingLocation().getLongitude().getValue() : null)
             .build();
     }
 }

@@ -16,14 +16,16 @@ import { useSessionData } from '../hooks/useSessionData';
 import { useInviteLink } from '../hooks/useInviteLink';
 import { useLocationTracking } from '../hooks/useLocationTracking';
 import { useOptimalLocation } from '../hooks/useOptimalLocation';
+import { useMeetingLocation } from '../hooks/useMeetingLocation';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { SessionHeader } from '../components/session/SessionHeader';
 import { ParticipantList } from '../components/session/ParticipantList';
 import { LocationTrackingSection } from '../components/session/LocationTrackingSection';
 import { InviteSection } from '../components/session/InviteSection';
+import { MeetingLocationSection } from '../components/session/MeetingLocationSection';
 import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
 import { ParticipantLocation, SessionDetailResponse } from '../types/session';
-import { CalculateOptimalLocationResponse } from '../services/api';
+import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
 
 const SessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -60,6 +62,14 @@ const SessionPage = () => {
     updateOptimalLocation,
   } = useOptimalLocation(sessionId);
 
+  const {
+    meetingLocation,
+    loading: updatingMeetingLocation,
+    error: meetingLocationError,
+    updateMeetingLocation,
+    updateMeetingLocationFromResponse,
+  } = useMeetingLocation(sessionId);
+
   const handleSessionUpdate = useCallback((updatedSession: SessionDetailResponse) => {
     updateSession(updatedSession);
   }, [updateSession]);
@@ -84,12 +94,17 @@ const SessionPage = () => {
     updateOptimalLocation(optimalLocation);
   }, [updateOptimalLocation]);
 
+  const handleMeetingLocationUpdate = useCallback((meetingLocation: UpdateMeetingLocationResponse) => {
+    updateMeetingLocationFromResponse(meetingLocation);
+  }, [updateMeetingLocationFromResponse]);
+
   useWebSocket({
     sessionId,
     onSessionUpdate: handleSessionUpdate,
     onLocationUpdate: handleLocationUpdate,
     onAddressUpdate: handleAddressUpdate,
     onOptimalLocationUpdate: handleOptimalLocationUpdate,
+    onMeetingLocationUpdate: handleMeetingLocationUpdate,
   });
 
   // Update participant names from session data
@@ -102,6 +117,19 @@ const SessionPage = () => {
       setParticipantNames(names);
     }
   }, [session]);
+
+  // Initialize meeting location from session data
+  useEffect(() => {
+    if (session && session.meetingLocationLatitude != null && session.meetingLocationLongitude != null) {
+      updateMeetingLocationFromResponse({
+        sessionId: session.id,
+        sessionIdString: session.sessionId,
+        latitude: session.meetingLocationLatitude,
+        longitude: session.meetingLocationLongitude,
+        message: '',
+      });
+    }
+  }, [session, updateMeetingLocationFromResponse]);
 
   // Load invite link when session is loaded and user is initiator
   useEffect(() => {
@@ -248,6 +276,17 @@ const SessionPage = () => {
             onRetry={() => {
               startLocationTracking();
             }}
+          />
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Meeting Location Section */}
+          <MeetingLocationSection
+            meetingLocation={meetingLocation}
+            isInitiator={isInitiator}
+            onUpdateLocation={updateMeetingLocation}
+            loading={updatingMeetingLocation}
+            error={meetingLocationError}
           />
 
           <Divider sx={{ my: 3 }} />

@@ -19,6 +19,8 @@ export interface SessionDetailResponse {
   createdAt: string;
   participants: ParticipantInfo[];
   participantCount: number;
+  meetingLocationLatitude?: number | null;
+  meetingLocationLongitude?: number | null;
 }
 
 export interface ParticipantLocation {

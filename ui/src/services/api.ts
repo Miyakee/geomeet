@@ -122,6 +122,19 @@ export interface CalculateOptimalLocationResponse {
   message: string;
 }
 
+export interface UpdateMeetingLocationRequest {
+  latitude: number;
+  longitude: number;
+}
+
+export interface UpdateMeetingLocationResponse {
+  sessionId: number;
+  sessionIdString: string;
+  latitude: number;
+  longitude: number;
+  message: string;
+}
+
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.post<T>(url, data);
@@ -171,6 +184,15 @@ export const sessionApi = {
     return postRequest<CalculateOptimalLocationResponse>(
       `/api/sessions/${sessionId}/optimal-location`,
       {}
+    );
+  },
+  updateMeetingLocation: async (
+    sessionId: string,
+    location: UpdateMeetingLocationRequest
+  ): Promise<UpdateMeetingLocationResponse> => {
+    return putRequest<UpdateMeetingLocationResponse>(
+      `/api/sessions/${sessionId}/meeting-location`,
+      location
     );
   },
 };
