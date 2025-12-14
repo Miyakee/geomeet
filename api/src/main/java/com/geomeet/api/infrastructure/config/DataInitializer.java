@@ -48,8 +48,24 @@ public class DataInitializer {
                 );
                 userRepository.save(testUser);
                 logger.info("Created test user: testuser / test123");
+            }
+
+            // Create tty user if it doesn't exist
+            if (userRepository.findByUsername("tty").isEmpty()) {
+                String ttyPasswordHash = passwordEncoder.encode("tty123");
+                User ttyUser = User.create(
+                    new Username("tty"),
+                    new Email("tty@geomeet.com"),
+                    new PasswordHash(ttyPasswordHash)
+                );
+                userRepository.save(ttyUser);
+                logger.info("Created tty user: tty / tty123");
             } else {
-                logger.info("Users already exist, skipping initialization");
+                logger.info("tty user already exists, skipping");
+            }
+
+            if (userRepository.findByUsername("admin").isPresent()) {
+                logger.info("Users initialization completed");
             }
         };
     }

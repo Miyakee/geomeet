@@ -11,18 +11,21 @@ import com.geomeet.api.adapter.web.session.dto.CreateSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.InviteLinkResponse;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionResponse;
+import com.geomeet.api.adapter.web.session.dto.SessionDetailResponse;
 import com.geomeet.api.application.command.CreateSessionCommand;
+import com.geomeet.api.application.command.GenerateInviteLinkCommand;
+import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
+import com.geomeet.api.application.result.GenerateInviteLinkResult;
+import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.result.JoinSessionResult;
+import com.geomeet.api.application.usecase.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.CreateSessionUseCase;
+import com.geomeet.api.application.usecase.GenerateInviteLinkUseCase;
+import com.geomeet.api.application.usecase.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.JoinSessionUseCase;
-import com.geomeet.api.application.usecase.SessionRepository;
-import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
-import java.time.LocalDateTime;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +45,13 @@ class SessionControllerTest {
     private JoinSessionUseCase joinSessionUseCase;
 
     @Mock
-    private SessionRepository sessionRepository;
+    private GetSessionDetailsUseCase getSessionDetailsUseCase;
+
+    @Mock
+    private GenerateInviteLinkUseCase generateInviteLinkUseCase;
+
+    @Mock
+    private BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
 
     @Mock
     private Authentication authentication;
@@ -55,7 +64,13 @@ class SessionControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionController = new SessionController(createSessionUseCase, joinSessionUseCase, sessionRepository);
+        sessionController = new SessionController(
+            createSessionUseCase,
+            joinSessionUseCase,
+            getSessionDetailsUseCase,
+            generateInviteLinkUseCase,
+            broadcastSessionUpdateUseCase
+        );
         initiatorId = 1L;
         sessionId = 100L;
         sessionIdString = "test-session-id-123";
@@ -103,20 +118,14 @@ class SessionControllerTest {
     void shouldGenerateInviteLinkSuccessfully() {
         // Given
         Long userId = 1L;
-        SessionId sessionIdVO = SessionId.fromString(sessionIdString);
-        Session session = Session.reconstruct(
-            sessionId,
-            sessionIdVO,
-            userId,
-            SessionStatus.ACTIVE,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            null,
-            null
-        );
+        GenerateInviteLinkResult result = GenerateInviteLinkResult.builder()
+            .sessionId(sessionIdString)
+            .inviteLink("/join?sessionId=" + sessionIdString)
+            .inviteCode(sessionIdString)
+            .build();
 
         when(authentication.getPrincipal()).thenReturn(userId);
-        when(sessionRepository.findBySessionId(sessionIdVO)).thenReturn(Optional.of(session));
+        when(generateInviteLinkUseCase.execute(any(GenerateInviteLinkCommand.class))).thenReturn(result);
 
         // When
         ResponseEntity<InviteLinkResponse> response = sessionController.generateInviteLink(
@@ -136,41 +145,7 @@ class SessionControllerTest {
         assertEquals("Invitation link generated successfully", responseBody.getMessage());
 
         verify(authentication).getPrincipal();
-        verify(sessionRepository).findBySessionId(sessionIdVO);
-    }
-
-    @Test
-    void shouldReturnForbiddenWhenUserIsNotInitiator() {
-        // Given
-        Long userId = 1L;
-        Long otherUserId = 2L;
-        SessionId sessionIdVO = SessionId.fromString(sessionIdString);
-        Session session = Session.reconstruct(
-            sessionId,
-            sessionIdVO,
-            otherUserId, // Different initiator
-            SessionStatus.ACTIVE,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            null,
-            null
-        );
-
-        when(authentication.getPrincipal()).thenReturn(userId);
-        when(sessionRepository.findBySessionId(sessionIdVO)).thenReturn(Optional.of(session));
-
-        // When
-        ResponseEntity<InviteLinkResponse> response = sessionController.generateInviteLink(
-            sessionIdString,
-            authentication
-        );
-
-        // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-
-        verify(authentication).getPrincipal();
-        verify(sessionRepository).findBySessionId(sessionIdVO);
+        verify(generateInviteLinkUseCase).execute(any(GenerateInviteLinkCommand.class));
     }
 
     @Test
@@ -210,6 +185,57 @@ class SessionControllerTest {
 
         verify(authentication).getPrincipal();
         verify(joinSessionUseCase).execute(any(JoinSessionCommand.class));
+        verify(broadcastSessionUpdateUseCase).execute(sessionIdString);
+    }
+
+    @Test
+    void shouldGetSessionDetailsSuccessfully() {
+        // Given
+        Long userId = 1L;
+        GetSessionDetailsResult.ParticipantInfo participantInfo = GetSessionDetailsResult.ParticipantInfo.builder()
+            .participantId(200L)
+            .userId(userId)
+            .username("testuser")
+            .email("test@example.com")
+            .joinedAt("2024-01-01T00:00:00")
+            .build();
+
+        GetSessionDetailsResult result = GetSessionDetailsResult.builder()
+            .id(sessionId)
+            .sessionId(sessionIdString)
+            .initiatorId(initiatorId)
+            .initiatorUsername("initiator")
+            .status(SessionStatus.ACTIVE.getValue())
+            .createdAt("2024-01-01T00:00:00")
+            .participants(java.util.List.of(participantInfo))
+            .participantCount(1L)
+            .build();
+
+        when(authentication.getPrincipal()).thenReturn(userId);
+        when(getSessionDetailsUseCase.execute(any(GetSessionDetailsCommand.class))).thenReturn(result);
+
+        // When
+        ResponseEntity<SessionDetailResponse> response = sessionController.getSessionDetails(
+            sessionIdString,
+            authentication
+        );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        SessionDetailResponse responseBody = response.getBody();
+        assertEquals(sessionId, responseBody.getId());
+        assertEquals(sessionIdString, responseBody.getSessionId());
+        assertEquals(initiatorId, responseBody.getInitiatorId());
+        assertEquals("initiator", responseBody.getInitiatorUsername());
+        assertEquals(SessionStatus.ACTIVE.getValue(), responseBody.getStatus());
+        assertEquals(1, responseBody.getParticipants().size());
+        assertEquals(1L, responseBody.getParticipantCount());
+
+        verify(authentication).getPrincipal();
+        verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
     }
 }
 
