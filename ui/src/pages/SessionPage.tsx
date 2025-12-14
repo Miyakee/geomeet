@@ -60,6 +60,13 @@ const SessionPage = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
   const [updatingLocation, setUpdatingLocation] = useState(false);
+  // Map to store participant locations: userId -> { latitude, longitude, accuracy, updatedAt }
+  const [participantLocations, setParticipantLocations] = useState<Map<number, {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    updatedAt: string;
+  }>>(new Map());
   const stompClientRef = useRef<Client | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const locationUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -501,9 +508,33 @@ const SessionPage = () => {
                       </Box>
                     }
                     secondary={
-                      <Typography variant="body2" color="text.secondary">
-                        {participant.email} • Joined: {new Date(participant.joinedAt).toLocaleString()}
-                      </Typography>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {participant.email} • Joined: {new Date(participant.joinedAt).toLocaleString()}
+                        </Typography>
+                        {(() => {
+                          const location = participantLocations.get(participant.userId);
+                          if (location) {
+                            const locationAge = Date.now() - new Date(location.updatedAt).getTime();
+                            const isRecent = locationAge < 60000; // Less than 1 minute old
+                            return (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                <LocationOn sx={{ fontSize: 14, color: isRecent ? 'success.main' : 'text.secondary' }} />
+                                <Typography 
+                                  variant="body2" 
+                                  color={isRecent ? 'success.main' : 'text.secondary'} 
+                                  sx={{ fontSize: '0.75rem' }}
+                                >
+                                  {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                                  {location.accuracy && <> • ±{Math.round(location.accuracy)}m</>}
+                                  {!isRecent && <> • {Math.round(locationAge / 1000)}s ago</>}
+                                </Typography>
+                              </Box>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </Box>
                     }
                   />
                 </ListItem>
