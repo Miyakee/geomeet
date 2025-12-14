@@ -17,10 +17,12 @@ import {
   IconButton,
   InputAdornment,
   Button,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
-import { Person, Group, ContentCopy } from '@mui/icons-material';
+import { Person, Group, ContentCopy, LocationOn } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { sessionApi } from '../services/api';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
@@ -47,7 +49,6 @@ interface SessionDetailResponse {
 const SessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [session, setSession] = useState<SessionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,14 @@ const SessionPage = () => {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingInvite, setLoadingInvite] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
+  const [updatingLocation, setUpdatingLocation] = useState(false);
   const stompClientRef = useRef<Client | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const locationUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const latestPositionRef = useRef<GeolocationPosition | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -80,8 +88,17 @@ const SessionPage = () => {
         stompClientRef.current.deactivate();
         stompClientRef.current = null;
       }
+      // Cleanup location watching
+      stopLocationTracking();
     };
   }, [sessionId]);
+
+  // Cleanup location tracking when component unmounts
+  useEffect(() => {
+    return () => {
+      stopLocationTracking();
+    };
+  }, []);
 
   const loadSessionData = async () => {
     if (!sessionId) return;
@@ -138,6 +155,139 @@ const SessionPage = () => {
       navigator.clipboard.writeText(inviteCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const updateLocationToServer = async (position: GeolocationPosition) => {
+    if (!sessionId) return;
+
+    try {
+      setUpdatingLocation(true);
+      setLocationError(null);
+      await sessionApi.updateLocation(sessionId, {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      });
+      setCurrentLocation(position);
+      console.log('Location updated successfully');
+    } catch (err: any) {
+      console.error('Failed to update location:', err);
+      setLocationError('Failed to update location. Please try again.');
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
+
+  const startLocationTracking = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setLocationError(null);
+
+    // Request permission and get initial position
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation(position);
+        updateLocationToServer(position);
+        setLocationEnabled(true);
+
+        // Start watching position changes
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (position) => {
+            setCurrentLocation(position);
+            latestPositionRef.current = position;
+            // Clear any previous errors when we get a successful position
+            setLocationError(null);
+            // Update to server every 5 seconds (throttle)
+            if (!locationUpdateIntervalRef.current) {
+              updateLocationToServer(position);
+              locationUpdateIntervalRef.current = setInterval(() => {
+                if (latestPositionRef.current) {
+                  updateLocationToServer(latestPositionRef.current);
+                }
+              }, 5000); // Update every 5 seconds
+            }
+          },
+          (error) => {
+            // For watchPosition errors, don't stop tracking, just show warning
+            handleGeolocationError(error, false);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000, // Increased timeout to 15 seconds
+            maximumAge: 30000, // Accept cached position up to 30 seconds old
+          }
+        );
+      },
+      (error) => {
+        console.error('Geolocation error (initial request):', error);
+        handleGeolocationError(error, true);
+        // Only disable if permission is denied
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationEnabled(false);
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000, // Increased timeout to 15 seconds
+        maximumAge: 30000, // Accept cached position up to 30 seconds old
+      }
+    );
+  };
+
+  const stopLocationTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (locationUpdateIntervalRef.current) {
+      clearInterval(locationUpdateIntervalRef.current);
+      locationUpdateIntervalRef.current = null;
+    }
+    setLocationEnabled(false);
+    setCurrentLocation(null);
+    latestPositionRef.current = null;
+  };
+
+  const handleGeolocationError = (error: GeolocationPositionError, isInitialRequest: boolean = false) => {
+    let errorMessage = '';
+    
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+        if (isInitialRequest) {
+          setLocationEnabled(false);
+        }
+        break;
+      case error.POSITION_UNAVAILABLE:
+        errorMessage = 'Location information is unavailable. This may happen if you are indoors or GPS signal is weak. The app will keep trying to get your location.';
+        // Don't stop tracking for POSITION_UNAVAILABLE, just show warning
+        break;
+      case error.TIMEOUT:
+        errorMessage = 'Location request timed out. The app will keep trying to get your location.';
+        // Don't stop tracking for TIMEOUT, just show warning
+        break;
+      default:
+        errorMessage = `Unable to get location (error code: ${error.code}). The app will keep trying.`;
+        break;
+    }
+    
+    setLocationError(errorMessage);
+    console.warn('Geolocation error:', {
+      code: error.code,
+      message: error.message,
+      isInitialRequest,
+    });
+  };
+
+  const handleLocationToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      startLocationTracking();
+    } else {
+      stopLocationTracking();
     }
   };
 
@@ -335,6 +485,63 @@ const SessionPage = () => {
               ))}
             </List>
           )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Location Tracking Section */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+              <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                Location Tracking
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={locationEnabled}
+                    onChange={handleLocationToggle}
+                    disabled={updatingLocation}
+                  />
+                }
+                label={locationEnabled ? 'Enabled' : 'Disabled'}
+              />
+            </Box>
+            {locationError && (
+              <Alert 
+                severity={locationError.includes('permission denied') ? 'error' : 'warning'} 
+                sx={{ mb: 2 }}
+                action={
+                  locationError.includes('permission denied') ? (
+                    <Button 
+                      color="inherit" 
+                      size="small" 
+                      onClick={() => {
+                        setLocationError(null);
+                        startLocationTracking();
+                      }}
+                    >
+                      Retry
+                    </Button>
+                  ) : null
+                }
+              >
+                {locationError}
+              </Alert>
+            )}
+            {locationEnabled && currentLocation && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Location: {currentLocation.coords.latitude.toFixed(6)},{' '}
+                {currentLocation.coords.longitude.toFixed(6)} (Accuracy: ±
+                {Math.round(currentLocation.coords.accuracy)}m)
+                {updatingLocation && <CircularProgress size={16} sx={{ ml: 1 }} />}
+              </Alert>
+            )}
+            {locationEnabled && !currentLocation && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Getting your location...
+              </Alert>
+            )}
+          </Box>
 
           <Divider sx={{ my: 3 }} />
 

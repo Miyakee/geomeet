@@ -94,6 +94,24 @@ export interface SessionDetailResponse {
   participantCount: number;
 }
 
+export interface UpdateLocationRequest {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+}
+
+export interface UpdateLocationResponse {
+  participantId: number;
+  sessionId: number;
+  sessionIdString: string;
+  userId: number;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  updatedAt: string;
+  message: string;
+}
+
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.post<T>(url, data);
@@ -112,6 +130,12 @@ async function getRequest<T>(url: string): Promise<T> {
   return response.data;
 }
 
+// Helper function for PUT requests
+async function putRequest<T>(url: string, data?: unknown): Promise<T> {
+  const response = await apiClient.put<T>(url, data);
+  return response.data;
+}
+
 export const sessionApi = {
   createSession: async (): Promise<CreateSessionResponse> => {
     return postRequest<CreateSessionResponse>('/api/sessions', {});
@@ -124,6 +148,12 @@ export const sessionApi = {
   },
   getSessionDetails: async (sessionId: string): Promise<SessionDetailResponse> => {
     return getRequest<SessionDetailResponse>(`/api/sessions/${sessionId}`);
+  },
+  updateLocation: async (
+    sessionId: string,
+    location: UpdateLocationRequest
+  ): Promise<UpdateLocationResponse> => {
+    return putRequest<UpdateLocationResponse>(`/api/sessions/${sessionId}/location`, location);
   },
 };
 
