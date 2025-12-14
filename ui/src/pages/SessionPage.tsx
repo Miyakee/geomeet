@@ -7,18 +7,23 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Button,
 } from '@mui/material';
+import { LocationOn } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useParams } from 'react-router-dom';
 import { useSessionData } from '../hooks/useSessionData';
 import { useInviteLink } from '../hooks/useInviteLink';
 import { useLocationTracking } from '../hooks/useLocationTracking';
+import { useOptimalLocation } from '../hooks/useOptimalLocation';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { SessionHeader } from '../components/session/SessionHeader';
 import { ParticipantList } from '../components/session/ParticipantList';
 import { LocationTrackingSection } from '../components/session/LocationTrackingSection';
 import { InviteSection } from '../components/session/InviteSection';
+import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
 import { ParticipantLocation, SessionDetailResponse } from '../types/session';
+import { CalculateOptimalLocationResponse } from '../services/api';
 
 const SessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -45,6 +50,15 @@ const SessionPage = () => {
 
   const [participantLocations, setParticipantLocations] = useState<Map<number, ParticipantLocation>>(new Map());
   const [participantAddresses, setParticipantAddresses] = useState<Map<number, string>>(new Map());
+  const [participantNames, setParticipantNames] = useState<Map<number, string>>(new Map());
+
+  const {
+    optimalLocation,
+    loading: calculatingOptimalLocation,
+    error: optimalLocationError,
+    calculateOptimalLocation,
+    updateOptimalLocation,
+  } = useOptimalLocation(sessionId);
 
   const handleSessionUpdate = useCallback((updatedSession: SessionDetailResponse) => {
     updateSession(updatedSession);
@@ -66,12 +80,28 @@ const SessionPage = () => {
     });
   }, []);
 
+  const handleOptimalLocationUpdate = useCallback((optimalLocation: CalculateOptimalLocationResponse) => {
+    updateOptimalLocation(optimalLocation);
+  }, [updateOptimalLocation]);
+
   useWebSocket({
     sessionId,
     onSessionUpdate: handleSessionUpdate,
     onLocationUpdate: handleLocationUpdate,
     onAddressUpdate: handleAddressUpdate,
+    onOptimalLocationUpdate: handleOptimalLocationUpdate,
   });
+
+  // Update participant names from session data
+  useEffect(() => {
+    if (session) {
+      const names = new Map<number, string>();
+      session.participants.forEach((participant) => {
+        names.set(participant.userId, participant.username);
+      });
+      setParticipantNames(names);
+    }
+  }, [session]);
 
   // Load invite link when session is loaded and user is initiator
   useEffect(() => {
@@ -155,6 +185,53 @@ const SessionPage = () => {
             participantLocations={participantLocations}
             participantAddresses={participantAddresses}
           />
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Optimal Location Map */}
+          <OptimalLocationMap
+            optimalLocation={optimalLocation ? {
+              latitude: optimalLocation.optimalLatitude,
+              longitude: optimalLocation.optimalLongitude,
+              totalTravelDistance: optimalLocation.totalTravelDistance,
+              participantCount: optimalLocation.participantCount,
+            } : null}
+            participantLocations={new Map(
+              Array.from(participantLocations.entries()).map(([userId, loc]) => [
+                userId,
+                {
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  userId,
+                },
+              ])
+            )}
+            participantNames={participantNames}
+          />
+
+          {/* Calculate Optimal Location Button */}
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+            <Button
+              variant="contained"
+              startIcon={<LocationOn />}
+              onClick={calculateOptimalLocation}
+              disabled={calculatingOptimalLocation || participantLocations.size === 0}
+            >
+              {calculatingOptimalLocation ? 'Calculating...' : 'Calculate Optimal Location'}
+            </Button>
+          </Box>
+
+          {optimalLocationError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {optimalLocationError}
+            </Alert>
+          )}
+
+          {optimalLocation && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Optimal location calculated! Total travel distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
+            </Alert>
+          )}
 
           <Divider sx={{ my: 3 }} />
 

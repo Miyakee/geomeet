@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { UpdateLocationResponse } from '../services/api';
+import { UpdateLocationResponse, CalculateOptimalLocationResponse } from '../services/api';
 import { reverseGeocode } from '../services/geocodingService';
 import { SessionDetailResponse, ParticipantLocation } from '../types/session';
 import SockJS from 'sockjs-client';
@@ -10,6 +10,7 @@ interface UseWebSocketProps {
   onSessionUpdate: (session: SessionDetailResponse) => void;
   onLocationUpdate: (location: ParticipantLocation, userId: number) => void;
   onAddressUpdate: (address: string, userId: number) => void;
+  onOptimalLocationUpdate?: (optimalLocation: CalculateOptimalLocationResponse) => void;
 }
 
 export const useWebSocket = ({
@@ -17,6 +18,7 @@ export const useWebSocket = ({
   onSessionUpdate,
   onLocationUpdate,
   onAddressUpdate,
+  onOptimalLocationUpdate,
 }: UseWebSocketProps) => {
   const stompClientRef = useRef<Client | null>(null);
 
@@ -82,6 +84,19 @@ export const useWebSocket = ({
               console.error('Failed to parse location update message:', err);
             }
           });
+
+          // Subscribe to optimal location updates
+          if (onOptimalLocationUpdate) {
+            client.subscribe(`/topic/session/${sessionId}/optimal-location`, (message) => {
+              try {
+                const optimalLocation: CalculateOptimalLocationResponse = JSON.parse(message.body);
+                console.log('Parsed optimal location update:', optimalLocation);
+                onOptimalLocationUpdate(optimalLocation);
+              } catch (err) {
+                console.error('Failed to parse optimal location message:', err);
+              }
+            });
+          }
         },
         onStompError: (frame) => {
           console.error('WebSocket STOMP error:', frame);
@@ -110,6 +125,6 @@ export const useWebSocket = ({
         stompClientRef.current = null;
       }
     };
-  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate]);
+  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate]);
 };
 
