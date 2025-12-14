@@ -77,6 +77,22 @@ public class GetSessionDetailsUseCase {
             })
             .collect(Collectors.toList());
 
+        // Check if initiator is in the participants list, if not, add them
+        boolean initiatorInParticipants = participantInfos.stream()
+            .anyMatch(p -> p.getUserId().equals(session.getInitiatorId()));
+        
+        if (!initiatorInParticipants) {
+            // Add initiator as a participant
+            GetSessionDetailsResult.ParticipantInfo initiatorInfo = GetSessionDetailsResult.ParticipantInfo.builder()
+                .participantId(null) // Initiator doesn't have a participant ID
+                .userId(session.getInitiatorId())
+                .username(initiator.getUsername().getValue())
+                .email(initiator.getEmail().getValue())
+                .joinedAt(session.getCreatedAt().format(DATE_TIME_FORMATTER))
+                .build();
+            participantInfos.add(0, initiatorInfo); // Add at the beginning
+        }
+
         // Return result
         return GetSessionDetailsResult.builder()
             .id(session.getId())

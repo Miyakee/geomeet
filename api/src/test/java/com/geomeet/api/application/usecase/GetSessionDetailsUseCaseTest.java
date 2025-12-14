@@ -132,8 +132,12 @@ class GetSessionDetailsUseCaseTest {
         assertEquals(initiatorId, result.getInitiatorId());
         assertEquals("initiator", result.getInitiatorUsername());
         assertEquals(SessionStatus.ACTIVE.getValue(), result.getStatus());
-        assertEquals(1, result.getParticipants().size());
-        assertEquals(1L, result.getParticipantCount());
+        // Initiator is automatically added to participants list, so we have initiator + 1 participant = 2
+        assertEquals(2, result.getParticipants().size());
+        assertEquals(2L, result.getParticipantCount());
+        // First participant should be the initiator
+        assertEquals("initiator", result.getParticipants().get(0).getUsername());
+        assertEquals(initiatorId, result.getParticipants().get(0).getUserId());
 
         verify(sessionRepository).findBySessionId(any(SessionId.class));
         verify(sessionParticipantRepository).existsBySessionIdAndUserId(sessionId, initiatorId);
@@ -157,8 +161,15 @@ class GetSessionDetailsUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(sessionId, result.getId());
-        assertEquals(1, result.getParticipants().size());
-        assertEquals("participant", result.getParticipants().get(0).getUsername());
+        // Initiator is automatically added to participants list, so we have initiator + 1 participant = 2
+        assertEquals(2, result.getParticipants().size());
+        assertEquals(2L, result.getParticipantCount());
+        // First participant should be the initiator
+        assertEquals("initiator", result.getParticipants().get(0).getUsername());
+        assertEquals(initiatorId, result.getParticipants().get(0).getUserId());
+        // Second participant should be the joined participant
+        assertEquals("participant", result.getParticipants().get(1).getUsername());
+        assertEquals(userId, result.getParticipants().get(1).getUserId());
 
         verify(sessionRepository).findBySessionId(any(SessionId.class));
         verify(sessionParticipantRepository).existsBySessionIdAndUserId(sessionId, userId);

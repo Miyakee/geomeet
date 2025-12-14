@@ -299,7 +299,7 @@ const SessionPage = () => {
             <List sx={{ width: '100%', mt: 2 }}>
               {session.participants.map((participant) => (
                 <ListItem
-                  key={participant.participantId}
+                  key={participant.participantId || `user-${participant.userId}`}
                   sx={{
                     bgcolor: participant.userId === user?.id ? 'action.selected' : 'transparent',
                     borderRadius: 1,
