@@ -60,6 +60,12 @@ public class SessionEntity {
     @Column(name = "updated_by", length = 50)
     private String updatedBy;
 
+    @Column(name = "meeting_location_latitude")
+    private Double meetingLocationLatitude;
+
+    @Column(name = "meeting_location_longitude")
+    private Double meetingLocationLongitude;
+
     public SessionEntity(String sessionId, Long initiatorId, String status) {
         this.sessionId = sessionId;
         this.initiatorId = initiatorId;

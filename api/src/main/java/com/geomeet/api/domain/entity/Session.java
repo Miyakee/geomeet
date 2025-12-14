@@ -1,5 +1,6 @@
 package com.geomeet.api.domain.entity;
 
+import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class Session {
     private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
+    private Location meetingLocation; // Meeting location set by initiator
 
     // Private constructor for reconstruction
     private Session() {
@@ -56,7 +58,8 @@ public class Session {
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String createdBy,
-        String updatedBy
+        String updatedBy,
+        Location meetingLocation
     ) {
         Session session = new Session();
         session.id = id;
@@ -67,7 +70,25 @@ public class Session {
         session.updatedAt = updatedAt;
         session.createdBy = createdBy;
         session.updatedBy = updatedBy;
+        session.meetingLocation = meetingLocation;
         return session;
+    }
+
+    /**
+     * Factory method to reconstruct Session from persistence (backward compatibility).
+     * Meeting location will be null.
+     */
+    public static Session reconstruct(
+        Long id,
+        SessionId sessionId,
+        Long initiatorId,
+        SessionStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String createdBy,
+        String updatedBy
+    ) {
+        return reconstruct(id, sessionId, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, null);
     }
 
     /**
@@ -86,6 +107,25 @@ public class Session {
      */
     public boolean isActive() {
         return this.status == SessionStatus.ACTIVE;
+    }
+
+    /**
+     * Business method: Update meeting location.
+     * Only the initiator can update the meeting location.
+     *
+     * @param location the new meeting location
+     * @throws IllegalStateException if session is not active
+     * @throws IllegalArgumentException if user is not the initiator
+     */
+    public void updateMeetingLocation(Long userId, Location location) {
+        if (!this.isActive()) {
+            throw new IllegalStateException("Cannot update meeting location for an ended session");
+        }
+        if (!this.initiatorId.equals(userId)) {
+            throw new IllegalArgumentException("Only the session initiator can update the meeting location");
+        }
+        this.meetingLocation = location;
+        this.updatedAt = LocalDateTime.now();
     }
 }
 

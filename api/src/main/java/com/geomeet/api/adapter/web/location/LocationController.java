@@ -3,12 +3,17 @@ package com.geomeet.api.adapter.web.location;
 import com.geomeet.api.adapter.web.location.dto.CalculateOptimalLocationResponse;
 import com.geomeet.api.adapter.web.location.dto.UpdateLocationRequest;
 import com.geomeet.api.adapter.web.location.dto.UpdateLocationResponse;
+import com.geomeet.api.adapter.web.location.dto.UpdateMeetingLocationRequest;
+import com.geomeet.api.adapter.web.location.dto.UpdateMeetingLocationResponse;
 import com.geomeet.api.application.command.CalculateOptimalLocationCommand;
 import com.geomeet.api.application.command.UpdateLocationCommand;
+import com.geomeet.api.application.command.UpdateMeetingLocationCommand;
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
 import com.geomeet.api.application.result.UpdateLocationResult;
+import com.geomeet.api.application.result.UpdateMeetingLocationResult;
 import com.geomeet.api.application.usecase.CalculateOptimalLocationUseCase;
 import com.geomeet.api.application.usecase.UpdateLocationUseCase;
+import com.geomeet.api.application.usecase.UpdateMeetingLocationUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,13 +34,16 @@ public class LocationController {
 
     private final UpdateLocationUseCase updateLocationUseCase;
     private final CalculateOptimalLocationUseCase calculateOptimalLocationUseCase;
+    private final UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
 
     public LocationController(
         UpdateLocationUseCase updateLocationUseCase,
-        CalculateOptimalLocationUseCase calculateOptimalLocationUseCase
+        CalculateOptimalLocationUseCase calculateOptimalLocationUseCase,
+        UpdateMeetingLocationUseCase updateMeetingLocationUseCase
     ) {
         this.updateLocationUseCase = updateLocationUseCase;
         this.calculateOptimalLocationUseCase = calculateOptimalLocationUseCase;
+        this.updateMeetingLocationUseCase = updateMeetingLocationUseCase;
     }
 
     /**
@@ -110,6 +118,45 @@ public class LocationController {
             .optimalLongitude(result.getOptimalLongitude())
             .totalTravelDistance(result.getTotalTravelDistance())
             .participantCount(result.getParticipantCount())
+            .message(result.getMessage())
+            .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update the meeting location for a session.
+     * Only the session initiator can update the meeting location.
+     *
+     * @param sessionId the session ID
+     * @param request the meeting location update request
+     * @param authentication the authenticated user
+     * @return meeting location update response
+     */
+    @PutMapping("/{sessionId}/meeting-location")
+    public ResponseEntity<UpdateMeetingLocationResponse> updateMeetingLocation(
+        @PathVariable String sessionId,
+        @Valid @RequestBody UpdateMeetingLocationRequest request,
+        Authentication authentication
+    ) {
+        // Extract user ID from JWT token
+        Long userId = (Long) authentication.getPrincipal();
+
+        // Execute use case
+        UpdateMeetingLocationCommand command = UpdateMeetingLocationCommand.of(
+            sessionId,
+            userId,
+            request.getLatitude(),
+            request.getLongitude()
+        );
+        UpdateMeetingLocationResult result = updateMeetingLocationUseCase.execute(command);
+
+        // Convert result to response DTO
+        UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.builder()
+            .sessionId(result.getSessionId())
+            .sessionIdString(result.getSessionIdString())
+            .latitude(result.getLatitude())
+            .longitude(result.getLongitude())
             .message(result.getMessage())
             .build();
 

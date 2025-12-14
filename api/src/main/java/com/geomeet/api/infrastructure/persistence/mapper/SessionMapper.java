@@ -1,6 +1,7 @@
 package com.geomeet.api.infrastructure.persistence.mapper;
 
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import com.geomeet.api.infrastructure.persistence.entity.SessionEntity;
@@ -17,6 +18,13 @@ public interface SessionMapper {
         if (entity == null) {
             return null;
         }
+        Location meetingLocation = null;
+        if (entity.getMeetingLocationLatitude() != null && entity.getMeetingLocationLongitude() != null) {
+            meetingLocation = Location.of(
+                entity.getMeetingLocationLatitude(),
+                entity.getMeetingLocationLongitude()
+            );
+        }
         return Session.reconstruct(
             entity.getId(),
             SessionId.fromString(entity.getSessionId()),
@@ -25,7 +33,8 @@ public interface SessionMapper {
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
             entity.getCreatedBy(),
-            entity.getUpdatedBy()
+            entity.getUpdatedBy(),
+            meetingLocation
         );
     }
 
@@ -33,7 +42,7 @@ public interface SessionMapper {
         if (domain == null) {
             return null;
         }
-        return SessionEntity.builder()
+        SessionEntity.SessionEntityBuilder builder = SessionEntity.builder()
             .id(domain.getId())
             .sessionId(domain.getSessionId().getValue())
             .initiatorId(domain.getInitiatorId())
@@ -41,7 +50,13 @@ public interface SessionMapper {
             .createdAt(domain.getCreatedAt())
             .updatedAt(domain.getUpdatedAt())
             .createdBy(domain.getCreatedBy())
-            .updatedBy(domain.getUpdatedBy())
-            .build();
+            .updatedBy(domain.getUpdatedBy());
+        
+        if (domain.getMeetingLocation() != null) {
+            builder.meetingLocationLatitude(domain.getMeetingLocation().getLatitude().getValue())
+                   .meetingLocationLongitude(domain.getMeetingLocation().getLongitude().getValue());
+        }
+        
+        return builder.build();
     }
 }
