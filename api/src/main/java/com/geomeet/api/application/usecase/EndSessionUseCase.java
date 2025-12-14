@@ -19,9 +19,14 @@ public class EndSessionUseCase {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final SessionRepository sessionRepository;
+    private final BroadcastSessionEndUseCase broadcastSessionEndUseCase;
 
-    public EndSessionUseCase(SessionRepository sessionRepository) {
+    public EndSessionUseCase(
+        SessionRepository sessionRepository,
+        BroadcastSessionEndUseCase broadcastSessionEndUseCase
+    ) {
         this.sessionRepository = sessionRepository;
+        this.broadcastSessionEndUseCase = broadcastSessionEndUseCase;
     }
 
     /**
@@ -51,13 +56,18 @@ public class EndSessionUseCase {
         Session savedSession = sessionRepository.save(session);
 
         // Build result
-        return EndSessionResult.builder()
+        EndSessionResult result = EndSessionResult.builder()
             .sessionId(savedSession.getId())
             .sessionIdString(savedSession.getSessionId().getValue())
             .status(savedSession.getStatus().getValue())
             .endedAt(savedSession.getUpdatedAt().format(DATE_TIME_FORMATTER))
             .message("Session ended successfully")
             .build();
+
+        // Broadcast session end notification to all subscribers
+        broadcastSessionEndUseCase.execute(result);
+
+        return result;
     }
 }
 

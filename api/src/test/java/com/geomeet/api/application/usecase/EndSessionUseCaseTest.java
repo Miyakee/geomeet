@@ -28,6 +28,9 @@ class EndSessionUseCaseTest {
     @Mock
     private SessionRepository sessionRepository;
 
+    @Mock
+    private BroadcastSessionEndUseCase broadcastSessionEndUseCase;
+
     private EndSessionUseCase endSessionUseCase;
 
     private Long initiatorId;
@@ -39,7 +42,7 @@ class EndSessionUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        endSessionUseCase = new EndSessionUseCase(sessionRepository);
+        endSessionUseCase = new EndSessionUseCase(sessionRepository, broadcastSessionEndUseCase);
 
         initiatorId = 1L;
         differentUserId = 2L;
@@ -81,6 +84,7 @@ class EndSessionUseCaseTest {
 
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionRepository).save(any(Session.class));
+        verify(broadcastSessionEndUseCase).execute(any(EndSessionResult.class));
     }
 
     @Test
@@ -145,6 +149,7 @@ class EndSessionUseCaseTest {
 
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionRepository, never()).save(any(Session.class));
+        verify(broadcastSessionEndUseCase, never()).execute(any(EndSessionResult.class));
     }
 }
 
