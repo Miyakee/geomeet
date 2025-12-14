@@ -1,11 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { sessionApi, UpdateMeetingLocationResponse } from '../services/api';
+import { reverseGeocode } from '../services/geocodingService';
 
 export const useMeetingLocation = (sessionId: string | undefined) => {
   const [meetingLocation, setMeetingLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [meetingLocationAddress, setMeetingLocationAddress] = useState<string | null>(null);
+  const [loadingAddress, setLoadingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,8 +54,30 @@ export const useMeetingLocation = (sessionId: string | undefined) => {
     });
   }, []);
 
+  // Fetch address when meeting location changes
+  useEffect(() => {
+    if (meetingLocation) {
+      setLoadingAddress(true);
+      reverseGeocode(meetingLocation.latitude, meetingLocation.longitude)
+        .then((address) => {
+          setMeetingLocationAddress(address);
+        })
+        .catch((err) => {
+          console.error('Failed to geocode meeting location:', err);
+          setMeetingLocationAddress(null);
+        })
+        .finally(() => {
+          setLoadingAddress(false);
+        });
+    } else {
+      setMeetingLocationAddress(null);
+    }
+  }, [meetingLocation]);
+
   return {
     meetingLocation,
+    meetingLocationAddress,
+    loadingAddress,
     loading,
     error,
     updateMeetingLocation,

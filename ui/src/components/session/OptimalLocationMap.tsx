@@ -87,6 +87,7 @@ interface OptimalLocationMapProps {
     latitude: number;
     longitude: number;
   } | null;
+  meetingLocationAddress?: string | null;
 }
 
 // Import react-leaflet components directly
@@ -99,6 +100,7 @@ export const OptimalLocationMap = ({
   participantNames,
   currentUserLocation,
   meetingLocation,
+  meetingLocationAddress,
 }: OptimalLocationMapProps) => {
   const [mounted, setMounted] = useState(false);
 
@@ -179,10 +181,15 @@ export const OptimalLocationMap = ({
                   <Typography variant="subtitle2" fontWeight="bold" color="error">
                     Meeting Location
                   </Typography>
-                  <Typography variant="body2">
+                  {meetingLocationAddress ? (
+                    <Typography variant="body2" sx={{ mt: 0.5, mb: 0.5 }}>
+                      {meetingLocationAddress}
+                    </Typography>
+                  ) : null}
+                  <Typography variant="body2" color="text.secondary">
                     {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     Set by session initiator
                   </Typography>
                 </Box>

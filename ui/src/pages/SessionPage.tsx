@@ -64,6 +64,8 @@ const SessionPage = () => {
 
   const {
     meetingLocation,
+    meetingLocationAddress,
+    loadingAddress: loadingMeetingLocationAddress,
     loading: updatingMeetingLocation,
     error: meetingLocationError,
     updateMeetingLocation,
@@ -243,6 +245,7 @@ const SessionPage = () => {
               latitude: meetingLocation.latitude,
               longitude: meetingLocation.longitude,
             } : null}
+            meetingLocationAddress={meetingLocationAddress}
           />
 
           {/* Calculate Optimal Location Button */}
@@ -311,6 +314,8 @@ const SessionPage = () => {
           {/* Meeting Location Section */}
           <MeetingLocationSection
             meetingLocation={meetingLocation}
+            meetingLocationAddress={meetingLocationAddress}
+            loadingAddress={loadingMeetingLocationAddress}
             isInitiator={isInitiator}
             onUpdateLocation={updateMeetingLocation}
             loading={updatingMeetingLocation}

@@ -17,6 +17,8 @@ import { Edit, LocationOn, Check, Close } from '@mui/icons-material';
 
 interface MeetingLocationSectionProps {
   meetingLocation: { latitude: number; longitude: number } | null;
+  meetingLocationAddress?: string | null;
+  loadingAddress?: boolean;
   isInitiator: boolean;
   onUpdateLocation: (latitude: number, longitude: number) => Promise<void>;
   loading?: boolean;
@@ -25,6 +27,8 @@ interface MeetingLocationSectionProps {
 
 export const MeetingLocationSection = ({
   meetingLocation,
+  meetingLocationAddress,
+  loadingAddress = false,
   isInitiator,
   onUpdateLocation,
   loading = false,
@@ -134,11 +138,17 @@ export const MeetingLocationSection = ({
 
         {meetingLocation ? (
           <Box>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              <strong>Latitude:</strong> {meetingLocation.latitude.toFixed(6)}
-            </Typography>
-            <Typography variant="body1">
-              <strong>Longitude:</strong> {meetingLocation.longitude.toFixed(6)}
+            {meetingLocationAddress ? (
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                <strong>Address:</strong> {meetingLocationAddress}
+              </Typography>
+            ) : loadingAddress ? (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Loading address...
+              </Typography>
+            ) : null}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              <strong>Coordinates:</strong> {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
             </Typography>
           </Box>
         ) : (
