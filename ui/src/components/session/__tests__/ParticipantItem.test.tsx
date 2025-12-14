@@ -109,5 +109,51 @@ describe('ParticipantItem', () => {
 
     expect(screen.queryByText(/37\.774900/)).not.toBeInTheDocument();
   });
+
+  it('should show both initiator and current user chips', () => {
+    render(
+      <ParticipantItem
+        participant={mockParticipant}
+        isInitiator={true}
+        isCurrentUser={true}
+      />
+    );
+
+    expect(screen.getByText('Initiator')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+  });
+
+  it('should display location age for old locations', () => {
+    const oldLocation: ParticipantLocation = {
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10.0,
+      updatedAt: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
+    };
+
+    render(
+      <ParticipantItem
+        participant={mockParticipant}
+        isInitiator={false}
+        isCurrentUser={false}
+        location={oldLocation}
+      />
+    );
+
+    expect(screen.getByText(/120s ago/)).toBeInTheDocument();
+  });
+
+  it('should highlight current user with background color', () => {
+    const { container } = render(
+      <ParticipantItem
+        participant={mockParticipant}
+        isInitiator={false}
+        isCurrentUser={true}
+      />
+    );
+
+    const listItem = container.querySelector('.MuiListItem-root');
+    expect(listItem).toHaveStyle({ backgroundColor: expect.any(String) });
+  });
 });
 

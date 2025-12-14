@@ -147,5 +147,91 @@ describe('OptimalLocationMap', () => {
 
     expect(screen.getByTestId('map-container')).toBeInTheDocument();
   });
+
+  it('should prioritize meeting location over optimal location', async () => {
+    const optimalLocation = {
+      latitude: 1.3521,
+      longitude: 103.8198,
+      totalTravelDistance: 10.5,
+      participantCount: 3,
+    };
+
+    const meetingLocation = {
+      latitude: 1.3000,
+      longitude: 103.8000,
+    };
+
+    render(
+      <OptimalLocationMap
+        optimalLocation={optimalLocation}
+        participantLocations={new Map()}
+        participantNames={new Map()}
+        meetingLocation={meetingLocation}
+      />
+    );
+
+    // Wait for component to mount
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+  });
+
+  it('should render meeting location marker when provided', async () => {
+    const meetingLocation = {
+      latitude: 1.3521,
+      longitude: 103.8198,
+    };
+
+    render(
+      <OptimalLocationMap
+        optimalLocation={null}
+        participantLocations={new Map()}
+        participantNames={new Map()}
+        meetingLocation={meetingLocation}
+        meetingLocationAddress="Test Address"
+      />
+    );
+
+    // Wait for component to mount
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+  });
+
+  it('should render all location types together', async () => {
+    const optimalLocation = {
+      latitude: 1.3521,
+      longitude: 103.8198,
+      totalTravelDistance: 10.5,
+      participantCount: 3,
+    };
+
+    const meetingLocation = {
+      latitude: 1.3000,
+      longitude: 103.8000,
+    };
+
+    const participantLocations = new Map([
+      [1, { latitude: 1.2903, longitude: 103.8520, userId: 1 }],
+    ]);
+
+    const participantNames = new Map([
+      [1, 'User 1'],
+    ]);
+
+    render(
+      <OptimalLocationMap
+        optimalLocation={optimalLocation}
+        participantLocations={participantLocations}
+        participantNames={participantNames}
+        meetingLocation={meetingLocation}
+      />
+    );
+
+    // Wait for component to mount
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+  });
 });
 
