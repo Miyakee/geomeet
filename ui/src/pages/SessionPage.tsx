@@ -260,7 +260,31 @@ const SessionPage = () => {
           )}
 
           {optimalLocation && (
-            <Alert severity="success" sx={{ mb: 2 }}>
+            <Alert 
+              severity="success" 
+              sx={{ mb: 2 }}
+              action={
+                isInitiator && (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        await updateMeetingLocation(
+                          optimalLocation.optimalLatitude,
+                          optimalLocation.optimalLongitude
+                        );
+                      } catch (err) {
+                        // Error is handled by useMeetingLocation hook
+                      }
+                    }}
+                    disabled={updatingMeetingLocation}
+                  >
+                    {updatingMeetingLocation ? 'Setting...' : 'Set as Meeting Location'}
+                  </Button>
+                )
+              }
+            >
               Optimal location calculated! Total travel distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
             </Alert>
           )}
