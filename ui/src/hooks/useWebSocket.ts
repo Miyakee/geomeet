@@ -5,6 +5,17 @@ import { SessionDetailResponse, ParticipantLocation } from '../types/session';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
+export interface SessionEndNotification {
+  sessionId: number;
+  sessionIdString: string;
+  status: string;
+  endedAt: string;
+  message: string;
+  hasMeetingLocation: boolean;
+  meetingLocationLatitude?: number | null;
+  meetingLocationLongitude?: number | null;
+}
+
 interface UseWebSocketProps {
   sessionId: string | undefined;
   onSessionUpdate: (session: SessionDetailResponse) => void;
@@ -12,6 +23,7 @@ interface UseWebSocketProps {
   onAddressUpdate: (address: string, userId: number) => void;
   onOptimalLocationUpdate?: (optimalLocation: CalculateOptimalLocationResponse) => void;
   onMeetingLocationUpdate?: (meetingLocation: UpdateMeetingLocationResponse) => void;
+  onSessionEnd?: (notification: SessionEndNotification) => void;
 }
 
 export const useWebSocket = ({
@@ -21,6 +33,7 @@ export const useWebSocket = ({
   onAddressUpdate,
   onOptimalLocationUpdate,
   onMeetingLocationUpdate,
+  onSessionEnd,
 }: UseWebSocketProps) => {
   const stompClientRef = useRef<Client | null>(null);
 
@@ -112,6 +125,19 @@ export const useWebSocket = ({
               }
             });
           }
+
+          // Subscribe to session end notifications
+          if (onSessionEnd) {
+            client.subscribe(`/topic/session/${sessionId}/end`, (message) => {
+              try {
+                const sessionEndNotification: SessionEndNotification = JSON.parse(message.body);
+                console.log('Parsed session end notification:', sessionEndNotification);
+                onSessionEnd(sessionEndNotification);
+              } catch (err) {
+                console.error('Failed to parse session end message:', err);
+              }
+            });
+          }
         },
         onStompError: (frame) => {
           console.error('WebSocket STOMP error:', frame);
@@ -140,6 +166,6 @@ export const useWebSocket = ({
         stompClientRef.current = null;
       }
     };
-  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate, onMeetingLocationUpdate]);
+  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate, onMeetingLocationUpdate, onSessionEnd]);
 };
 

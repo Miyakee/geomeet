@@ -32,6 +32,7 @@ import { MeetingLocationSection } from '../components/session/MeetingLocationSec
 import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
 import { ParticipantLocation, SessionDetailResponse } from '../types/session';
 import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
+import { SessionEndNotification } from '../hooks/useWebSocket';
 
 const SessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -59,6 +60,7 @@ const SessionPage = () => {
   const [participantLocations, setParticipantLocations] = useState<Map<number, ParticipantLocation>>(new Map());
   const [participantAddresses, setParticipantAddresses] = useState<Map<number, string>>(new Map());
   const [participantNames, setParticipantNames] = useState<Map<number, string>>(new Map());
+  const [sessionEndNotification, setSessionEndNotification] = useState<SessionEndNotification | null>(null);
 
   const {
     optimalLocation,
@@ -114,6 +116,18 @@ const SessionPage = () => {
     updateMeetingLocationFromResponse(meetingLocation);
   }, [updateMeetingLocationFromResponse]);
 
+  const handleSessionEnd = useCallback((notification: SessionEndNotification) => {
+    // Update session status to Ended
+    if (session) {
+      updateSession({
+        ...session,
+        status: 'Ended',
+      });
+    }
+    // Store notification for display
+    setSessionEndNotification(notification);
+  }, [session, updateSession]);
+
   useWebSocket({
     sessionId,
     onSessionUpdate: handleSessionUpdate,
@@ -121,6 +135,7 @@ const SessionPage = () => {
     onAddressUpdate: handleAddressUpdate,
     onOptimalLocationUpdate: handleOptimalLocationUpdate,
     onMeetingLocationUpdate: handleMeetingLocationUpdate,
+    onSessionEnd: handleSessionEnd,
   });
 
   // Update participant names from session data
