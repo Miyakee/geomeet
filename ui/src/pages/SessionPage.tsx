@@ -207,6 +207,10 @@ const SessionPage = () => {
               ])
             )}
             participantNames={participantNames}
+            currentUserLocation={currentLocation ? {
+              latitude: currentLocation.coords.latitude,
+              longitude: currentLocation.coords.longitude,
+            } : null}
           />
 
           {/* Calculate Optimal Location Button */}

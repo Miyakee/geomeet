@@ -61,6 +61,10 @@ interface OptimalLocationMapProps {
   } | null;
   participantLocations: Map<number, ParticipantLocationData>;
   participantNames: Map<number, string>;
+  currentUserLocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 // Import react-leaflet components directly
@@ -71,6 +75,7 @@ export const OptimalLocationMap = ({
   optimalLocation,
   participantLocations,
   participantNames,
+  currentUserLocation,
 }: OptimalLocationMapProps) => {
   const [mounted, setMounted] = useState(false);
 
@@ -78,11 +83,13 @@ export const OptimalLocationMap = ({
     setMounted(true);
   }, []);
 
-  // Default to Singapore center if no optimal location
+  // Default center: use current user location, then optimal location, then Singapore
   const defaultCenter: [number, number] = [1.3521, 103.8198];
   const center: [number, number] = optimalLocation
     ? [optimalLocation.latitude, optimalLocation.longitude]
-    : defaultCenter;
+    : currentUserLocation
+      ? [currentUserLocation.latitude, currentUserLocation.longitude]
+      : defaultCenter;
 
   // Calculate bounds to fit all markers
   const allLocations: Array<[number, number]> = [];
