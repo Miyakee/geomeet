@@ -1,0 +1,93 @@
+package com.geomeet.api.application.usecase;
+
+import com.geomeet.api.application.command.GetSessionDetailsCommand;
+import com.geomeet.api.application.result.GetSessionDetailsResult;
+import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.entity.SessionParticipant;
+import com.geomeet.api.domain.entity.User;
+import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.valueobject.SessionId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+
+/**
+ * Application service (Use Case) for getting session details.
+ * Orchestrates the session details retrieval flow.
+ */
+@Service
+public class GetSessionDetailsUseCase {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    private final SessionRepository sessionRepository;
+    private final SessionParticipantRepository sessionParticipantRepository;
+    private final UserRepository userRepository;
+
+    public GetSessionDetailsUseCase(
+        SessionRepository sessionRepository,
+        SessionParticipantRepository sessionParticipantRepository,
+        UserRepository userRepository
+    ) {
+        this.sessionRepository = sessionRepository;
+        this.sessionParticipantRepository = sessionParticipantRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Executes the get session details use case.
+     * Retrieves session information and all participants.
+     *
+     * @param command the get session details command
+     * @return session details result with participants
+     * @throws DomainException if session not found, user not found, or access denied
+     */
+    public GetSessionDetailsResult execute(GetSessionDetailsCommand command) {
+        // Find session by sessionId
+        SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
+        Session session = sessionRepository.findBySessionId(sessionIdVO)
+            .orElseThrow(() -> new DomainException("Session not found"));
+
+        // Check if user is a participant or initiator
+        boolean isParticipant = sessionParticipantRepository.existsBySessionIdAndUserId(
+            session.getId(), command.getUserId()
+        );
+        if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
+            throw new DomainException("Access denied: User is not a participant or initiator");
+        }
+
+        // Get initiator info
+        User initiator = userRepository.findById(session.getInitiatorId())
+            .orElseThrow(() -> new DomainException("Initiator not found"));
+
+        // Get all participants
+        List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
+        List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
+            .map(participant -> {
+                User user = userRepository.findById(participant.getUserId())
+                    .orElseThrow(() -> new DomainException("User not found for participant"));
+                return GetSessionDetailsResult.ParticipantInfo.builder()
+                    .participantId(participant.getId())
+                    .userId(participant.getUserId())
+                    .username(user.getUsername().getValue())
+                    .email(user.getEmail().getValue())
+                    .joinedAt(participant.getJoinedAt().format(DATE_TIME_FORMATTER))
+                    .build();
+            })
+            .collect(Collectors.toList());
+
+        // Return result
+        return GetSessionDetailsResult.builder()
+            .id(session.getId())
+            .sessionId(session.getSessionId().getValue())
+            .initiatorId(session.getInitiatorId())
+            .initiatorUsername(initiator.getUsername().getValue())
+            .status(session.getStatus().getValue())
+            .createdAt(session.getCreatedAt().format(DATE_TIME_FORMATTER))
+            .participants(participantInfos)
+            .participantCount((long) participantInfos.size())
+            .build();
+    }
+}
+

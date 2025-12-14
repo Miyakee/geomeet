@@ -5,14 +5,21 @@ import com.geomeet.api.adapter.web.session.dto.CreateSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.InviteLinkResponse;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionResponse;
+import com.geomeet.api.adapter.web.session.dto.ParticipantInfo;
+import com.geomeet.api.adapter.web.session.dto.SessionDetailResponse;
 import com.geomeet.api.application.command.CreateSessionCommand;
+import com.geomeet.api.application.command.GenerateInviteLinkCommand;
+import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
+import com.geomeet.api.application.result.GenerateInviteLinkResult;
+import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.result.JoinSessionResult;
+import com.geomeet.api.application.usecase.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.CreateSessionUseCase;
+import com.geomeet.api.application.usecase.GenerateInviteLinkUseCase;
+import com.geomeet.api.application.usecase.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.JoinSessionUseCase;
-import com.geomeet.api.application.usecase.SessionRepository;
-import com.geomeet.api.domain.valueobject.SessionId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,16 +41,22 @@ public class SessionController {
 
     private final CreateSessionUseCase createSessionUseCase;
     private final JoinSessionUseCase joinSessionUseCase;
-    private final SessionRepository sessionRepository;
+    private final GetSessionDetailsUseCase getSessionDetailsUseCase;
+    private final GenerateInviteLinkUseCase generateInviteLinkUseCase;
+    private final BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
 
     public SessionController(
         CreateSessionUseCase createSessionUseCase,
         JoinSessionUseCase joinSessionUseCase,
-        SessionRepository sessionRepository
+        GetSessionDetailsUseCase getSessionDetailsUseCase,
+        GenerateInviteLinkUseCase generateInviteLinkUseCase,
+        BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase
     ) {
         this.createSessionUseCase = createSessionUseCase;
         this.joinSessionUseCase = joinSessionUseCase;
-        this.sessionRepository = sessionRepository;
+        this.getSessionDetailsUseCase = getSessionDetailsUseCase;
+        this.generateInviteLinkUseCase = generateInviteLinkUseCase;
+        this.broadcastSessionUpdateUseCase = broadcastSessionUpdateUseCase;
     }
 
     @PostMapping
@@ -81,24 +94,15 @@ public class SessionController {
         // Extract user ID from JWT token
         Long userId = (Long) authentication.getPrincipal();
 
-        // Find session
-        SessionId sessionIdVO = SessionId.fromString(sessionId);
-        com.geomeet.api.domain.entity.Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new RuntimeException("Session not found"));
+        // Execute use case
+        GenerateInviteLinkCommand command = GenerateInviteLinkCommand.of(sessionId, userId);
+        GenerateInviteLinkResult result = generateInviteLinkUseCase.execute(command);
 
-        // Verify user is the initiator
-        if (!session.getInitiatorId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        // Generate invite link (using sessionId as the code)
-        String inviteLink = "/join?sessionId=" + sessionId;
-        String inviteCode = sessionId;
-
+        // Convert result to response DTO
         InviteLinkResponse response = InviteLinkResponse.builder()
-            .sessionId(sessionId)
-            .inviteLink(inviteLink)
-            .inviteCode(inviteCode)
+            .sessionId(result.getSessionId())
+            .inviteLink(result.getInviteLink())
+            .inviteCode(result.getInviteCode())
             .message("Invitation link generated successfully")
             .build();
 
@@ -109,31 +113,69 @@ public class SessionController {
      * Join a session using invitation code (sessionId).
      */
     @PostMapping("/join")
-    public ResponseEntity<?> joinSession(
+    public ResponseEntity<JoinSessionResponse> joinSession(
         @Valid @RequestBody JoinSessionRequest request,
         Authentication authentication
     ) {
-        try {
-            // Extract user ID from JWT token
-            Long userId = (Long) authentication.getPrincipal();
+        // Extract user ID from JWT token
+        Long userId = (Long) authentication.getPrincipal();
 
-            JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), userId);
-            JoinSessionResult result = joinSessionUseCase.execute(command);
+        // Execute use case
+        JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), userId);
+        JoinSessionResult result = joinSessionUseCase.execute(command);
 
-            JoinSessionResponse response = JoinSessionResponse.builder()
-                .participantId(result.getParticipantId())
-                .sessionId(result.getSessionId())
-                .sessionIdString(result.getSessionIdString())
-                .userId(result.getUserId())
-                .joinedAt(result.getJoinedAt())
-                .message(result.getMessage())
-                .build();
+        // Convert result to response DTO
+        JoinSessionResponse response = JoinSessionResponse.builder()
+            .participantId(result.getParticipantId())
+            .sessionId(result.getSessionId())
+            .sessionIdString(result.getSessionIdString())
+            .userId(result.getUserId())
+            .joinedAt(result.getJoinedAt())
+            .message(result.getMessage())
+            .build();
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            // Exception will be handled by GlobalExceptionHandler
-            throw e;
-        }
+        // Broadcast session update to all participants
+        broadcastSessionUpdateUseCase.execute(result.getSessionIdString());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Get session details including participants.
+     */
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<SessionDetailResponse> getSessionDetails(
+        @PathVariable String sessionId,
+        Authentication authentication
+    ) {
+        // Extract user ID from JWT token
+        Long userId = (Long) authentication.getPrincipal();
+
+        // Execute use case
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionId, userId);
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Convert result to response DTO
+        SessionDetailResponse response = SessionDetailResponse.builder()
+            .id(result.getId())
+            .sessionId(result.getSessionId())
+            .initiatorId(result.getInitiatorId())
+            .initiatorUsername(result.getInitiatorUsername())
+            .status(result.getStatus())
+            .createdAt(result.getCreatedAt())
+            .participants(result.getParticipants().stream()
+                .map(participant -> ParticipantInfo.builder()
+                    .participantId(participant.getParticipantId())
+                    .userId(participant.getUserId())
+                    .username(participant.getUsername())
+                    .email(participant.getEmail())
+                    .joinedAt(participant.getJoinedAt())
+                    .build())
+                .collect(java.util.stream.Collectors.toList()))
+            .participantCount(result.getParticipantCount())
+            .build();
+
+        return ResponseEntity.ok(response);
     }
 }
 
