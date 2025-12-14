@@ -58,7 +58,7 @@ public class UpdateLocationUseCase {
             throw new DomainException("Cannot update location for an ended session");
         }
 
-        // Find participant
+        // Find participant (initiator should also have a participant record)
         SessionParticipant participant = sessionParticipantRepository
             .findBySessionIdAndUserId(session.getId(), command.getUserId())
             .orElseThrow(() -> new DomainException("User is not a participant in this session"));

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.geomeet.api.application.command.CreateSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,13 +24,16 @@ class CreateSessionUseCaseTest {
     @Mock
     private SessionRepository sessionRepository;
 
+    @Mock
+    private SessionParticipantRepository sessionParticipantRepository;
+
     private CreateSessionUseCase createSessionUseCase;
 
     private Long initiatorId;
 
     @BeforeEach
     void setUp() {
-        createSessionUseCase = new CreateSessionUseCase(sessionRepository);
+        createSessionUseCase = new CreateSessionUseCase(sessionRepository, sessionParticipantRepository);
         initiatorId = 1L;
     }
 
@@ -38,7 +42,31 @@ class CreateSessionUseCaseTest {
         // Given
         CreateSessionCommand command = new CreateSessionCommand(initiatorId);
         Session createdSession = Session.create(initiatorId);
-        when(sessionRepository.save(any(Session.class))).thenReturn(createdSession);
+        // Set ID for the saved session - use the created session's values
+        Session savedSession = Session.reconstruct(
+            100L, // sessionId
+            createdSession.getSessionId(),
+            createdSession.getInitiatorId(),
+            createdSession.getStatus(),
+            java.time.LocalDateTime.now(), // createdAt
+            java.time.LocalDateTime.now(), // updatedAt
+            null, // createdBy
+            null  // updatedBy
+        );
+        when(sessionRepository.save(any(Session.class))).thenReturn(savedSession);
+        
+        java.time.LocalDateTime participantNow = java.time.LocalDateTime.now();
+        SessionParticipant savedParticipant = SessionParticipant.reconstruct(
+            200L, // participantId
+            savedSession.getId(),
+            initiatorId,
+            participantNow, // joinedAt
+            participantNow, // createdAt
+            participantNow, // updatedAt
+            null, // createdBy
+            null  // updatedBy
+        );
+        when(sessionParticipantRepository.save(any(SessionParticipant.class))).thenReturn(savedParticipant);
 
         // When
         CreateSessionResult result = createSessionUseCase.execute(command);
@@ -50,6 +78,7 @@ class CreateSessionUseCaseTest {
         assertEquals(SessionStatus.ACTIVE.getValue(), result.getStatus());
         assertNotNull(result.getCreatedAt());
         verify(sessionRepository).save(any(Session.class));
+        verify(sessionParticipantRepository).save(any(SessionParticipant.class));
     }
 
     @Test
@@ -58,9 +87,16 @@ class CreateSessionUseCaseTest {
         CreateSessionCommand command = new CreateSessionCommand(initiatorId);
         Session session1 = Session.create(initiatorId);
         Session session2 = Session.create(initiatorId);
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        Session savedSession1 = Session.reconstruct(100L, session1.getSessionId(), initiatorId, session1.getStatus(), now, now, null, null);
+        Session savedSession2 = Session.reconstruct(101L, session2.getSessionId(), initiatorId, session2.getStatus(), now, now, null, null);
         when(sessionRepository.save(any(Session.class)))
-            .thenReturn(session1)
-            .thenReturn(session2);
+            .thenReturn(savedSession1)
+            .thenReturn(savedSession2);
+        java.time.LocalDateTime participantNow = java.time.LocalDateTime.now();
+        when(sessionParticipantRepository.save(any(SessionParticipant.class)))
+            .thenReturn(SessionParticipant.reconstruct(200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null))
+            .thenReturn(SessionParticipant.reconstruct(201L, 101L, initiatorId, participantNow, participantNow, participantNow, null, null));
 
         // When
         CreateSessionResult result1 = createSessionUseCase.execute(command);
@@ -75,7 +111,12 @@ class CreateSessionUseCaseTest {
         // Given
         CreateSessionCommand command = new CreateSessionCommand(initiatorId);
         Session createdSession = Session.create(initiatorId);
-        when(sessionRepository.save(any(Session.class))).thenReturn(createdSession);
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        Session savedSession = Session.reconstruct(100L, createdSession.getSessionId(), initiatorId, createdSession.getStatus(), now, now, null, null);
+        when(sessionRepository.save(any(Session.class))).thenReturn(savedSession);
+        java.time.LocalDateTime participantNow = java.time.LocalDateTime.now();
+        when(sessionParticipantRepository.save(any(SessionParticipant.class)))
+            .thenReturn(SessionParticipant.reconstruct(200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null));
 
         // When
         CreateSessionResult result = createSessionUseCase.execute(command);
