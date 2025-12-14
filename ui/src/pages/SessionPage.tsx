@@ -67,6 +67,8 @@ const SessionPage = () => {
     accuracy?: number;
     updatedAt: string;
   }>>(new Map());
+  // Map to store participant addresses: userId -> address string
+  const [participantAddresses, setParticipantAddresses] = useState<Map<number, string>>(new Map());
   const stompClientRef = useRef<Client | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const locationUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -298,6 +300,47 @@ const SessionPage = () => {
     }
   };
 
+  // Reverse geocoding: convert coordinates to address
+  const reverseGeocode = async (latitude: number, longitude: number): Promise<string | null> => {
+    try {
+      // Use OpenStreetMap Nominatim API (free, no API key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'GeoMeet/1.0', // Required by Nominatim
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        console.warn('Reverse geocoding failed:', response.statusText);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      // Extract address components
+      const address = data.address;
+      if (!address) {
+        return null;
+      }
+
+      // Build address string: prefer road, then suburb, then city
+      const parts: string[] = [];
+      if (address.road) parts.push(address.road);
+      if (address.house_number) parts.push(address.house_number);
+      if (address.suburb) parts.push(address.suburb);
+      if (address.city) parts.push(address.city);
+      if (address.country) parts.push(address.country);
+
+      return parts.length > 0 ? parts.join(', ') : null;
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return null;
+    }
+  };
+
   const setupWebSocket = () => {
     if (!sessionId) return;
 
@@ -361,6 +404,18 @@ const SessionPage = () => {
               });
               return newMap;
             });
+            
+            // Reverse geocode to get address
+            reverseGeocode(locationUpdate.latitude, locationUpdate.longitude).then((address) => {
+              if (address) {
+                setParticipantAddresses((prev) => {
+                  const newMap = new Map(prev);
+                  newMap.set(locationUpdate.userId, address);
+                  return newMap;
+                });
+              }
+            });
+            
             console.log('Location updated for participant:', locationUpdate.userId);
           } catch (err) {
             console.error('Failed to parse location update message:', err);
@@ -526,6 +581,9 @@ const SessionPage = () => {
                                   sx={{ fontSize: '0.75rem' }}
                                 >
                                   {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                                  {participantAddresses.has(participant.userId) && (
+                                    <> • {participantAddresses.get(participant.userId)}</>
+                                  )}
                                   {location.accuracy && <> • ±{Math.round(location.accuracy)}m</>}
                                   {!isRecent && <> • {Math.round(locationAge / 1000)}s ago</>}
                                 </Typography>
