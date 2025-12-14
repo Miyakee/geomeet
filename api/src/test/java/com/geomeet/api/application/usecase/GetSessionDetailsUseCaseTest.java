@@ -244,5 +244,42 @@ class GetSessionDetailsUseCaseTest {
 
         assertEquals("User not found for participant", exception.getMessage());
     }
+
+    @Test
+    void shouldNotAddInitiatorWhenAlreadyInParticipants() {
+        // Given - initiator is already a participant
+        SessionParticipant initiatorParticipant = SessionParticipant.reconstruct(
+            201L,
+            sessionId,
+            initiatorId,
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null,
+            null
+        );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(true);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(initiatorParticipant, participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.getParticipants().size());
+        assertEquals(2L, result.getParticipantCount());
+        // Initiator should not be duplicated
+        long initiatorCount = result.getParticipants().stream()
+            .filter(p -> p.getUserId().equals(initiatorId))
+            .count();
+        assertEquals(1, initiatorCount);
+    }
 }
 

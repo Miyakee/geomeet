@@ -314,5 +314,52 @@ class UpdateLocationUseCaseTest {
         assertEquals(longitude, result.getLongitude());
         assertEquals(null, result.getAccuracy());
     }
+
+    @Test
+    void shouldThrowExceptionWhenInitiatorHasNoParticipantRecord() {
+        // Given - user is initiator but no participant record exists
+        // Current implementation requires initiator to have a participant record
+        Long initiatorUserId = 2L; // Same as initiatorId in activeSession
+        UpdateLocationCommand command = UpdateLocationCommand.of(
+            sessionIdString, initiatorUserId, latitude, longitude, accuracy
+        );
+        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
+        when(sessionParticipantRepository.findBySessionIdAndUserId(sessionDbId, initiatorUserId))
+            .thenReturn(Optional.empty());
+
+        // When & Then
+        DomainException exception = assertThrows(DomainException.class, () -> {
+            updateLocationUseCase.execute(command);
+        });
+
+        assertEquals("User is not a participant in this session", exception.getMessage());
+        verify(sessionRepository).findBySessionId(sessionId);
+        verify(sessionParticipantRepository).findBySessionIdAndUserId(sessionDbId, initiatorUserId);
+        verify(participantLocationRepository, never()).save(any(ParticipantLocation.class));
+        verify(broadcastLocationUpdateUseCase, never()).execute(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIsNotParticipantAndNotInitiator() {
+        // Given - user is neither participant nor initiator
+        Long unauthorizedUserId = 999L;
+        UpdateLocationCommand command = UpdateLocationCommand.of(
+            sessionIdString, unauthorizedUserId, latitude, longitude, accuracy
+        );
+        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
+        when(sessionParticipantRepository.findBySessionIdAndUserId(sessionDbId, unauthorizedUserId))
+            .thenReturn(Optional.empty());
+
+        // When & Then
+        DomainException exception = assertThrows(DomainException.class, () -> {
+            updateLocationUseCase.execute(command);
+        });
+
+        assertEquals("User is not a participant in this session", exception.getMessage());
+        verify(sessionRepository).findBySessionId(sessionId);
+        verify(sessionParticipantRepository).findBySessionIdAndUserId(sessionDbId, unauthorizedUserId);
+        verify(participantLocationRepository, never()).save(any(ParticipantLocation.class));
+        verify(broadcastLocationUpdateUseCase, never()).execute(any());
+    }
 }
 

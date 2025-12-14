@@ -3,6 +3,7 @@ package com.geomeet.api.application.usecase;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -187,6 +188,40 @@ class BroadcastSessionUpdateUseCaseTest {
         verify(sessionParticipantRepository).findBySessionId(sessionId);
         verify(userRepository).findById(userId);
         // Should still broadcast even if some participant users are not found (filtered out)
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldNotAddInitiatorWhenAlreadyInParticipants() {
+        // Given - initiator is already a participant
+        SessionParticipant initiatorParticipant = SessionParticipant.reconstruct(
+            201L,
+            sessionId,
+            initiatorId,
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null,
+            null
+        );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(initiatorParticipant, participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(sessionRepository).findBySessionId(any(SessionId.class));
+        verify(userRepository, times(2)).findById(initiatorId); // Called once for initiator, once in participant stream
+        verify(sessionParticipantRepository).findBySessionId(sessionId);
+        verify(userRepository).findById(userId);
         verify(messagingTemplate).convertAndSend(
             eq("/topic/session/" + sessionIdString),
             any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
