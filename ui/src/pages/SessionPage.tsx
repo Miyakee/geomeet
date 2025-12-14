@@ -239,6 +239,10 @@ const SessionPage = () => {
               latitude: currentLocation.coords.latitude,
               longitude: currentLocation.coords.longitude,
             } : null}
+            meetingLocation={meetingLocation ? {
+              latitude: meetingLocation.latitude,
+              longitude: meetingLocation.longitude,
+            } : null}
           />
 
           {/* Calculate Optimal Location Button */}

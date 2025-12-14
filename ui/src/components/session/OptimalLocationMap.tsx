@@ -45,6 +45,24 @@ const ParticipantIcon = L.icon({
   shadowSize: [41, 41],
 });
 
+// Custom icon for meeting location (set by initiator)
+// Create a red marker icon for meeting location
+const MeetingLocationIcon = L.divIcon({
+  className: 'custom-marker-icon',
+  html: `<div style="
+    background-color: #d32f2f;
+    width: 30px;
+    height: 30px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  "></div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
+});
+
 interface ParticipantLocationData {
   latitude: number;
   longitude: number;
@@ -65,6 +83,10 @@ interface OptimalLocationMapProps {
     latitude: number;
     longitude: number;
   } | null;
+  meetingLocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 // Import react-leaflet components directly
@@ -76,6 +98,7 @@ export const OptimalLocationMap = ({
   participantLocations,
   participantNames,
   currentUserLocation,
+  meetingLocation,
 }: OptimalLocationMapProps) => {
   const [mounted, setMounted] = useState(false);
 
@@ -83,16 +106,21 @@ export const OptimalLocationMap = ({
     setMounted(true);
   }, []);
 
-  // Default center: use current user location, then optimal location, then Singapore
+  // Default center: prioritize meeting location, then optimal location, then current user location, then Singapore
   const defaultCenter: [number, number] = [1.3521, 103.8198];
-  const center: [number, number] = optimalLocation
-    ? [optimalLocation.latitude, optimalLocation.longitude]
-    : currentUserLocation
-      ? [currentUserLocation.latitude, currentUserLocation.longitude]
-      : defaultCenter;
+  const center: [number, number] = meetingLocation
+    ? [meetingLocation.latitude, meetingLocation.longitude]
+    : optimalLocation
+      ? [optimalLocation.latitude, optimalLocation.longitude]
+      : currentUserLocation
+        ? [currentUserLocation.latitude, currentUserLocation.longitude]
+        : defaultCenter;
 
   // Calculate bounds to fit all markers
   const allLocations: Array<[number, number]> = [];
+  if (meetingLocation) {
+    allLocations.push([meetingLocation.latitude, meetingLocation.longitude]);
+  }
   if (optimalLocation) {
     allLocations.push([optimalLocation.latitude, optimalLocation.longitude]);
   }
@@ -139,6 +167,28 @@ export const OptimalLocationMap = ({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+
+          {/* Meeting location marker (set by initiator) */}
+          {meetingLocation && (
+            <Marker
+              position={[meetingLocation.latitude, meetingLocation.longitude]}
+              icon={MeetingLocationIcon}
+            >
+              <Popup>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold" color="error">
+                    Meeting Location
+                  </Typography>
+                  <Typography variant="body2">
+                    {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Set by session initiator
+                  </Typography>
+                </Box>
+              </Popup>
+            </Marker>
+          )}
 
           {/* Optimal location marker */}
           {optimalLocation && (
