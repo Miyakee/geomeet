@@ -8,8 +8,13 @@ import {
   CircularProgress,
   Divider,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
-import { LocationOn } from '@mui/icons-material';
+import { LocationOn, Stop } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useParams } from 'react-router-dom';
 import { useSessionData } from '../hooks/useSessionData';
@@ -17,6 +22,7 @@ import { useInviteLink } from '../hooks/useInviteLink';
 import { useLocationTracking } from '../hooks/useLocationTracking';
 import { useOptimalLocation } from '../hooks/useOptimalLocation';
 import { useMeetingLocation } from '../hooks/useMeetingLocation';
+import { useEndSession } from '../hooks/useEndSession';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { SessionHeader } from '../components/session/SessionHeader';
 import { ParticipantList } from '../components/session/ParticipantList';
@@ -71,6 +77,14 @@ const SessionPage = () => {
     updateMeetingLocation,
     updateMeetingLocationFromResponse,
   } = useMeetingLocation(sessionId);
+
+  const {
+    loading: endingSession,
+    error: endSessionError,
+    endSession,
+  } = useEndSession(sessionId);
+
+  const [endSessionDialogOpen, setEndSessionDialogOpen] = useState(false);
 
   const handleSessionUpdate = useCallback((updatedSession: SessionDetailResponse) => {
     updateSession(updatedSession);
@@ -206,6 +220,21 @@ const SessionPage = () => {
           }}
         >
           <SessionHeader session={session} isInitiator={isInitiator} />
+
+          {/* End Session Button - Only visible to initiator for active sessions */}
+          {isInitiator && session.status === 'Active' && (
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Stop />}
+                onClick={() => setEndSessionDialogOpen(true)}
+                disabled={endingSession}
+              >
+                End Session
+              </Button>
+            </Box>
+          )}
 
           <Divider sx={{ my: 2 }} />
 
@@ -351,6 +380,63 @@ const SessionPage = () => {
           </Typography>
         </Paper>
       </Box>
+
+      {/* End Session Confirmation Dialog */}
+      <Dialog
+        open={endSessionDialogOpen}
+        onClose={() => setEndSessionDialogOpen(false)}
+        aria-labelledby="end-session-dialog-title"
+        aria-describedby="end-session-dialog-description"
+      >
+        <DialogTitle id="end-session-dialog-title">
+          End Session
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="end-session-dialog-description">
+            Are you sure you want to end this session? This action cannot be undone.
+            {meetingLocation && (
+              <>
+                <br />
+                <br />
+                The final meeting location will be shared with all participants.
+              </>
+            )}
+            {!meetingLocation && (
+              <>
+                <br />
+                <br />
+                No meeting location has been set. The session will be marked as cancelled.
+              </>
+            )}
+          </DialogContentText>
+          {endSessionError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {endSessionError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEndSessionDialogOpen(false)} disabled={endingSession}>
+            Cancel
+          </Button>
+          <Button
+            onClick={async () => {
+              try {
+                await endSession();
+                setEndSessionDialogOpen(false);
+              } catch (err) {
+                // Error is handled by useEndSession hook
+              }
+            }}
+            variant="contained"
+            color="error"
+            disabled={endingSession}
+            startIcon={<Stop />}
+          >
+            {endingSession ? 'Ending...' : 'End Session'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
