@@ -236,6 +236,38 @@ const SessionPage = () => {
         >
           <SessionHeader session={session} isInitiator={isInitiator} />
 
+          {/* Session End Notification */}
+          {sessionEndNotification && (
+            <Alert 
+              severity={sessionEndNotification.hasMeetingLocation ? 'success' : 'warning'} 
+              sx={{ mb: 2 }}
+              onClose={() => setSessionEndNotification(null)}
+            >
+              {sessionEndNotification.hasMeetingLocation ? (
+                <Box>
+                  <Typography variant="body1" fontWeight="bold" gutterBottom>
+                    Session Ended - Final Meeting Location
+                  </Typography>
+                  <Typography variant="body2">
+                    The session has ended. The final meeting location has been set:
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1, fontWeight: 'medium' }}>
+                    {sessionEndNotification.meetingLocationLatitude?.toFixed(6)}, {sessionEndNotification.meetingLocationLongitude?.toFixed(6)}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="body1" fontWeight="bold" gutterBottom>
+                    Session Cancelled
+                  </Typography>
+                  <Typography variant="body2">
+                    The session has been ended without a final meeting location.
+                  </Typography>
+                </Box>
+              )}
+            </Alert>
+          )}
+
           {/* End Session Button - Only visible to initiator for active sessions */}
           {isInitiator && session.status === 'Active' && (
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
