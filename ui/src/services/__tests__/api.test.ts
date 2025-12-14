@@ -6,9 +6,13 @@ import axios from 'axios';
 vi.mock('axios', () => {
   const mockPost = vi.fn();
   const mockGet = vi.fn();
+  const mockPut = vi.fn();
+  const mockDelete = vi.fn();
   const mockAxiosInstance = {
     post: mockPost,
     get: mockGet,
+    put: mockPut,
+    delete: mockDelete,
     interceptors: {
       request: { use: vi.fn() },
     },
@@ -23,6 +27,8 @@ vi.mock('axios', () => {
 describe('API Service', () => {
   let mockPost: any;
   let mockGet: any;
+  let mockPut: any;
+  let mockDelete: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -30,6 +36,8 @@ describe('API Service', () => {
     const axiosInstance = (axios.create as any)();
     mockPost = axiosInstance.post;
     mockGet = axiosInstance.get;
+    mockPut = axiosInstance.put;
+    mockDelete = axiosInstance.delete;
   });
 
   describe('authApi', () => {

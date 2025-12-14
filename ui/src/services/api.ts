@@ -135,6 +135,14 @@ export interface UpdateMeetingLocationResponse {
   message: string;
 }
 
+export interface EndSessionResponse {
+  sessionId: number;
+  sessionIdString: string;
+  status: string;
+  endedAt: string;
+  message: string;
+}
+
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.post<T>(url, data);
@@ -156,6 +164,12 @@ async function getRequest<T>(url: string): Promise<T> {
 // Helper function for PUT requests
 async function putRequest<T>(url: string, data?: unknown): Promise<T> {
   const response = await apiClient.put<T>(url, data);
+  return response.data;
+}
+
+// Helper function for DELETE requests
+async function deleteRequest<T>(url: string): Promise<T> {
+  const response = await apiClient.delete<T>(url);
   return response.data;
 }
 
@@ -194,6 +208,9 @@ export const sessionApi = {
       `/api/sessions/${sessionId}/meeting-location`,
       location
     );
+  },
+  endSession: async (sessionId: string): Promise<EndSessionResponse> => {
+    return deleteRequest<EndSessionResponse>(`/api/sessions/${sessionId}`);
   },
 };
 
