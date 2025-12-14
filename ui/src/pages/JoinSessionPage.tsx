@@ -13,6 +13,7 @@ import { Login, GroupAdd } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { sessionApi } from '../services/api';
+import { SessionDetailResponse } from '../types/session';
 
 const JoinSessionPage = () => {
   const { isAuthenticated, isInitialized } = useAuth();
@@ -22,6 +23,8 @@ const JoinSessionPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(false);
+  const [sessionDetails, setSessionDetails] = useState<SessionDetailResponse | null>(null);
   const hasAttemptedJoin = useRef(false);
 
   // Redirect to login if not authenticated, preserving sessionId
@@ -33,6 +36,47 @@ const JoinSessionPage = () => {
     }
   }, [isAuthenticated, isInitialized, navigate, sessionId]);
 
+  // Check session status when sessionId changes (with debounce)
+  useEffect(() => {
+    if (!sessionId.trim() || !isAuthenticated) {
+      setSessionDetails(null);
+      setError(null);
+      return;
+    }
+
+    const checkSessionStatus = async () => {
+      setCheckingSession(true);
+      try {
+        const details = await sessionApi.getSessionDetails(sessionId.trim());
+        setSessionDetails(details);
+        
+        // Check if session is ended
+        if (details.status === 'Ended') {
+          setError('This session has ended. You cannot join an ended session.');
+        } else {
+          setError(null); // Clear error if session is active
+        }
+      } catch (err: any) {
+        // If session not found or other error, clear session details
+        setSessionDetails(null);
+        // Don't set error here - let the join attempt handle it
+        if (err.response?.status === 404) {
+          // Session not found - clear error, will be handled on join attempt
+          setError(null);
+        }
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    // Debounce: wait 500ms after user stops typing
+    const timer = setTimeout(() => {
+      checkSessionStatus();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [sessionId, isAuthenticated]);
+
   const handleJoinSession = async () => {
     if (!sessionId.trim()) {
       setError('Please enter a session ID');
@@ -41,6 +85,12 @@ const JoinSessionPage = () => {
 
     if (!isAuthenticated) {
       setError('Please login first');
+      return;
+    }
+
+    // Check if session is ended before attempting to join
+    if (sessionDetails && sessionDetails.status === 'Ended') {
+      setError('This session has ended. You cannot join an ended session.');
       return;
     }
 
@@ -160,8 +210,17 @@ const JoinSessionPage = () => {
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
                 placeholder="Enter session ID or invitation code"
-                disabled={loading}
+                disabled={loading || checkingSession}
                 sx={{ mb: 3 }}
+                helperText={
+                  checkingSession
+                    ? 'Checking session status...'
+                    : sessionDetails && sessionDetails.status === 'Ended'
+                    ? 'This session has ended'
+                    : sessionDetails && sessionDetails.status === 'Active'
+                    ? 'Session is active'
+                    : ''
+                }
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleJoinSession();
@@ -174,7 +233,12 @@ const JoinSessionPage = () => {
                 fullWidth
                 startIcon={loading ? <CircularProgress size={20} /> : <GroupAdd />}
                 onClick={handleJoinSession}
-                disabled={loading || !sessionId.trim()}
+                disabled={
+                  loading ||
+                  checkingSession ||
+                  !sessionId.trim() ||
+                  (sessionDetails?.status === 'Ended')
+                }
                 sx={{ mb: 2 }}
               >
                 {loading ? 'Joining...' : 'Join Session'}

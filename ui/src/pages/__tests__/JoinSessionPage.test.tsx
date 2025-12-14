@@ -15,6 +15,7 @@ vi.mock('../../contexts/AuthContext', () => ({
 vi.mock('../../services/api', () => ({
   sessionApi: {
     joinSession: vi.fn(),
+    getSessionDetails: vi.fn(),
   },
 }));
 
@@ -294,5 +295,172 @@ describe('JoinSessionPage', () => {
     );
 
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/join');
+  });
+
+  it('should check session status when sessionId is entered', async () => {
+    const user = userEvent.setup();
+    const mockSessionDetails = {
+      id: 100,
+      sessionId: 'test-session-id',
+      initiatorId: 1,
+      initiatorUsername: 'testuser',
+      status: 'Active',
+      createdAt: '2024-01-01T00:00:00',
+      participants: [],
+      participantCount: 0,
+    };
+
+    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    await user.type(sessionIdInput, 'test-session-id');
+
+    // Wait for debounce (500ms)
+    await waitFor(() => {
+      expect(sessionApi.getSessionDetails).toHaveBeenCalledWith('test-session-id');
+    }, { timeout: 1000 });
+  });
+
+  it('should disable join button and show error when session is ended', async () => {
+    const user = userEvent.setup();
+    const mockSessionDetails = {
+      id: 100,
+      sessionId: 'test-session-id',
+      initiatorId: 1,
+      initiatorUsername: 'testuser',
+      status: 'Ended',
+      createdAt: '2024-01-01T00:00:00',
+      participants: [],
+      participantCount: 0,
+    };
+
+    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    await user.type(sessionIdInput, 'test-session-id');
+
+    // Wait for debounce and session check (600ms for debounce + API call)
+    await waitFor(() => {
+      expect(screen.getByText(/This session has ended. You cannot join an ended session/)).toBeInTheDocument();
+    }, { timeout: 2000 });
+
+    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    expect(joinButton).toBeDisabled();
+
+    // Helper text should show session is ended
+    const helperTexts = screen.getAllByText(/This session has ended/);
+    expect(helperTexts.length).toBeGreaterThan(0);
+  });
+
+  it('should show active status when session is active', async () => {
+    const user = userEvent.setup();
+    const mockSessionDetails = {
+      id: 100,
+      sessionId: 'test-session-id',
+      initiatorId: 1,
+      initiatorUsername: 'testuser',
+      status: 'Active',
+      createdAt: '2024-01-01T00:00:00',
+      participants: [],
+      participantCount: 0,
+    };
+
+    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    await user.type(sessionIdInput, 'test-session-id');
+
+    // Wait for debounce and session check
+    await waitFor(() => {
+      expect(screen.getByText(/Session is active/)).toBeInTheDocument();
+    }, { timeout: 1000 });
+
+    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    expect(joinButton).not.toBeDisabled();
+  });
+
+  it('should prevent joining ended session even if button is clicked', async () => {
+    const user = userEvent.setup();
+    const mockSessionDetails = {
+      id: 100,
+      sessionId: 'test-session-id',
+      initiatorId: 1,
+      initiatorUsername: 'testuser',
+      status: 'Ended',
+      createdAt: '2024-01-01T00:00:00',
+      participants: [],
+      participantCount: 0,
+    };
+
+    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    await user.type(sessionIdInput, 'test-session-id');
+
+    // Wait for session check (600ms for debounce + API call)
+    await waitFor(() => {
+      expect(screen.getByText(/This session has ended. You cannot join an ended session/)).toBeInTheDocument();
+    }, { timeout: 2000 });
+
+    // Try to click join button (should be disabled, but if not, should not call API)
+    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    expect(joinButton).toBeDisabled();
+
+    // Verify joinSession was not called
+    expect(sessionApi.joinSession).not.toHaveBeenCalled();
+  });
+
+  it('should handle session not found during status check', async () => {
+    const user = userEvent.setup();
+    const mockError = {
+      response: {
+        status: 404,
+      },
+    };
+
+    vi.mocked(sessionApi.getSessionDetails).mockRejectedValue(mockError);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    await user.type(sessionIdInput, 'test-session-id');
+
+    // Wait for debounce
+    await waitFor(() => {
+      expect(sessionApi.getSessionDetails).toHaveBeenCalledWith('test-session-id');
+    }, { timeout: 1000 });
+
+    // Should not show error for 404 during status check
+    // Error will be shown when user tries to join
+    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    expect(joinButton).not.toBeDisabled();
   });
 });

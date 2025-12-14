@@ -301,6 +301,109 @@ describe('useWebSocket', () => {
     );
   });
 
+  it('should subscribe to session end notifications when callback is provided', () => {
+    const onSessionUpdate = vi.fn();
+    const onLocationUpdate = vi.fn();
+    const onAddressUpdate = vi.fn();
+    const onSessionEnd = vi.fn();
+
+    renderHook(() =>
+      useWebSocket({
+        sessionId: 'test-session-id',
+        onSessionUpdate,
+        onLocationUpdate,
+        onAddressUpdate,
+        onSessionEnd,
+      })
+    );
+
+    vi.advanceTimersByTime(500);
+
+    // Simulate connection
+    if (onConnectCallback) {
+      onConnectCallback({});
+    }
+
+    expect(mockClient.subscribe).toHaveBeenCalledWith(
+      '/topic/session/test-session-id/end',
+      expect.any(Function)
+    );
+  });
+
+  it('should handle session end notification', () => {
+    const onSessionUpdate = vi.fn();
+    const onLocationUpdate = vi.fn();
+    const onAddressUpdate = vi.fn();
+    const onSessionEnd = vi.fn();
+
+    const mockSessionEndNotification = {
+      sessionId: 100,
+      sessionIdString: 'test-session-id',
+      status: 'Ended',
+      endedAt: '2024-01-01T00:00:00',
+      message: 'Session ended successfully',
+      hasMeetingLocation: true,
+      meetingLocationLatitude: 1.3521,
+      meetingLocationLongitude: 103.8198,
+    };
+
+    renderHook(() =>
+      useWebSocket({
+        sessionId: 'test-session-id',
+        onSessionUpdate,
+        onLocationUpdate,
+        onAddressUpdate,
+        onSessionEnd,
+      })
+    );
+
+    vi.advanceTimersByTime(500);
+
+    // Simulate connection
+    if (onConnectCallback) {
+      onConnectCallback({});
+    }
+
+    // Get the callback for session end notifications
+    const sessionEndCallback = subscribeCallbacks.get('/topic/session/test-session-id/end');
+    if (sessionEndCallback) {
+      sessionEndCallback({
+        body: JSON.stringify(mockSessionEndNotification),
+      });
+    }
+
+    expect(onSessionEnd).toHaveBeenCalledWith(mockSessionEndNotification);
+  });
+
+  it('should not subscribe to session end when callback is not provided', () => {
+    const onSessionUpdate = vi.fn();
+    const onLocationUpdate = vi.fn();
+    const onAddressUpdate = vi.fn();
+
+    renderHook(() =>
+      useWebSocket({
+        sessionId: 'test-session-id',
+        onSessionUpdate,
+        onLocationUpdate,
+        onAddressUpdate,
+      })
+    );
+
+    vi.advanceTimersByTime(500);
+
+    // Simulate connection
+    if (onConnectCallback) {
+      onConnectCallback({});
+    }
+
+    // Should not subscribe to session end topic
+    const subscribeCalls = vi.mocked(mockClient.subscribe).mock.calls;
+    const sessionEndSubscribe = subscribeCalls.find(
+      (call) => call[0] === '/topic/session/test-session-id/end'
+    );
+    expect(sessionEndSubscribe).toBeUndefined();
+  });
+
   it('should cleanup WebSocket connection on unmount', () => {
     const onSessionUpdate = vi.fn();
     const onLocationUpdate = vi.fn();
