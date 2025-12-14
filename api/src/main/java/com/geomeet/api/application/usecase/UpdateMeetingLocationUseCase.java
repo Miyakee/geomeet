@@ -17,9 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class UpdateMeetingLocationUseCase {
 
     private final SessionRepository sessionRepository;
+    private final BroadcastMeetingLocationUseCase broadcastMeetingLocationUseCase;
 
-    public UpdateMeetingLocationUseCase(SessionRepository sessionRepository) {
+    public UpdateMeetingLocationUseCase(
+        SessionRepository sessionRepository,
+        BroadcastMeetingLocationUseCase broadcastMeetingLocationUseCase
+    ) {
         this.sessionRepository = sessionRepository;
+        this.broadcastMeetingLocationUseCase = broadcastMeetingLocationUseCase;
     }
 
     /**
@@ -59,6 +64,9 @@ public class UpdateMeetingLocationUseCase {
             .longitude(savedSession.getMeetingLocation().getLongitude().getValue())
             .message("Meeting location updated successfully")
             .build();
+
+        // Broadcast meeting location update to all subscribers
+        broadcastMeetingLocationUseCase.execute(result);
 
         return result;
     }

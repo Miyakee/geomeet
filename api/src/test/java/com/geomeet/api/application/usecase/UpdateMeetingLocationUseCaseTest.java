@@ -29,6 +29,9 @@ class UpdateMeetingLocationUseCaseTest {
     @Mock
     private SessionRepository sessionRepository;
 
+    @Mock
+    private BroadcastMeetingLocationUseCase broadcastMeetingLocationUseCase;
+
     private UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
 
     private Long initiatorId;
@@ -41,7 +44,10 @@ class UpdateMeetingLocationUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        updateMeetingLocationUseCase = new UpdateMeetingLocationUseCase(sessionRepository);
+        updateMeetingLocationUseCase = new UpdateMeetingLocationUseCase(
+            sessionRepository,
+            broadcastMeetingLocationUseCase
+        );
 
         initiatorId = 1L;
         sessionDbId = 100L;
@@ -98,6 +104,7 @@ class UpdateMeetingLocationUseCaseTest {
 
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionRepository).save(any(Session.class));
+        verify(broadcastMeetingLocationUseCase).execute(any(UpdateMeetingLocationResult.class));
     }
 
     @Test
@@ -168,6 +175,7 @@ class UpdateMeetingLocationUseCaseTest {
         assertEquals("Only the session initiator can update the meeting location", exception.getMessage());
         verify(sessionRepository).findBySessionId(sessionId);
         verify(sessionRepository, never()).save(any(Session.class));
+        verify(broadcastMeetingLocationUseCase, never()).execute(any(UpdateMeetingLocationResult.class));
     }
 }
 
