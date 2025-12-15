@@ -294,6 +294,37 @@ const SessionPage = () => {
 
           <Divider sx={{ my: 3 }} />
 
+          {/* Meeting Location Section */}
+          <MeetingLocationSection
+              meetingLocation={meetingLocation}
+              meetingLocationAddress={meetingLocationAddress}
+              loadingAddress={loadingMeetingLocationAddress}
+              currentUserLocation={currentLocation ? {
+                latitude: currentLocation.coords.latitude,
+                longitude: currentLocation.coords.longitude,
+              } : null}
+              isInitiator={isInitiator}
+              onUpdateLocation={updateMeetingLocation}
+              loading={updatingMeetingLocation}
+              error={meetingLocationError}
+          />
+
+          <Divider sx={{ my: 3 }} />
+
+
+          <LocationTrackingSection
+              locationEnabled={locationEnabled}
+              locationError={locationError}
+              currentLocation={currentLocation}
+              updatingLocation={updatingLocation}
+              onToggle={handleLocationToggle}
+              onRetry={() => {
+                startLocationTracking();
+              }}
+          />
+
+          <Divider sx={{ my: 3 }} />
+
           {/* Optimal Location Map */}
           <OptimalLocationMap
             optimalLocation={optimalLocation ? {
@@ -371,36 +402,6 @@ const SessionPage = () => {
               Optimal location calculated! Total travel distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
             </Alert>
           )}
-
-          <Divider sx={{ my: 3 }} />
-
-          <LocationTrackingSection
-            locationEnabled={locationEnabled}
-            locationError={locationError}
-            currentLocation={currentLocation}
-            updatingLocation={updatingLocation}
-            onToggle={handleLocationToggle}
-            onRetry={() => {
-              startLocationTracking();
-            }}
-          />
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Meeting Location Section */}
-          <MeetingLocationSection
-            meetingLocation={meetingLocation}
-            meetingLocationAddress={meetingLocationAddress}
-            loadingAddress={loadingMeetingLocationAddress}
-            currentUserLocation={currentLocation ? {
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
-            } : null}
-            isInitiator={isInitiator}
-            onUpdateLocation={updateMeetingLocation}
-            loading={updatingMeetingLocation}
-            error={meetingLocationError}
-          />
 
           <Divider sx={{ my: 3 }} />
 
