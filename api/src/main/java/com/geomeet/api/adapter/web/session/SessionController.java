@@ -181,6 +181,8 @@ public class SessionController {
                     .build())
                 .collect(java.util.stream.Collectors.toList()))
             .participantCount(result.getParticipantCount())
+            .meetingLocationLatitude(result.getMeetingLocationLatitude())
+            .meetingLocationLongitude(result.getMeetingLocationLongitude())
             .build();
 
         return ResponseEntity.ok(response);

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { SessionDetailResponse } from '../types/session';
 
 // In development, use relative path to leverage Vite proxy
 // In production, use the full API URL
@@ -75,24 +76,7 @@ export interface JoinSessionResponse {
   message: string;
 }
 
-export interface ParticipantInfo {
-  participantId: number;
-  userId: number;
-  username: string;
-  email: string;
-  joinedAt: string;
-}
-
-export interface SessionDetailResponse {
-  id: number;
-  sessionId: string;
-  initiatorId: number;
-  initiatorUsername: string;
-  status: string;
-  createdAt: string;
-  participants: ParticipantInfo[];
-  participantCount: number;
-}
+// SessionDetailResponse is imported from types/session.ts
 
 export interface UpdateLocationRequest {
   latitude: number;

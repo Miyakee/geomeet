@@ -23,5 +23,7 @@ public class SessionDetailResponse {
     private String createdAt;
     private List<ParticipantInfo> participants;
     private Long participantCount;
+    private Double meetingLocationLatitude;
+    private Double meetingLocationLongitude;
 }
 

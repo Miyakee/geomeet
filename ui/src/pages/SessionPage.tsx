@@ -150,17 +150,26 @@ const SessionPage = () => {
   }, [session]);
 
   // Initialize meeting location from session data
+  // This ensures new users who join after meeting location is set can see it
   useEffect(() => {
-    if (session && session.meetingLocationLatitude != null && session.meetingLocationLongitude != null) {
-      updateMeetingLocationFromResponse({
-        sessionId: session.id,
-        sessionIdString: session.sessionId,
-        latitude: session.meetingLocationLatitude,
-        longitude: session.meetingLocationLongitude,
-        message: '',
-      });
+    if (session) {
+      if (session.meetingLocationLatitude != null && session.meetingLocationLongitude != null) {
+        // Always update to ensure new users see the meeting location
+        // Check if the location has changed to avoid unnecessary updates
+        if (!meetingLocation || 
+            meetingLocation.latitude !== session.meetingLocationLatitude || 
+            meetingLocation.longitude !== session.meetingLocationLongitude) {
+          updateMeetingLocationFromResponse({
+            sessionId: session.id,
+            sessionIdString: session.sessionId,
+            latitude: session.meetingLocationLatitude,
+            longitude: session.meetingLocationLongitude,
+            message: '',
+          });
+        }
+      }
     }
-  }, [session, updateMeetingLocationFromResponse]);
+  }, [session?.meetingLocationLatitude, session?.meetingLocationLongitude, session?.id, session?.sessionId, updateMeetingLocationFromResponse, meetingLocation]);
 
   // Load invite link when session is loaded and user is initiator
   useEffect(() => {
