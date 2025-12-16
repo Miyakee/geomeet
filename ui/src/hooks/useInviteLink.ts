@@ -8,7 +8,9 @@ export const useInviteLink = (sessionId: string | undefined) => {
   const [loadingInvite, setLoadingInvite] = useState(false);
 
   const loadInviteLink = async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      return;
+    }
     
     try {
       setLoadingInvite(true);

@@ -172,25 +172,25 @@ export const sessionApi = {
   },
   updateLocation: async (
     sessionId: string,
-    location: UpdateLocationRequest
+    location: UpdateLocationRequest,
   ): Promise<UpdateLocationResponse> => {
     return putRequest<UpdateLocationResponse>(`/api/sessions/${sessionId}/location`, location);
   },
   calculateOptimalLocation: async (
-    sessionId: string
+    sessionId: string,
   ): Promise<CalculateOptimalLocationResponse> => {
     return postRequest<CalculateOptimalLocationResponse>(
       `/api/sessions/${sessionId}/optimal-location`,
-      {}
+      {},
     );
   },
   updateMeetingLocation: async (
     sessionId: string,
-    location: UpdateMeetingLocationRequest
+    location: UpdateMeetingLocationRequest,
   ): Promise<UpdateMeetingLocationResponse> => {
     return putRequest<UpdateMeetingLocationResponse>(
       `/api/sessions/${sessionId}/meeting-location`,
-      location
+      location,
     );
   },
   endSession: async (sessionId: string): Promise<EndSessionResponse> => {

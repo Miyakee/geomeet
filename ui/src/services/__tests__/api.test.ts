@@ -27,7 +27,7 @@ vi.mock('axios', () => {
 describe('API Service', () => {
   let mockPost: any;
   let mockGet: any;
-  let mockPut: any;
+  let _mockPut: any;
   let mockDelete: any;
 
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe('API Service', () => {
     const axiosInstance = (axios.create as any)();
     mockPost = axiosInstance.post;
     mockGet = axiosInstance.get;
-    mockPut = axiosInstance.put;
+    _mockPut = axiosInstance.put;
     mockDelete = axiosInstance.delete;
   });
 
@@ -82,7 +82,7 @@ describe('API Service', () => {
         authApi.login({
           usernameOrEmail: 'testuser',
           password: 'wrongpassword',
-        })
+        }),
       ).rejects.toEqual(mockError);
     });
   });

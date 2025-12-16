@@ -36,7 +36,7 @@ describe('ParticipantList', () => {
         session={mockSession}
         participantLocations={new Map()}
         participantAddresses={new Map()}
-      />
+      />,
     );
 
     expect(screen.getByText(/Participants \(2\)/)).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('ParticipantList', () => {
         session={mockSession}
         participantLocations={new Map()}
         participantAddresses={new Map()}
-      />
+      />,
     );
 
     expect(screen.getByText('user1')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('ParticipantList', () => {
         session={emptySession}
         participantLocations={new Map()}
         participantAddresses={new Map()}
-      />
+      />,
     );
 
     expect(screen.getByText(/No participants yet/)).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('ParticipantList', () => {
         session={mockSession}
         participantLocations={locations}
         participantAddresses={new Map()}
-      />
+      />,
     );
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('ParticipantList', () => {
         session={mockSession}
         participantLocations={locations}
         participantAddresses={addresses}
-      />
+      />,
     );
 
     expect(screen.getByText(/Market Street, San Francisco/)).toBeInTheDocument();

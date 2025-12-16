@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import SessionPage from '../SessionPage';
@@ -133,7 +133,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(/Session: test-ses/)).toBeInTheDocument();
@@ -150,7 +150,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Loading session...')).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(/Participants/)).toBeInTheDocument();
@@ -198,7 +198,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Invite Friends')).toBeInTheDocument();
@@ -217,7 +217,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.queryByText('Invite Friends')).not.toBeInTheDocument();
@@ -227,7 +227,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Location Tracking')).toBeInTheDocument();
@@ -237,7 +237,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Meeting Location')).toBeInTheDocument();
@@ -247,14 +247,14 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Calculate Optimal Location')).toBeInTheDocument();
   });
 
   it('should call calculateOptimalLocation when button is clicked', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     const mockCalculateOptimalLocation = vi.fn();
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({
@@ -268,7 +268,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // The button exists but is disabled when participantLocations.size === 0
@@ -305,7 +305,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(/Optimal location calculated!/)).toBeInTheDocument();
@@ -334,7 +334,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Set as Meeting Location')).toBeInTheDocument();
@@ -353,7 +353,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -374,7 +374,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -392,7 +392,7 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const button = screen.getByText('Calculating...');
@@ -403,13 +403,13 @@ describe('SessionPage', () => {
     render(
       <BrowserRouter>
         <SessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(useWebSocketHook.useWebSocket).toHaveBeenCalledWith(
       expect.objectContaining({
         sessionId: 'test-session-id',
-      })
+      }),
     );
   });
 });

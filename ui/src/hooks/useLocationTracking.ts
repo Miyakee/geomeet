@@ -11,7 +11,9 @@ export const useLocationTracking = (sessionId: string | undefined) => {
   const latestPositionRef = useRef<GeolocationPosition | null>(null);
 
   const updateLocationToServer = async (position: GeolocationPosition) => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      return;
+    }
 
     try {
       setUpdatingLocation(true);
@@ -22,7 +24,6 @@ export const useLocationTracking = (sessionId: string | undefined) => {
         accuracy: position.coords.accuracy,
       });
       setCurrentLocation(position);
-      console.log('Location updated successfully');
     } catch (err: any) {
       console.error('Failed to update location:', err);
       setLocationError('Failed to update location. Please try again.');
@@ -95,7 +96,7 @@ export const useLocationTracking = (sessionId: string | undefined) => {
             enableHighAccuracy: true,
             timeout: 15000,
             maximumAge: 30000,
-          }
+          },
         );
       },
       (error) => {
@@ -109,7 +110,7 @@ export const useLocationTracking = (sessionId: string | undefined) => {
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 30000,
-      }
+      },
     );
   };
 

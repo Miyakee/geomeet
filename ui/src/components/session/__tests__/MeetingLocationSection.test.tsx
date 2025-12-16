@@ -26,7 +26,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText('Meeting Location')).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -51,7 +51,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.queryByRole('button', { name: /edit/i });
@@ -69,7 +69,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/1\.352100/)).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('MeetingLocationSection', () => {
         meetingLocationAddress="Orchard Road, Singapore"
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/Orchard Road, Singapore/)).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe('MeetingLocationSection', () => {
         loadingAddress={true}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText('Loading address...')).toBeInTheDocument();
@@ -129,7 +129,7 @@ describe('MeetingLocationSection', () => {
         currentUserLocation={currentUserLocation}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/Distance from your location/)).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/No meeting location set/)).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={false}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/Meeting location has not been set/)).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -193,7 +193,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -215,7 +215,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -245,7 +245,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -276,7 +276,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -318,7 +318,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -351,7 +351,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -372,7 +372,7 @@ describe('MeetingLocationSection', () => {
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
         error="Failed to update location"
-      />
+      />,
     );
 
     expect(screen.getByText('Failed to update location')).toBeInTheDocument();
@@ -385,7 +385,7 @@ describe('MeetingLocationSection', () => {
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
         loading={true}
-      />
+      />,
     );
 
     // When loading, edit button should be disabled
@@ -401,7 +401,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={null}
         isInitiator={true}
         onUpdateLocation={mockOnUpdateLocation}
-      />
+      />,
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });

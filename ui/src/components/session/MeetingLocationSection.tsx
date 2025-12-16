@@ -103,8 +103,8 @@ export const MeetingLocationSection = ({
           setValidationError(null);
         },
         (err) => {
-          setValidationError('Failed to get current location: ' + err.message);
-        }
+          setValidationError(`Failed to get current location: ${err.message}`);
+        },
       );
     } else {
       setValidationError('Geolocation is not supported by your browser');
@@ -151,7 +151,8 @@ export const MeetingLocationSection = ({
               </Typography>
             ) : null}
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              <strong>Coordinates:</strong> {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
+              <strong>Coordinates:</strong>{' '}
+              {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
             </Typography>
             {currentUserLocation && (
               <DistanceDisplay
@@ -239,7 +240,7 @@ const DistanceDisplay = ({ currentLocation, meetingLocation }: DistanceDisplayPr
       currentLocation.latitude,
       currentLocation.longitude,
       meetingLocation.latitude,
-      meetingLocation.longitude
+      meetingLocation.longitude,
     );
   }, [currentLocation.latitude, currentLocation.longitude, meetingLocation.latitude, meetingLocation.longitude]);
 

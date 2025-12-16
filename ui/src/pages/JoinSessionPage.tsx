@@ -216,10 +216,10 @@ const JoinSessionPage = () => {
                   checkingSession
                     ? 'Checking session status...'
                     : sessionDetails && sessionDetails.status === 'Ended'
-                    ? 'This session has ended'
-                    : sessionDetails && sessionDetails.status === 'Active'
-                    ? 'Session is active'
-                    : ''
+                      ? 'This session has ended'
+                      : sessionDetails && sessionDetails.status === 'Active'
+                        ? 'Session is active'
+                        : ''
                 }
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {

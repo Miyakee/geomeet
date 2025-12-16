@@ -19,6 +19,7 @@ export const ParticipantItem = ({
 }: ParticipantItemProps) => {
   const locationAge = location ? Date.now() - new Date(location.updatedAt).getTime() : null;
   const isRecent = locationAge !== null && locationAge < 60000;
+  const locationAgeSeconds = locationAge !== null ? Math.round(locationAge / 1000) : null;
 
   return (
     <ListItem
@@ -64,7 +65,7 @@ export const ParticipantItem = ({
                   {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                   {address && <> • {address}</>}
                   {location.accuracy && <> • ±{Math.round(location.accuracy)}m</>}
-                  {!isRecent && <> • {Math.round(locationAge! / 1000)}s ago</>}
+                  {!isRecent && locationAgeSeconds !== null && <> • {locationAgeSeconds}s ago</>}
                 </Typography>
               </Box>
             )}

@@ -38,7 +38,9 @@ export const useWebSocket = ({
   const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      return;
+    }
 
     const setupWebSocket = () => {
       const token = localStorage.getItem('token');
@@ -62,13 +64,12 @@ export const useWebSocket = ({
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
-        onConnect: (frame) => {
-          console.log('WebSocket connected, frame:', frame);
+        onConnect: (_frame) => {
+          // WebSocket connected
           
           client.subscribe(`/topic/session/${sessionId}`, (message) => {
             try {
               const updatedSession: SessionDetailResponse = JSON.parse(message.body);
-              console.log('Parsed session update:', updatedSession);
               onSessionUpdate(updatedSession);
             } catch (err) {
               console.error('Failed to parse WebSocket message:', err);
@@ -78,7 +79,6 @@ export const useWebSocket = ({
           client.subscribe(`/topic/session/${sessionId}/locations`, (message) => {
             try {
               const locationUpdate: UpdateLocationResponse = JSON.parse(message.body);
-              console.log('Parsed location update:', locationUpdate);
               
               onLocationUpdate(
                 {
@@ -87,7 +87,7 @@ export const useWebSocket = ({
                   accuracy: locationUpdate.accuracy,
                   updatedAt: locationUpdate.updatedAt,
                 },
-                locationUpdate.userId
+                locationUpdate.userId,
               );
               
               reverseGeocode(locationUpdate.latitude, locationUpdate.longitude).then((address) => {
@@ -105,7 +105,6 @@ export const useWebSocket = ({
             client.subscribe(`/topic/session/${sessionId}/optimal-location`, (message) => {
               try {
                 const optimalLocation: CalculateOptimalLocationResponse = JSON.parse(message.body);
-                console.log('Parsed optimal location update:', optimalLocation);
                 onOptimalLocationUpdate(optimalLocation);
               } catch (err) {
                 console.error('Failed to parse optimal location message:', err);
@@ -118,7 +117,6 @@ export const useWebSocket = ({
             client.subscribe(`/topic/session/${sessionId}/meeting-location`, (message) => {
               try {
                 const meetingLocation: UpdateMeetingLocationResponse = JSON.parse(message.body);
-                console.log('Parsed meeting location update:', meetingLocation);
                 onMeetingLocationUpdate(meetingLocation);
               } catch (err) {
                 console.error('Failed to parse meeting location message:', err);
@@ -131,7 +129,6 @@ export const useWebSocket = ({
             client.subscribe(`/topic/session/${sessionId}/end`, (message) => {
               try {
                 const sessionEndNotification: SessionEndNotification = JSON.parse(message.body);
-                console.log('Parsed session end notification:', sessionEndNotification);
                 onSessionEnd(sessionEndNotification);
               } catch (err) {
                 console.error('Failed to parse session end message:', err);
@@ -146,7 +143,7 @@ export const useWebSocket = ({
           console.error('WebSocket error:', event);
         },
         onDisconnect: () => {
-          console.log('WebSocket disconnected');
+          // WebSocket disconnected
         },
       });
 
@@ -161,11 +158,19 @@ export const useWebSocket = ({
     return () => {
       clearTimeout(wsTimer);
       if (stompClientRef.current) {
-        console.log('Cleaning up WebSocket connection');
+        // Cleaning up WebSocket connection
         stompClientRef.current.deactivate();
         stompClientRef.current = null;
       }
     };
-  }, [sessionId, onSessionUpdate, onLocationUpdate, onAddressUpdate, onOptimalLocationUpdate, onMeetingLocationUpdate, onSessionEnd]);
+  }, [
+    sessionId,
+    onSessionUpdate,
+    onLocationUpdate,
+    onAddressUpdate,
+    onOptimalLocationUpdate,
+    onMeetingLocationUpdate,
+    onSessionEnd,
+  ]);
 };
 

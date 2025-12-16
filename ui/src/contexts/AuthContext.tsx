@@ -18,6 +18,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -38,8 +39,8 @@ const decodeToken = (token: string): { userId: number; username: string } | null
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .map((c) => `%${  (`00${  c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join(''),
     );
     const decoded = JSON.parse(jsonPayload);
     return {
@@ -78,23 +79,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const login = async (credentials: LoginRequest) => {
-    try {
-      const response = await authApi.login(credentials);
-      setToken(response.token);
-      
-      // Decode token to get user ID
-      const decoded = decodeToken(response.token);
-      const userData = {
-        id: decoded?.userId || 0,
-        username: response.username,
-        email: response.email,
-      };
-      setUser(userData);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(userData));
-    } catch (error) {
-      throw error;
-    }
+    const response = await authApi.login(credentials);
+    setToken(response.token);
+    
+    // Decode token to get user ID
+    const decoded = decodeToken(response.token);
+    const userData = {
+      id: decoded?.userId || 0,
+      username: response.username,
+      email: response.email,
+    };
+    setUser(userData);
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {

@@ -40,7 +40,7 @@ const getCacheKey = (latitude: number, longitude: number): string => {
 export const reverseGeocode = async (
   latitude: number,
   longitude: number,
-  retries: number = 2
+  retries: number = 2,
 ): Promise<string | null> => {
   // Check cache first
   const cacheKey = getCacheKey(latitude, longitude);
@@ -61,7 +61,8 @@ export const reverseGeocode = async (
       if (attempt > 0) {
         // Exponential backoff: wait 2^attempt seconds before retry
         const backoffDelay = Math.min(1000 * Math.pow(2, attempt), 5000);
-        console.log(`Retrying geocoding (attempt ${attempt + 1}/${retries + 1}) after ${backoffDelay}ms...`);
+        // Retrying geocoding with exponential backoff
+        console.warn(`Retrying geocoding (attempt ${attempt + 1}/${retries + 1}) after ${backoffDelay}ms...`);
         await delay(backoffDelay);
       }
 
@@ -77,7 +78,7 @@ export const reverseGeocode = async (
           },
           // Add timeout
           signal: AbortSignal.timeout(10000), // 10 second timeout
-        }
+        },
       );
 
       if (!response.ok) {
@@ -90,7 +91,9 @@ export const reverseGeocode = async (
           }
         }
         console.warn('Reverse geocoding failed:', response.status, response.statusText);
-        if (attempt < retries) continue;
+        if (attempt < retries) {
+          continue;
+        }
         return null;
       }
 
@@ -106,11 +109,21 @@ export const reverseGeocode = async (
 
       // Build address string: prefer road, then suburb, then city
       const parts: string[] = [];
-      if (address.road) parts.push(address.road);
-      if (address.house_number) parts.push(address.house_number);
-      if (address.suburb) parts.push(address.suburb);
-      if (address.city) parts.push(address.city);
-      if (address.country) parts.push(address.country);
+      if (address.road) {
+        parts.push(address.road);
+      }
+      if (address.house_number) {
+        parts.push(address.house_number);
+      }
+      if (address.suburb) {
+        parts.push(address.suburb);
+      }
+      if (address.city) {
+        parts.push(address.city);
+      }
+      if (address.country) {
+        parts.push(address.country);
+      }
 
       const addressString = parts.length > 0 ? parts.join(', ') : null;
       
@@ -122,15 +135,21 @@ export const reverseGeocode = async (
       // Handle different error types
       if (error.name === 'AbortError' || error.name === 'TimeoutError') {
         console.warn('Geocoding request timeout:', error);
-        if (attempt < retries) continue;
+        if (attempt < retries) {
+          continue;
+        }
       } else if (error.message?.includes('ERR_CONNECTION_RESET') || 
                  error.message?.includes('network') ||
                  error.message?.includes('Failed to fetch')) {
         console.warn('Network error during geocoding:', error.message);
-        if (attempt < retries) continue;
+        if (attempt < retries) {
+          continue;
+        }
       } else {
         console.error('Reverse geocoding error:', error);
-        if (attempt < retries) continue;
+        if (attempt < retries) {
+          continue;
+        }
       }
       
       // On final attempt, cache null to avoid repeated requests

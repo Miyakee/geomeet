@@ -50,7 +50,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Use getAllByText and check first occurrence
@@ -65,7 +65,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i) as HTMLInputElement;
@@ -90,7 +90,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -120,7 +120,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -148,7 +148,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -166,7 +166,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
@@ -193,7 +193,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -223,7 +223,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Wait for auto-join to trigger (component uses 100ms delay)
@@ -248,7 +248,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -268,7 +268,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const backButton = screen.getByRole('button', { name: /Back to Dashboard/i });
@@ -291,7 +291,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/join');
@@ -315,7 +315,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -345,7 +345,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -382,7 +382,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -415,7 +415,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
@@ -447,7 +447,7 @@ describe('JoinSessionPage', () => {
     render(
       <BrowserRouter>
         <JoinSessionPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);

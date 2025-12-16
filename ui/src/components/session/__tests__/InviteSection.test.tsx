@@ -21,7 +21,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Invite Friends')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={onLoadInviteLink}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     const generateButton = screen.getByText('Generate Invite Link');
@@ -59,7 +59,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={onLoadInviteLink}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     const generateButton = screen.getByText('Generate Invite Link');
@@ -78,7 +78,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     // Check for CircularProgress (it might not have accessible text)
@@ -96,7 +96,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByDisplayValue('http://localhost:3000/join?sessionId=test-session')).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={onCopyInviteLink}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     const copyButtons = screen.getAllByRole('button');
@@ -139,7 +139,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={onCopyInviteCode}
-      />
+      />,
     );
 
     const copyButtons = screen.getAllByRole('button');
@@ -159,7 +159,7 @@ describe('InviteSection', () => {
         onLoadInviteLink={vi.fn()}
         onCopyInviteLink={vi.fn()}
         onCopyInviteCode={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Copied to clipboard!')).toBeInTheDocument();

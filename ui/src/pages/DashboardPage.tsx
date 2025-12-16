@@ -25,7 +25,7 @@ const DashboardPage = () => {
   const [session, setSession] = useState<CreateSessionResponse | null>(null);
   const [inviteLink, setInviteLink] = useState<InviteLinkResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingInvite, setLoadingInvite] = useState(false);
+  const [_loadingInvite, setLoadingInvite] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -81,7 +81,9 @@ const DashboardPage = () => {
   };
 
   const handleGenerateInviteLink = async () => {
-    if (!session?.sessionId) return;
+    if (!session?.sessionId) {
+      return;
+    }
     setLoadingInvite(true);
     setError(null);
     try {

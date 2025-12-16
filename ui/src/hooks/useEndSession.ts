@@ -27,7 +27,7 @@ export const useEndSession = (sessionId: string | undefined) => {
       } else {
         setError('Failed to end session. Please try again.');
       }
-      throw err;
+      return null;
     } finally {
       setLoading(false);
     }

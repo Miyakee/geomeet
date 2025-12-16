@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useInviteLink } from '../useInviteLink';
 import { sessionApi } from '../../services/api';
 
@@ -93,7 +93,7 @@ describe('useInviteLink', () => {
     });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'http://localhost:3000/join?sessionId=test-session-id'
+      'http://localhost:3000/join?sessionId=test-session-id',
     );
     expect(result.current.copied).toBe(true);
 

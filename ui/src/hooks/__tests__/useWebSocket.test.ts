@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useWebSocket } from '../useWebSocket';
-import { SessionDetailResponse, ParticipantLocation } from '../../types/session';
-import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../../services/api';
+import { SessionDetailResponse } from '../../types/session';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
@@ -72,7 +71,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     expect(Client).not.toHaveBeenCalled();
@@ -91,7 +90,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     // Advance timer to trigger setup
@@ -111,7 +110,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     // Advance timer to trigger setup
@@ -133,7 +132,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -145,7 +144,7 @@ describe('useWebSocket', () => {
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
       '/topic/session/test-session-id',
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -171,7 +170,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -214,7 +213,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -239,7 +238,7 @@ describe('useWebSocket', () => {
         accuracy: 10.0,
         updatedAt: mockLocationUpdate.updatedAt,
       },
-      1
+      1,
     );
   });
 
@@ -256,7 +255,7 @@ describe('useWebSocket', () => {
         onLocationUpdate,
         onAddressUpdate,
         onOptimalLocationUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -268,7 +267,7 @@ describe('useWebSocket', () => {
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
       '/topic/session/test-session-id/optimal-location',
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -285,7 +284,7 @@ describe('useWebSocket', () => {
         onLocationUpdate,
         onAddressUpdate,
         onMeetingLocationUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -297,7 +296,7 @@ describe('useWebSocket', () => {
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
       '/topic/session/test-session-id/meeting-location',
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -314,7 +313,7 @@ describe('useWebSocket', () => {
         onLocationUpdate,
         onAddressUpdate,
         onSessionEnd,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -326,7 +325,7 @@ describe('useWebSocket', () => {
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
       '/topic/session/test-session-id/end',
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -354,7 +353,7 @@ describe('useWebSocket', () => {
         onLocationUpdate,
         onAddressUpdate,
         onSessionEnd,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -386,7 +385,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -399,7 +398,7 @@ describe('useWebSocket', () => {
     // Should not subscribe to session end topic
     const subscribeCalls = vi.mocked(mockClient.subscribe).mock.calls;
     const sessionEndSubscribe = subscribeCalls.find(
-      (call) => call[0] === '/topic/session/test-session-id/end'
+      (call) => call[0] === '/topic/session/test-session-id/end',
     );
     expect(sessionEndSubscribe).toBeUndefined();
   });
@@ -415,7 +414,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -438,7 +437,7 @@ describe('useWebSocket', () => {
         onSessionUpdate,
         onLocationUpdate,
         onAddressUpdate,
-      })
+      }),
     );
 
     vi.advanceTimersByTime(500);
@@ -477,7 +476,7 @@ describe('useWebSocket', () => {
         }),
       {
         initialProps: { sessionId: 'session-1' },
-      }
+      },
     );
 
     vi.advanceTimersByTime(500);

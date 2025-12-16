@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
@@ -62,7 +62,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Welcome to GeoMeet')).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Create Session')).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const createButton = screen.getByText('Create Session');
@@ -128,7 +128,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const createButton = screen.getByText('Create Session');
@@ -141,7 +141,7 @@ describe('DashboardPage', () => {
 
   it('should show loading state during session creation', async () => {
     const user = userEvent.setup();
-    let resolveCreate: (value: any) => void;
+    let resolveCreate: ((value: any) => void) | undefined;
     const createPromise = new Promise((resolve) => {
       resolveCreate = resolve;
     });
@@ -156,7 +156,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const createButton = screen.getByText('Create Session');
@@ -169,14 +169,16 @@ describe('DashboardPage', () => {
     });
 
     // Resolve the promise
-    resolveCreate!({
-      id: 1,
-      sessionId: 'test-session-id',
-      initiatorId: 1,
-      status: 'Active',
-      createdAt: '2024-01-01T00:00:00',
-      message: 'Session created successfully',
-    });
+    if (resolveCreate) {
+      resolveCreate({
+        id: 1,
+        sessionId: 'test-session-id',
+        initiatorId: 1,
+        status: 'Active',
+        createdAt: '2024-01-01T00:00:00',
+        message: 'Session created successfully',
+      });
+    }
 
     await waitFor(() => {
       // Button should be enabled after navigation or session creation
@@ -190,7 +192,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const logoutButton = screen.getByText('Logout');
@@ -225,7 +227,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const createButton = screen.getByText('Create Session');
@@ -238,7 +240,7 @@ describe('DashboardPage', () => {
     // Find copy button - it should be visible after session is created
     const copyButtons = screen.getAllByRole('button');
     const copyButton = copyButtons.find((btn) => 
-      btn.textContent?.toLowerCase().includes('copy') && !btn.disabled
+      btn.textContent?.toLowerCase().includes('copy') && !btn.disabled,
     );
     
     expect(copyButton).toBeDefined();
@@ -266,7 +268,7 @@ describe('DashboardPage', () => {
     render(
       <BrowserRouter>
         <DashboardPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const createButton = screen.getByText('Create Session');

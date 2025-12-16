@@ -17,7 +17,7 @@ export const calculateHaversineDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number => {
   const EARTH_RADIUS_KM = 6371.0;
 

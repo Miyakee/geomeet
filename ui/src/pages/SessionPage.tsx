@@ -23,7 +23,7 @@ import { useLocationTracking } from '../hooks/useLocationTracking';
 import { useOptimalLocation } from '../hooks/useOptimalLocation';
 import { useMeetingLocation } from '../hooks/useMeetingLocation';
 import { useEndSession } from '../hooks/useEndSession';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useWebSocket, SessionEndNotification } from '../hooks/useWebSocket';
 import { SessionHeader } from '../components/session/SessionHeader';
 import { ParticipantList } from '../components/session/ParticipantList';
 import { LocationTrackingSection } from '../components/session/LocationTrackingSection';
@@ -32,7 +32,6 @@ import { MeetingLocationSection } from '../components/session/MeetingLocationSec
 import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
 import { ParticipantLocation, SessionDetailResponse } from '../types/session';
 import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
-import { SessionEndNotification } from '../hooks/useWebSocket';
 
 const SessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -169,7 +168,15 @@ const SessionPage = () => {
         }
       }
     }
-  }, [session?.meetingLocationLatitude, session?.meetingLocationLongitude, session?.id, session?.sessionId, updateMeetingLocationFromResponse, meetingLocation]);
+  }, [
+    session?.meetingLocationLatitude,
+    session?.meetingLocationLongitude,
+    session?.id,
+    session?.sessionId,
+    updateMeetingLocationFromResponse,
+    meetingLocation,
+    session,
+  ]);
 
   // Load invite link when session is loaded and user is initiator
   useEffect(() => {
@@ -261,7 +268,8 @@ const SessionPage = () => {
                     The session has ended. The final meeting location has been set:
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 1, fontWeight: 'medium' }}>
-                    {sessionEndNotification.meetingLocationLatitude?.toFixed(6)}, {sessionEndNotification.meetingLocationLongitude?.toFixed(6)}
+                    {sessionEndNotification.meetingLocationLatitude?.toFixed(6)},{' '}
+                    {sessionEndNotification.meetingLocationLongitude?.toFixed(6)}
                   </Typography>
                 </Box>
               ) : (
@@ -305,31 +313,31 @@ const SessionPage = () => {
 
           {/* Meeting Location Section */}
           <MeetingLocationSection
-              meetingLocation={meetingLocation}
-              meetingLocationAddress={meetingLocationAddress}
-              loadingAddress={loadingMeetingLocationAddress}
-              currentUserLocation={currentLocation ? {
-                latitude: currentLocation.coords.latitude,
-                longitude: currentLocation.coords.longitude,
-              } : null}
-              isInitiator={isInitiator}
-              onUpdateLocation={updateMeetingLocation}
-              loading={updatingMeetingLocation}
-              error={meetingLocationError}
+            meetingLocation={meetingLocation}
+            meetingLocationAddress={meetingLocationAddress}
+            loadingAddress={loadingMeetingLocationAddress}
+            currentUserLocation={currentLocation ? {
+              latitude: currentLocation.coords.latitude,
+              longitude: currentLocation.coords.longitude,
+            } : null}
+            isInitiator={isInitiator}
+            onUpdateLocation={updateMeetingLocation}
+            loading={updatingMeetingLocation}
+            error={meetingLocationError}
           />
 
           <Divider sx={{ my: 3 }} />
 
 
           <LocationTrackingSection
-              locationEnabled={locationEnabled}
-              locationError={locationError}
-              currentLocation={currentLocation}
-              updatingLocation={updatingLocation}
-              onToggle={handleLocationToggle}
-              onRetry={() => {
-                startLocationTracking();
-              }}
+            locationEnabled={locationEnabled}
+            locationError={locationError}
+            currentLocation={currentLocation}
+            updatingLocation={updatingLocation}
+            onToggle={handleLocationToggle}
+            onRetry={() => {
+              startLocationTracking();
+            }}
           />
 
           <Divider sx={{ my: 3 }} />
@@ -350,7 +358,7 @@ const SessionPage = () => {
                   longitude: loc.longitude,
                   userId,
                 },
-              ])
+              ]),
             )}
             participantNames={participantNames}
             currentUserLocation={currentLocation ? {
@@ -395,7 +403,7 @@ const SessionPage = () => {
                       try {
                         await updateMeetingLocation(
                           optimalLocation.optimalLatitude,
-                          optimalLocation.optimalLongitude
+                          optimalLocation.optimalLongitude,
                         );
                       } catch (err) {
                         // Error is handled by useMeetingLocation hook

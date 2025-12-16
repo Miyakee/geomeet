@@ -8,7 +8,9 @@ export const useSessionData = (sessionId: string | undefined) => {
   const [error, setError] = useState<string | null>(null);
 
   const loadSessionData = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      return;
+    }
 
     try {
       setLoading(true);

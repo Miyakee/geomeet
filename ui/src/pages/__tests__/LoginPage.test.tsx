@@ -40,7 +40,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Use getAllByText and check first occurrence
@@ -57,7 +57,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -78,7 +78,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const passwordInputs = screen.getAllByLabelText(/Password/i);
@@ -101,7 +101,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -128,7 +128,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -154,7 +154,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -185,7 +185,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -204,7 +204,7 @@ describe('LoginPage', () => {
 
   it('should show loading state during login', async () => {
     const user = userEvent.setup();
-    let resolveLogin: () => void;
+    let resolveLogin: (() => void) | undefined;
     const loginPromise = new Promise<void>((resolve) => {
       resolveLogin = resolve;
     });
@@ -213,7 +213,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const usernameInput = screen.getByLabelText(/Username or Email/i);
@@ -230,7 +230,9 @@ describe('LoginPage', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
     // Resolve login
-    resolveLogin!();
+    if (resolveLogin) {
+      resolveLogin();
+    }
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
     });
@@ -240,7 +242,7 @@ describe('LoginPage', () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(/Demo credentials:/)).toBeInTheDocument();

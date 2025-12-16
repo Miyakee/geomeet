@@ -72,7 +72,7 @@ describe('geocodingService', () => {
         headers: expect.objectContaining({
           'User-Agent': 'GeoMeet/1.0',
         }),
-      })
+      }),
     );
   }, 10000);
 

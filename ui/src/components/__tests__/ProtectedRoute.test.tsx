@@ -27,7 +27,7 @@ const renderWithRouter = (isAuthenticated: boolean, isInitialized: boolean = tru
       <ProtectedRoute>
         <TestComponent />
       </ProtectedRoute>
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 };
 

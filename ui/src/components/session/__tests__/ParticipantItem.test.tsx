@@ -25,7 +25,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={false}
         isCurrentUser={false}
-      />
+      />,
     );
 
     expect(screen.getByText('testuser')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={true}
         isCurrentUser={false}
-      />
+      />,
     );
 
     expect(screen.getByText('Initiator')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={false}
         isCurrentUser={true}
-      />
+      />,
     );
 
     expect(screen.getByText('You')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('ParticipantItem', () => {
         isInitiator={false}
         isCurrentUser={false}
         location={mockLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('ParticipantItem', () => {
         isCurrentUser={false}
         location={mockLocation}
         address="Market Street, San Francisco"
-      />
+      />,
     );
 
     expect(screen.getByText(/Market Street, San Francisco/)).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('ParticipantItem', () => {
         isInitiator={false}
         isCurrentUser={false}
         location={mockLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/±10m/)).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={false}
         isCurrentUser={false}
-      />
+      />,
     );
 
     expect(screen.queryByText(/37\.774900/)).not.toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={true}
         isCurrentUser={true}
-      />
+      />,
     );
 
     expect(screen.getByText('Initiator')).toBeInTheDocument();
@@ -137,7 +137,7 @@ describe('ParticipantItem', () => {
         isInitiator={false}
         isCurrentUser={false}
         location={oldLocation}
-      />
+      />,
     );
 
     expect(screen.getByText(/120s ago/)).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('ParticipantItem', () => {
         participant={mockParticipant}
         isInitiator={false}
         isCurrentUser={true}
-      />
+      />,
     );
 
     const listItem = container.querySelector('.MuiListItem-root');

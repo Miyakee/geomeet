@@ -26,7 +26,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Location Tracking')).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     const switchElement = screen.getByRole('checkbox');
@@ -57,7 +57,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     const switchElement = screen.getByRole('checkbox');
@@ -76,7 +76,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={onToggle}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     const switchElement = screen.getByRole('checkbox');
@@ -94,7 +94,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Location permission denied')).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={onRetry}
-      />
+      />,
     );
 
     const retryButton = screen.getByText('Retry');
@@ -130,7 +130,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={onRetry}
-      />
+      />,
     );
 
     const retryButton = screen.getByText('Retry');
@@ -148,7 +148,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe('LocationTrackingSection', () => {
         updatingLocation={false}
         onToggle={vi.fn()}
         onRetry={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Getting your location...')).toBeInTheDocument();

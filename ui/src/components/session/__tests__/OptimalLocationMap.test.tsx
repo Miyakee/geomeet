@@ -27,7 +27,7 @@ describe('OptimalLocationMap', () => {
         optimalLocation={null}
         participantLocations={new Map()}
         participantNames={new Map()}
-      />
+      />,
     );
 
     // Component shows loading initially, then "No locations" after mount
@@ -43,7 +43,7 @@ describe('OptimalLocationMap', () => {
         optimalLocation={null}
         participantLocations={new Map()}
         participantNames={new Map()}
-      />
+      />,
     );
 
     expect(screen.getByText('No locations available to display on map')).toBeInTheDocument();
@@ -62,7 +62,7 @@ describe('OptimalLocationMap', () => {
         optimalLocation={optimalLocation}
         participantLocations={new Map()}
         participantNames={new Map()}
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -89,7 +89,7 @@ describe('OptimalLocationMap', () => {
         optimalLocation={null}
         participantLocations={participantLocations}
         participantNames={participantNames}
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -111,7 +111,7 @@ describe('OptimalLocationMap', () => {
         participantLocations={new Map()}
         participantNames={new Map()}
         currentUserLocation={currentUserLocation}
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -139,7 +139,7 @@ describe('OptimalLocationMap', () => {
         participantLocations={new Map()}
         participantNames={new Map()}
         currentUserLocation={currentUserLocation}
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -167,7 +167,7 @@ describe('OptimalLocationMap', () => {
         participantLocations={new Map()}
         participantNames={new Map()}
         meetingLocation={meetingLocation}
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -189,7 +189,7 @@ describe('OptimalLocationMap', () => {
         participantNames={new Map()}
         meetingLocation={meetingLocation}
         meetingLocationAddress="Test Address"
-      />
+      />,
     );
 
     // Wait for component to mount
@@ -225,7 +225,7 @@ describe('OptimalLocationMap', () => {
         participantLocations={participantLocations}
         participantNames={participantNames}
         meetingLocation={meetingLocation}
-      />
+      />,
     );
 
     // Wait for component to mount
