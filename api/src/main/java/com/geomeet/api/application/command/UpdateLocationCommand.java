@@ -47,7 +47,8 @@ public class UpdateLocationCommand {
      * @param accuracy the accuracy in meters (optional)
      * @return a new UpdateLocationCommand
      */
-    public static UpdateLocationCommand of(String sessionId, Long userId, Double latitude, Double longitude, Double accuracy) {
+    public static UpdateLocationCommand of(
+            String sessionId, Long userId, Double latitude, Double longitude, Double accuracy) {
         return UpdateLocationCommand.builder()
             .sessionId(sessionId)
             .userId(userId)

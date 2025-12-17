@@ -69,7 +69,8 @@ public class CalculateOptimalLocationUseCase {
         List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
 
         if (participantLocations.isEmpty()) {
-            throw new DomainException("No participant locations available. At least one participant must share their location.");
+            throw new DomainException(
+                    "No participant locations available. At least one participant must share their location.");
         }
 
         // Extract Location value objects

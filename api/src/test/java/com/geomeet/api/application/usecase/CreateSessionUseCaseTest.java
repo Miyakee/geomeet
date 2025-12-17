@@ -88,15 +88,19 @@ class CreateSessionUseCaseTest {
         Session session1 = Session.create(initiatorId);
         Session session2 = Session.create(initiatorId);
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        Session savedSession1 = Session.reconstruct(100L, session1.getSessionId(), initiatorId, session1.getStatus(), now, now, null, null);
-        Session savedSession2 = Session.reconstruct(101L, session2.getSessionId(), initiatorId, session2.getStatus(), now, now, null, null);
+        Session savedSession1 = Session.reconstruct(
+                100L, session1.getSessionId(), initiatorId, session1.getStatus(), now, now, null, null);
+        Session savedSession2 = Session.reconstruct(
+                101L, session2.getSessionId(), initiatorId, session2.getStatus(), now, now, null, null);
         when(sessionRepository.save(any(Session.class)))
             .thenReturn(savedSession1)
             .thenReturn(savedSession2);
         java.time.LocalDateTime participantNow = java.time.LocalDateTime.now();
         when(sessionParticipantRepository.save(any(SessionParticipant.class)))
-            .thenReturn(SessionParticipant.reconstruct(200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null))
-            .thenReturn(SessionParticipant.reconstruct(201L, 101L, initiatorId, participantNow, participantNow, participantNow, null, null));
+            .thenReturn(SessionParticipant.reconstruct(
+                    200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null))
+            .thenReturn(SessionParticipant.reconstruct(
+                    201L, 101L, initiatorId, participantNow, participantNow, participantNow, null, null));
 
         // When
         CreateSessionResult result1 = createSessionUseCase.execute(command);
@@ -112,11 +116,13 @@ class CreateSessionUseCaseTest {
         CreateSessionCommand command = new CreateSessionCommand(initiatorId);
         Session createdSession = Session.create(initiatorId);
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        Session savedSession = Session.reconstruct(100L, createdSession.getSessionId(), initiatorId, createdSession.getStatus(), now, now, null, null);
+        Session savedSession = Session.reconstruct(
+                100L, createdSession.getSessionId(), initiatorId, createdSession.getStatus(), now, now, null, null);
         when(sessionRepository.save(any(Session.class))).thenReturn(savedSession);
         java.time.LocalDateTime participantNow = java.time.LocalDateTime.now();
         when(sessionParticipantRepository.save(any(SessionParticipant.class)))
-            .thenReturn(SessionParticipant.reconstruct(200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null));
+            .thenReturn(SessionParticipant.reconstruct(
+                    200L, 100L, initiatorId, participantNow, participantNow, participantNow, null, null));
 
         // When
         CreateSessionResult result = createSessionUseCase.execute(command);

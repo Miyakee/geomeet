@@ -143,9 +143,12 @@ jacocoTestCoverageVerification {
 // Checkstyle Configuration
 checkstyle {
     toolVersion = '10.12.5'
+    // Use Google style as base, then customize
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
     ignoreFailures = false
     showViolations = true
+    maxErrors = 0
+    maxWarnings = 0
 }
 
 // PMD Configuration

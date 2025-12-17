@@ -133,7 +133,8 @@ class ParticipantLocationRepositoryImplTest {
         when(participantLocationMapper.toDomain(entityLocation)).thenReturn(domainLocation);
 
         // When
-        Optional<ParticipantLocation> result = participantLocationRepository.findBySessionIdAndUserId(sessionId, userId);
+        Optional<ParticipantLocation> result =
+                participantLocationRepository.findBySessionIdAndUserId(sessionId, userId);
 
         // Then
         assertTrue(result.isPresent());
@@ -149,7 +150,8 @@ class ParticipantLocationRepositoryImplTest {
             .thenReturn(Optional.empty());
 
         // When
-        Optional<ParticipantLocation> result = participantLocationRepository.findBySessionIdAndUserId(sessionId, userId);
+        Optional<ParticipantLocation> result =
+                participantLocationRepository.findBySessionIdAndUserId(sessionId, userId);
 
         // Then
         assertFalse(result.isPresent());

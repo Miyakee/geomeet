@@ -75,7 +75,8 @@ class BroadcastSessionEndUseCaseTest {
 
         // Then
         String expectedDestination = "/topic/session/" + sessionIdString + "/end";
-        verify(messagingTemplate).convertAndSend(eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
+        verify(messagingTemplate).convertAndSend(
+                eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
     }
 
     @Test
@@ -101,7 +102,8 @@ class BroadcastSessionEndUseCaseTest {
 
         // Then
         String expectedDestination = "/topic/session/" + sessionIdString + "/end";
-        verify(messagingTemplate).convertAndSend(eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
+        verify(messagingTemplate).convertAndSend(
+                eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
     }
 
     @Test
@@ -115,7 +117,8 @@ class BroadcastSessionEndUseCaseTest {
 
         // Then
         String expectedDestination = "/topic/session/" + sessionIdString + "/end";
-        verify(messagingTemplate).convertAndSend(eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
+        verify(messagingTemplate).convertAndSend(
+                eq(expectedDestination), any(BroadcastSessionEndUseCase.SessionEndNotification.class));
     }
 }
 
