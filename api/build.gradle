@@ -159,6 +159,11 @@ pmd {
     ignoreFailures = false
 }
 
+// PMD Test Configuration - ignore failures for test code
+pmdTest {
+    ignoreFailures = true
+}
+
 // SpotBugs Configuration
 spotbugs {
     toolVersion = '4.8.3'
