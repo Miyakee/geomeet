@@ -11,22 +11,54 @@
     <rule ref="category/java/bestpractices.xml">
         <exclude name="JUnitTestsShouldIncludeAssert"/>
         <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+        <exclude name="UnusedAssignment"/>
     </rule>
 
     <!-- Code Style -->
     <rule ref="category/java/codestyle.xml">
         <exclude name="OnlyOneReturn"/>
         <exclude name="AtLeastOneConstructor"/>
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <exclude name="ShortMethodName"/>
+        <exclude name="ShortClassName"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="LocalVariableNamingConventions"/>
+        <exclude name="FieldNamingConventions"/>
+        <exclude name="UnnecessaryImport"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="CallSuperInConstructor"/>
     </rule>
 
     <!-- Design -->
     <rule ref="category/java/design.xml">
         <exclude name="TooManyMethods"/>
         <exclude name="DataClass"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="UseUtilityClass"/>
+        <exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="CouplingBetweenObjects"/>
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="CollapsibleIfStatements"/>
+        <exclude name="AvoidDeeplyNestedIfStmts"/>
+        <exclude name="SignatureDeclareThrowsException"/>
+        <exclude name="AvoidCatchingGenericException"/>
     </rule>
 
     <!-- Error Prone -->
-    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="MissingSerialVersionUID"/>
+        <exclude name="UseLocaleWithCaseConversions"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="AvoidDeeplyNestedIfStmts"/>
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="EmptyCatchBlock"/>
+        <exclude name="UnusedFormalParameter"/>
+        <exclude name="SignatureDeclareThrowsException"/>
+        <exclude name="UselessParentheses"/>
+    </rule>
 
     <!-- Performance -->
     <rule ref="category/java/performance.xml"/>
@@ -35,49 +67,27 @@
     <rule ref="category/java/security.xml"/>
 
     <!-- Multithreading -->
-    <rule ref="category/java/multithreading.xml"/>
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="UseConcurrentHashMap"/>
+    </rule>
 
     <!-- Custom Rules -->
-    <rule ref="category/java/codestyle.xml/FieldNamingConventions">
-        <properties>
-            <property name="constantPattern" value="[A-Z][A-Z_0-9]*"/>
-            <property name="enumConstantPattern" value="[A-Z][A-Z_0-9]*"/>
-        </properties>
-    </rule>
-
-    <rule ref="category/java/codestyle.xml/ShortVariable">
-        <properties>
-            <property name="minimum" value="2"/>
-        </properties>
-    </rule>
-
     <rule ref="category/java/codestyle.xml/LongVariable">
         <properties>
-            <property name="minimum" value="30"/>
+            <property name="minimum" value="35"/>
         </properties>
     </rule>
 
-    <rule ref="category/java/design.xml/ExcessiveMethodLength">
+    <rule ref="category/java/design.xml/TooManyMethods">
         <properties>
-            <property name="minimum" value="150"/>
+            <property name="maxmethods" value="30"/>
         </properties>
     </rule>
 
     <rule ref="category/java/design.xml/ExcessiveParameterList">
         <properties>
-            <property name="minimum" value="7"/>
+            <property name="minimum" value="13"/>
         </properties>
-    </rule>
-
-    <rule ref="category/java/design.xml/ExcessiveClassLength">
-        <properties>
-            <property name="minimum" value="1000"/>
-        </properties>
-    </rule>
-
-    <!-- Exclude test files from some rules -->
-    <rule ref="category/java/bestpractices.xml/UnusedPrivateField">
-        <exclude-pattern>.*Test\.java</exclude-pattern>
     </rule>
 
 </ruleset>

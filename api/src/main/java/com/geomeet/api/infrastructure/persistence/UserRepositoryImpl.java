@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class UserRepositoryImpl implements UserRepository {
 
     private final JpaUserRepository jpaUserRepository;
-    public UserRepositoryImpl(JpaUserRepository jpaUserRepository, UserMapper userMapper) {
+    public UserRepositoryImpl(JpaUserRepository jpaUserRepository, @SuppressWarnings("unused") UserMapper userMapper) {
         this.jpaUserRepository = jpaUserRepository;
     }
 

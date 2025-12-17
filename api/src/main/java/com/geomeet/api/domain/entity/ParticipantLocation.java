@@ -1,8 +1,6 @@
 package com.geomeet.api.domain.entity;
 
-import com.geomeet.api.domain.valueobject.Latitude;
 import com.geomeet.api.domain.valueobject.Location;
-import com.geomeet.api.domain.valueobject.Longitude;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;

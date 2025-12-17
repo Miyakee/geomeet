@@ -1,6 +1,5 @@
 package com.geomeet.api.domain.valueobject;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
