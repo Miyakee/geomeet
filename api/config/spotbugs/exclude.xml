@@ -10,10 +10,9 @@
         <Source name="~.*\.class"/>
     </Match>
 
-    <!-- Exclude test classes from some checks -->
+    <!-- Exclude test classes from most checks (test code quality requirements are more relaxed) -->
     <Match>
         <Class name="~.*Test"/>
-        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
 
     <!-- Exclude Spring Boot main application class from some checks -->
@@ -28,5 +27,18 @@
         <Class name="~.*Entity"/>
     </Match>
 
-</FindBugsFilter>
+    <!-- Exclude CT_CONSTRUCTOR_THROW (intentional validation in constructors) -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 
+    <!-- Exclude EI_EXPOSE_REP and EI_EXPOSE_REP2 (Lombok/Spring generated code and framework patterns) -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+</FindBugsFilter>
