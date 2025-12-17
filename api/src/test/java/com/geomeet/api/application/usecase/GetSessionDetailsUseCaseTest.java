@@ -2,6 +2,7 @@ package com.geomeet.api.application.usecase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -280,6 +281,58 @@ class GetSessionDetailsUseCaseTest {
             .filter(p -> p.getUserId().equals(initiatorId))
             .count();
         assertEquals(1, initiatorCount);
+    }
+
+    @Test
+    void shouldIncludeMeetingLocationWhenSessionHasMeetingLocation() {
+        // Given - session with meeting location
+        com.geomeet.api.domain.valueobject.Location meetingLocation = 
+            com.geomeet.api.domain.valueobject.Location.of(1.3521, 103.8198);
+        Session sessionWithLocation = Session.reconstruct(
+            sessionId,
+            SessionId.fromString(sessionIdString),
+            initiatorId,
+            SessionStatus.ACTIVE,
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null,
+            null,
+            meetingLocation
+        );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(sessionWithLocation));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1.3521, result.getMeetingLocationLatitude());
+        assertEquals(103.8198, result.getMeetingLocationLongitude());
+    }
+
+    @Test
+    void shouldReturnNullMeetingLocationWhenSessionHasNoMeetingLocation() {
+        // Given - session without meeting location (already set up in setUp)
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNull(result.getMeetingLocationLatitude());
+        assertNull(result.getMeetingLocationLongitude());
     }
 }
 
