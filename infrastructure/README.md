@@ -38,9 +38,14 @@ infrastructure/
 
 1. **Configure AWS credentials**:
    ```bash
-   aws configure --profile PowerUserPlusRole-160071257600
+   # Set your AWS profile name
+   export AWS_PROFILE=your-aws-profile-name
+   
    # Or use AWS SSO:
-   aws sso login --profile PowerUserPlusRole-160071257600
+   aws sso login --profile your-aws-profile-name
+   
+   # Or configure via AWS CLI:
+   aws configure --profile your-aws-profile-name
    ```
 
 2. **Initialize Terraform**:

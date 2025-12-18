@@ -9,6 +9,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=aws
+      # Database configuration - use environment variables
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_ENDPOINT}:5432/${DB_NAME:-geomeet}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}

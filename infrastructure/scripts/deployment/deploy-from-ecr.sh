@@ -14,7 +14,18 @@ NC='\033[0m' # No Color
 
 # 配置
 AWS_REGION="${AWS_REGION:-ap-southeast-1}"
-AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-160071257600}"
+
+# 动态获取 AWS Account ID（如果未设置）
+if [ -z "$AWS_ACCOUNT_ID" ]; then
+    echo "🔍 获取 AWS Account ID..."
+    AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
+    if [ -z "$AWS_ACCOUNT_ID" ]; then
+        echo -e "${RED}❌ 无法获取 AWS Account ID${NC}"
+        echo "请设置 AWS_ACCOUNT_ID 环境变量或配置 AWS CLI"
+        exit 1
+    fi
+fi
+
 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 

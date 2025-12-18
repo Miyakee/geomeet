@@ -8,9 +8,9 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  description = "AWS profile name for authentication"
+  description = "AWS profile name for authentication. Leave empty to use default AWS credentials chain."
   type        = string
-  default     = "PowerUserPlusRole-160071257600"
+  default     = ""  # Empty string means use default AWS credentials (from environment, IAM role, etc.)
 }
 
 variable "environment" {
@@ -59,14 +59,15 @@ variable "db_name" {
 variable "db_username" {
   description = "Database master username"
   type        = string
-  default     = "geomeet_admin"
+  # No default - must be provided via terraform.tfvars or environment variable
   sensitive   = true
 }
 
 variable "db_password" {
   description = "Database master password"
   type        = string
-  default     = "ChangeMe123!"
+  # No default - must be provided via terraform.tfvars or environment variable
+  # Use strong password and never commit to Git
   sensitive   = true
 }
 

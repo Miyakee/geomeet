@@ -1,0 +1,25 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is in .gitignore and will NOT be committed
+
+# AWS Configuration
+aws_region  = "ap-southeast-1"
+aws_profile = "your-aws-profile-name"  # 不要使用默认值
+
+# Environment
+environment = "dev"
+project_name = "geomeet"
+
+# Database Configuration
+# ⚠️ 重要：这些是敏感信息，不要提交到 Git
+db_name     = "geomeet"
+db_username = "geomeet_admin"
+db_password = "YourSecurePassword123!"  # 使用强密码
+
+# Compute Configuration
+ec2_instance_type = "t3.micro"
+ec2_key_name      = "your-ec2-key-name"
+
+# Optional: Domain name for HTTPS
+# domain_name = "geomeet.yourdomain.com"
+

@@ -25,3 +25,14 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# Environment files (may contain sensitive data)
+.env
+.env.local
+.env.*.local
+
+# Configuration files with sensitive data
+config/docker-compose.yml
+# Keep example files
+!config/docker-compose.yml.example
+!config/.env.example
+

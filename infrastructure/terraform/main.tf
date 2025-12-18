@@ -23,7 +23,9 @@ terraform {
 
 # Configure AWS Provider
 provider "aws" {
-  region  = var.aws_region
+  region = var.aws_region
+  # profile is optional - if empty, uses default AWS credentials
+  # Set via environment variable TF_VAR_aws_profile or terraform.tfvars
   profile = var.aws_profile
   
   default_tags {
