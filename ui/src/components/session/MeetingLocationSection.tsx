@@ -96,6 +96,19 @@ export const MeetingLocationSection = ({
 
   const handleUseCurrentLocation = () => {
     if (navigator.geolocation) {
+      const isSecureOrigin = 
+        window.location.protocol === 'https:' || 
+        window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1';
+      
+      if (!isSecureOrigin) {
+        setValidationError(
+          'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
+          'Alternatively, you can manually enter your location coordinates.'
+        );
+        return;
+      }
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLatitude(position.coords.latitude.toFixed(6));
@@ -103,7 +116,14 @@ export const MeetingLocationSection = ({
           setValidationError(null);
         },
         (err) => {
-          setValidationError(`Failed to get current location: ${err.message}`);
+          if (err.code === err.PERMISSION_DENIED && err.message.includes('secure origins')) {
+            setValidationError(
+              'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
+              'Alternatively, you can manually enter your location coordinates.'
+            );
+          } else {
+            setValidationError(`Failed to get current location: ${err.message}`);
+          }
         },
       );
     } else {

@@ -35,22 +35,39 @@ export const useLocationTracking = (sessionId: string | undefined) => {
   const handleGeolocationError = (error: GeolocationPositionError, isInitialRequest: boolean = false) => {
     let errorMessage = '';
     
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
-        if (isInitialRequest) {
-          setLocationEnabled(false);
-        }
-        break;
-      case error.POSITION_UNAVAILABLE:
-        errorMessage = 'Location information is unavailable. This may happen if you are indoors or GPS signal is weak. The app will keep trying to get your location.';
-        break;
-      case error.TIMEOUT:
-        errorMessage = 'Location request timed out. The app will keep trying to get your location.';
-        break;
-      default:
-        errorMessage = `Unable to get location (error code: ${error.code}). The app will keep trying.`;
-        break;
+    // Check if error is due to insecure origin (HTTP instead of HTTPS)
+    const isSecureOrigin = 
+      window.location.protocol === 'https:' || 
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1';
+    
+    if (error.code === error.PERMISSION_DENIED && 
+        error.message.includes('secure origins') && 
+        !isSecureOrigin) {
+      errorMessage = 
+        'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
+        'The site administrator needs to configure SSL/TLS certificate for secure access.';
+      if (isInitialRequest) {
+        setLocationEnabled(false);
+      }
+    } else {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+          if (isInitialRequest) {
+            setLocationEnabled(false);
+          }
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Location information is unavailable. This may happen if you are indoors or GPS signal is weak. The app will keep trying to get your location.';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'Location request timed out. The app will keep trying to get your location.';
+          break;
+        default:
+          errorMessage = `Unable to get location (error code: ${error.code}). The app will keep trying.`;
+          break;
+      }
     }
     
     setLocationError(errorMessage);
@@ -58,6 +75,8 @@ export const useLocationTracking = (sessionId: string | undefined) => {
       code: error.code,
       message: error.message,
       isInitialRequest,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
     });
   };
 
