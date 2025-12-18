@@ -26,28 +26,6 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
         },
-        // Inject polyfill at the beginning of ALL chunks
-        banner: `
-// CRITICAL: Polyfill for Request/Response - MUST execute before any other code
-if (typeof globalThis !== 'undefined') {
-  if (typeof Request !== 'undefined' && !globalThis.Request) {
-    Object.defineProperty(globalThis, 'Request', {
-      value: Request,
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
-  }
-  if (typeof Response !== 'undefined' && !globalThis.Response) {
-    Object.defineProperty(globalThis, 'Response', {
-      value: Response,
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
-  }
-}
-        `.trim(),
       },
     },
   },
