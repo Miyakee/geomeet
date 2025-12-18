@@ -12,12 +12,16 @@ vi.mock('../../contexts/AuthContext', () => ({
 }));
 
 // Mock sessionApi
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    createSession: vi.fn(),
-    generateInviteLink: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      createSession: vi.fn(),
+      generateInviteLink: vi.fn(),
+    },
+  };
+});
 
 // Mock useNavigate
 const mockNavigate = vi.fn();

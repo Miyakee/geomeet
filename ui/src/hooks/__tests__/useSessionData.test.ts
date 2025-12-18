@@ -4,11 +4,15 @@ import { useSessionData } from '../useSessionData';
 import { sessionApi } from '../../services/api';
 import { SessionDetailResponse } from '../../types/session';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    getSessionDetails: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      getSessionDetails: vi.fn(),
+    },
+  };
+});
 
 describe('useSessionData', () => {
   beforeEach(() => {

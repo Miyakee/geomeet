@@ -3,11 +3,15 @@ import { renderHook, act } from '@testing-library/react';
 import { useEndSession } from '../useEndSession';
 import { sessionApi } from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    endSession: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      endSession: vi.fn(),
+    },
+  };
+});
 
 describe('useEndSession', () => {
   beforeEach(() => {

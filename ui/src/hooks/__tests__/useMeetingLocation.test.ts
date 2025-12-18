@@ -4,11 +4,15 @@ import { useMeetingLocation } from '../useMeetingLocation';
 import { sessionApi } from '../../services/api';
 import { reverseGeocode } from '../../services/geocodingService';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    updateMeetingLocation: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      updateMeetingLocation: vi.fn(),
+    },
+  };
+});
 
 vi.mock('../../services/geocodingService', () => ({
   reverseGeocode: vi.fn(),

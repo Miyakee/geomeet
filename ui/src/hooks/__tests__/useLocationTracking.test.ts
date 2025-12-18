@@ -3,11 +3,15 @@ import { renderHook, act } from '@testing-library/react';
 import { useLocationTracking } from '../useLocationTracking';
 import { sessionApi } from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    updateLocation: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      updateLocation: vi.fn(),
+    },
+  };
+});
 
 // Mock geolocation API
 const mockGeolocation = {

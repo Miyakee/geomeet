@@ -3,11 +3,15 @@ import { renderHook, act } from '@testing-library/react';
 import { useInviteLink } from '../useInviteLink';
 import { sessionApi } from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    generateInviteLink: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      generateInviteLink: vi.fn(),
+    },
+  };
+});
 
 // Mock navigator.clipboard
 Object.assign(navigator, {

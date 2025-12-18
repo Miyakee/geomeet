@@ -3,11 +3,15 @@ import { renderHook, act } from '@testing-library/react';
 import { useOptimalLocation } from '../useOptimalLocation';
 import { sessionApi } from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    calculateOptimalLocation: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      calculateOptimalLocation: vi.fn(),
+    },
+  };
+});
 
 describe('useOptimalLocation', () => {
   beforeEach(() => {

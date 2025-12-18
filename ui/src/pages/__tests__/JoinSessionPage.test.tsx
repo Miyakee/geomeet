@@ -12,12 +12,16 @@ vi.mock('../../contexts/AuthContext', () => ({
 }));
 
 // Mock sessionApi
-vi.mock('../../services/api', () => ({
-  sessionApi: {
-    joinSession: vi.fn(),
-    getSessionDetails: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    sessionApi: {
+      joinSession: vi.fn(),
+      getSessionDetails: vi.fn(),
+    },
+  };
+});
 
 // Mock useNavigate and useSearchParams
 const mockNavigate = vi.fn();

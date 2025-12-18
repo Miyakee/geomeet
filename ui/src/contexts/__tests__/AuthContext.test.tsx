@@ -5,11 +5,15 @@ import {authApi} from '../../services/api';
 import {ReactNode} from 'react';
 
 // Mock the API
-vi.mock('../../services/api', () => ({
-  authApi: {
-    login: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    authApi: {
+      login: vi.fn(),
+    },
+  };
+});
 
 const wrapper = ({children}: { children: ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>

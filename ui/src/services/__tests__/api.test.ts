@@ -21,6 +21,9 @@ describe('API Service', () => {
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
+        headers: new Headers({
+          'content-type': 'application/json',
+        }),
         json: async () => mockResponse,
       });
 
@@ -80,6 +83,9 @@ describe('API Service', () => {
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
+        headers: new Headers({
+          'content-type': 'application/json',
+        }),
         json: async () => mockResponse,
       });
 
@@ -103,6 +109,9 @@ describe('API Service', () => {
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
+        headers: new Headers({
+          'content-type': 'application/json',
+        }),
         json: async () => mockResponse,
       });
 
