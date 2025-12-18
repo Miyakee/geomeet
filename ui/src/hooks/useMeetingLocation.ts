@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { sessionApi, UpdateMeetingLocationResponse } from '../services/api';
+import { sessionApi, UpdateMeetingLocationResponse, ApiError } from '../services/api';
 import { reverseGeocode } from '../services/geocodingService';
 
 export const useMeetingLocation = (sessionId: string | undefined) => {
@@ -12,7 +12,7 @@ export const useMeetingLocation = (sessionId: string | undefined) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateMeetingLocation = useCallback(async (latitude: number, longitude: number) => {
+  const updateMeetingLocation = useCallback(async (latitude: number, longitude: number): Promise<void> => {
     if (!sessionId) {
       setError('Session ID is required');
       return;
@@ -29,19 +29,24 @@ export const useMeetingLocation = (sessionId: string | undefined) => {
         latitude: result.latitude,
         longitude: result.longitude,
       });
-      return result;
-    } catch (err: any) {
-      console.error('Failed to update meeting location:', err);
-      if (err.response?.status === 403) {
-        setError('You do not have permission to update meeting location.');
-      } else if (err.response?.status === 404) {
-        setError('Session not found.');
-      } else if (err.response?.status === 400) {
-        setError(err.response?.data?.message || 'Invalid location data.');
-      } else {
-        setError('Failed to update meeting location. Please try again.');
-      }
-      throw err;
+          } catch (err: any) {
+            console.error('Failed to update meeting location:', err);
+            if (err instanceof ApiError || err.response) {
+              const status = err.status || err.response?.status;
+              const data = err.response?.data || err.response;
+              if (status === 403) {
+                setError('You do not have permission to update meeting location.');
+              } else if (status === 404) {
+                setError('Session not found.');
+              } else if (status === 400) {
+                setError(data?.message || 'Invalid location data.');
+              } else {
+                setError('Failed to update meeting location. Please try again.');
+              }
+            } else {
+              setError('Failed to update meeting location. Please try again.');
+            }
+            throw err;
     } finally {
       setLoading(false);
     }

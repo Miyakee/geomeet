@@ -240,7 +240,7 @@ describe('DashboardPage', () => {
     // Find copy button - it should be visible after session is created
     const copyButtons = screen.getAllByRole('button');
     const copyButton = copyButtons.find((btn) => 
-      btn.textContent?.toLowerCase().includes('copy') && !btn.disabled,
+      btn.textContent?.toLowerCase().includes('copy') && !(btn as HTMLButtonElement).disabled,
     );
     
     expect(copyButton).toBeDefined();

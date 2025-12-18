@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useWebSocket } from '../useWebSocket';
 import { SessionDetailResponse } from '../../types/session';
@@ -398,7 +398,7 @@ describe('useWebSocket', () => {
     // Should not subscribe to session end topic
     const subscribeCalls = vi.mocked(mockClient.subscribe).mock.calls;
     const sessionEndSubscribe = subscribeCalls.find(
-      (call) => call[0] === '/topic/session/test-session-id/end',
+      (call: any) => call[0] === '/topic/session/test-session-id/end',
     );
     expect(sessionEndSubscribe).toBeUndefined();
   });

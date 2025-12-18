@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import SessionPage from '../SessionPage';
 import * as AuthContext from '../../contexts/AuthContext';
@@ -86,6 +85,7 @@ describe('SessionPage', () => {
       session: mockSession,
       loading: false,
       error: null,
+      reload: vi.fn(),
       updateSession: vi.fn(),
     });
 
@@ -106,6 +106,7 @@ describe('SessionPage', () => {
       updatingLocation: false,
       handleLocationToggle: vi.fn(),
       startLocationTracking: vi.fn(),
+      stopLocationTracking: vi.fn(),
     });
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({
@@ -144,6 +145,7 @@ describe('SessionPage', () => {
       session: null,
       loading: true,
       error: null,
+      reload: vi.fn(),
       updateSession: vi.fn(),
     });
 
@@ -162,6 +164,7 @@ describe('SessionPage', () => {
       session: null,
       loading: false,
       error: errorMessage,
+      reload: vi.fn(),
       updateSession: vi.fn(),
     });
 
@@ -254,7 +257,6 @@ describe('SessionPage', () => {
   });
 
   it('should call calculateOptimalLocation when button is clicked', async () => {
-    const _user = userEvent.setup();
     const mockCalculateOptimalLocation = vi.fn();
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({

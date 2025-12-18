@@ -340,7 +340,7 @@ describe('MeetingLocationSection', () => {
       message: 'User denied geolocation',
     };
 
-    mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+    mockGeolocation.getCurrentPosition.mockImplementation((_success, error) => {
       if (error) {
         error(mockError as GeolocationPositionError);
       }

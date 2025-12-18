@@ -17,7 +17,7 @@ import {
 import {Add, ContentCopy, Logout, Person} from '@mui/icons-material';
 import {useAuth} from '../contexts/AuthContext';
 import {useNavigate} from 'react-router-dom';
-import {CreateSessionResponse, InviteLinkResponse, sessionApi} from '../services/api';
+import {CreateSessionResponse, InviteLinkResponse, sessionApi, ApiError} from '../services/api';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -42,14 +42,21 @@ const DashboardPage = () => {
       setSession(createdSession);
       // Navigate to session page
       navigate(`/session/${createdSession.sessionId}`);
-    } catch (err: any) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.message) {
-        setError(err.message);
-      } else {
-        setError('Failed to create session. Please try again.');
-      }
+      } catch (err: any) {
+        if (err instanceof ApiError || err.response) {
+          const data = err.response?.data || err.response;
+          if (data?.message) {
+            setError(data.message);
+          } else if (err.message) {
+            setError(err.message);
+          } else {
+            setError('Failed to create session. Please try again.');
+          }
+        } else if (err.message) {
+          setError(err.message);
+        } else {
+          setError('Failed to create session. Please try again.');
+        }
     } finally {
       setLoading(false);
     }

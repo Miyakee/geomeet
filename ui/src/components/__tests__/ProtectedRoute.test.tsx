@@ -14,7 +14,7 @@ const TestComponent = () => <div>Protected Content</div>;
 
 const renderWithRouter = (isAuthenticated: boolean, isInitialized: boolean = true) => {
   vi.mocked(AuthContext.useAuth).mockReturnValue({
-    user: isAuthenticated ? { username: 'test', email: 'test@test.com' } : null,
+    user: isAuthenticated ? { id: 1, username: 'test', email: 'test@test.com' } : null,
     token: isAuthenticated ? 'test-token' : null,
     login: vi.fn(),
     logout: vi.fn(),

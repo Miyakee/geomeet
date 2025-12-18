@@ -1,27 +1,90 @@
-import axios from 'axios';
 import { SessionDetailResponse } from '../types/session';
 
 // In development, use relative path to leverage Vite proxy
-// In production, use the full API URL
-const API_BASE_URL = import.meta.env.PROD
-  ? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080')
-  : ''; // Empty string means use relative path (via Vite proxy)
+// In production, use relative path to leverage Nginx proxy (same domain)
+// Only use absolute URL if VITE_API_BASE_URL is explicitly set
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Helper function to get auth token
+function getAuthToken(): string | null {
+  return localStorage.getItem('token');
+}
 
-// Add token to requests if available
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Helper function to build full URL
+function buildUrl(path: string): string {
+  if (API_BASE_URL) {
+    return `${API_BASE_URL}${path}`;
   }
-  return config;
-});
+  return path;
+}
+
+// Helper function to handle errors
+// This class mimics axios error structure for backward compatibility
+export class ApiError extends Error {
+  public response?: {
+    status: number;
+    data?: any;
+  };
+
+  constructor(
+    message: string,
+    public status: number,
+    responseData?: any,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    this.response = {
+      status,
+      data: responseData,
+    };
+  }
+}
+
+// Helper function to make HTTP requests
+async function request<T>(
+  url: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const fullUrl = buildUrl(url);
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorData: any;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { message: response.statusText };
+    }
+
+    throw new ApiError(
+      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+      response.status,
+      errorData,
+    );
+  }
+
+  // Handle empty responses
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  // For non-JSON responses, return empty object
+  return {} as T;
+}
 
 export interface LoginRequest {
   usernameOrEmail: string;
@@ -129,8 +192,10 @@ export interface EndSessionResponse {
 
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
-  const response = await apiClient.post<T>(url, data);
-  return response.data;
+  return request<T>(url, {
+    method: 'POST',
+    body: data ? JSON.stringify(data) : undefined,
+  });
 }
 
 export const authApi = {
@@ -141,20 +206,24 @@ export const authApi = {
 
 // Helper function for GET requests
 async function getRequest<T>(url: string): Promise<T> {
-  const response = await apiClient.get<T>(url);
-  return response.data;
+  return request<T>(url, {
+    method: 'GET',
+  });
 }
 
 // Helper function for PUT requests
 async function putRequest<T>(url: string, data?: unknown): Promise<T> {
-  const response = await apiClient.put<T>(url, data);
-  return response.data;
+  return request<T>(url, {
+    method: 'PUT',
+    body: data ? JSON.stringify(data) : undefined,
+  });
 }
 
 // Helper function for DELETE requests
 async function deleteRequest<T>(url: string): Promise<T> {
-  const response = await apiClient.delete<T>(url);
-  return response.data;
+  return request<T>(url, {
+    method: 'DELETE',
+  });
 }
 
 export const sessionApi = {
@@ -197,6 +266,3 @@ export const sessionApi = {
     return deleteRequest<EndSessionResponse>(`/api/sessions/${sessionId}`);
   },
 };
-
-export default apiClient;
-

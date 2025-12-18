@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { sessionApi } from '../services/api';
+import { sessionApi, ApiError } from '../services/api';
 import { SessionDetailResponse } from '../types/session';
 
 export const useSessionData = (sessionId: string | undefined) => {
@@ -19,10 +19,15 @@ export const useSessionData = (sessionId: string | undefined) => {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load session:', err);
-      if (err.response?.status === 403) {
-        setError('You do not have permission to view this session.');
-      } else if (err.response?.status === 404) {
-        setError('Session not found.');
+      if (err instanceof ApiError || err.response) {
+        const status = err.status || err.response?.status;
+        if (status === 403) {
+          setError('You do not have permission to view this session.');
+        } else if (status === 404) {
+          setError('Session not found.');
+        } else {
+          setError('Failed to load session. Please try again.');
+        }
       } else {
         setError('Failed to load session. Please try again.');
       }

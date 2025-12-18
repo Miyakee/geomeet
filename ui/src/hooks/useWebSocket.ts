@@ -54,8 +54,9 @@ export const useWebSocket = ({
         stompClientRef.current = null;
       }
 
-      const wsUrl = import.meta.env.PROD
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/^http/, 'ws')
+      // Use relative path in production (via Nginx proxy) unless VITE_API_BASE_URL is set
+      const wsUrl = import.meta.env.VITE_API_BASE_URL
+        ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')
         : '';
 
       const socket = new SockJS(wsUrl ? `${wsUrl}/ws` : '/ws');

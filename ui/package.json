@@ -19,7 +19,6 @@
     "@mui/material": "^5.15.0",
     "@stomp/stompjs": "^7.2.1",
     "@types/leaflet": "^1.9.21",
-    "axios": "^1.6.2",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -34,6 +33,7 @@
     "@testing-library/user-event": "^14.5.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@types/sockjs-client": "^1.5.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
@@ -46,6 +46,7 @@
     "jsdom": "^23.0.1",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
+    "vite-plugin-node-polyfills": "^0.24.0",
     "vitest": "^1.1.0"
   }
 }

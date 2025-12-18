@@ -131,7 +131,7 @@ describe('useLocationTracking', () => {
     } as GeolocationPositionError;
 
     // Call error callback synchronously for testing
-    mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+    mockGeolocation.getCurrentPosition.mockImplementation((_success, error) => {
       if (error) {
         error(mockError);
       }
