@@ -104,7 +104,7 @@ export const MeetingLocationSection = ({
       if (!isSecureOrigin) {
         setValidationError(
           'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
-          'Alternatively, you can manually enter your location coordinates.'
+          'Alternatively, you can manually enter your location coordinates.',
         );
         return;
       }
@@ -119,7 +119,7 @@ export const MeetingLocationSection = ({
           if (err.code === err.PERMISSION_DENIED && err.message.includes('secure origins')) {
             setValidationError(
               'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
-              'Alternatively, you can manually enter your location coordinates.'
+              'Alternatively, you can manually enter your location coordinates.',
             );
           } else {
             setValidationError(`Failed to get current location: ${err.message}`);

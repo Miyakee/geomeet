@@ -42,21 +42,21 @@ const DashboardPage = () => {
       setSession(createdSession);
       // Navigate to session page
       navigate(`/session/${createdSession.sessionId}`);
-      } catch (err: any) {
-        if (err instanceof ApiError || err.response) {
-          const data = err.response?.data || err.response;
-          if (data?.message) {
-            setError(data.message);
-          } else if (err.message) {
-            setError(err.message);
-          } else {
-            setError('Failed to create session. Please try again.');
-          }
+    } catch (err: any) {
+      if (err instanceof ApiError || err.response) {
+        const data = err.response?.data || err.response;
+        if (data?.message) {
+          setError(data.message);
         } else if (err.message) {
           setError(err.message);
         } else {
           setError('Failed to create session. Please try again.');
         }
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Failed to create session. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

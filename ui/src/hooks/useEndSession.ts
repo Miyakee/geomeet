@@ -16,23 +16,23 @@ export const useEndSession = (sessionId: string | undefined) => {
       setError(null);
       const result = await sessionApi.endSession(sessionId);
       return result;
-      } catch (err: any) {
-        console.error('Failed to end session:', err);
-        if (err instanceof ApiError || err.response) {
-          const status = err.status || err.response?.status;
-          const data = err.response?.data || err.response;
-          if (status === 403) {
-            setError('You do not have permission to end this session.');
-          } else if (status === 404) {
-            setError('Session not found.');
-          } else if (status === 400) {
-            setError(data?.message || 'Cannot end session. Session may already be ended.');
-          } else {
-            setError('Failed to end session. Please try again.');
-          }
+    } catch (err: any) {
+      console.error('Failed to end session:', err);
+      if (err instanceof ApiError || err.response) {
+        const status = err.status || err.response?.status;
+        const data = err.response?.data || err.response;
+        if (status === 403) {
+          setError('You do not have permission to end this session.');
+        } else if (status === 404) {
+          setError('Session not found.');
+        } else if (status === 400) {
+          setError(data?.message || 'Cannot end session. Session may already be ended.');
         } else {
           setError('Failed to end session. Please try again.');
         }
+      } else {
+        setError('Failed to end session. Please try again.');
+      }
       return null;
     } finally {
       setLoading(false);
