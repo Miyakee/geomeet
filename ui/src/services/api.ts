@@ -198,9 +198,26 @@ async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   });
 }
 
+export class RegisterRequest {
+  username: string;
+  password: string;
+  email: string;
+  verificationCode: string;
+}
+
+class RegisterResponse {
+  token: string;
+  username: string;
+  email: string;
+  message: string;
+}
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     return postRequest<LoginResponse>('/api/auth/login', credentials);
+  },
+  register: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
+    return postRequest<RegisterResponse>('/api/auth/register', credentials);
   },
 };
 
