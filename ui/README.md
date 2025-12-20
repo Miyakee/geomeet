@@ -20,8 +20,28 @@ npm install
 For production builds, create a `.env` file in the `ui` directory:
 
 ```env
+# API Configuration
 VITE_API_BASE_URL=http://localhost:8080
+
+# Geocoding Service Configuration (Optional)
+# Options: 'auto', 'opencage', 'mapbox', 'nominatim'
+VITE_GEOCODING_PROVIDER=auto
+
+# OpenCage Geocoding API (Recommended - supports CORS)
+# Free tier: 2,500 requests/day
+# Sign up at: https://opencagedata.com/api
+VITE_OPENCAGE_API_KEY=your-opencage-api-key
+
+# PositionStack Geocoding API (Easy to register - supports CORS)
+# Free tier: 100 requests/month
+# Sign up at: https://positionstack.com/
+VITE_POSITIONSTACK_API_KEY=your-positionstack-api-key
 ```
+
+**Geocoding Service Notes:**
+- If no API keys are provided, the service will use Nominatim (free, but has CORS limitations)
+- OpenCage and Mapbox both support CORS and are recommended for production
+- Copy `.env.example` to `.env` and fill in your API keys
 
 **Note**: In development mode, Vite automatically proxies `/api` requests to `http://localhost:8080`, so no CORS issues occur.
 

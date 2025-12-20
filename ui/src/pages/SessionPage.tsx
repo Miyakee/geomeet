@@ -52,8 +52,11 @@ const SessionPage = () => {
     locationError,
     currentLocation,
     updatingLocation,
+    showManualInput,
     handleLocationToggle,
     startLocationTracking,
+    setManualLocation,
+    setShowManualInput,
   } = useLocationTracking(sessionId);
 
   const [participantLocations, setParticipantLocations] = useState<Map<number, ParticipantLocation>>(new Map());
@@ -334,10 +337,13 @@ const SessionPage = () => {
             locationError={locationError}
             currentLocation={currentLocation}
             updatingLocation={updatingLocation}
+            showManualInput={showManualInput}
             onToggle={handleLocationToggle}
             onRetry={() => {
               startLocationTracking();
             }}
+            onSetManualLocation={setManualLocation}
+            onCloseManualInput={() => setShowManualInput(false)}
           />
 
           <Divider sx={{ my: 3 }} />

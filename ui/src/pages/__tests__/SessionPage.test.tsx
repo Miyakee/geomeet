@@ -104,9 +104,12 @@ describe('SessionPage', () => {
       locationError: null,
       currentLocation: null,
       updatingLocation: false,
+      showManualInput: false,
       handleLocationToggle: vi.fn(),
       startLocationTracking: vi.fn(),
       stopLocationTracking: vi.fn(),
+      setManualLocation: vi.fn(),
+      setShowManualInput: vi.fn(),
     });
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({
