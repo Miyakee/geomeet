@@ -104,10 +104,8 @@ const JoinSessionPage = () => {
     try {
       const result = await sessionApi.joinSession(sessionId.trim());
       setSuccess(true);
-      // Navigate to session page to see all participants
-      setTimeout(() => {
-        navigate(`/session/${result.sessionIdString}`, { replace: true });
-      }, 1000);
+      // Navigate to session page immediately (no delay for better UX)
+      navigate(`/session/${result.sessionIdString}`, { replace: true });
     } catch (err: any) {
       hasAttemptedJoin.current = false; // Allow retry on error
       console.error('Join session error:', err);

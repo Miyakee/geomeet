@@ -26,7 +26,6 @@ const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -39,16 +38,20 @@ const LoginPage = () => {
       };
       await login(credentials);
       
-      // Check if there's a redirect parameter
-      const redirect = searchParams.get('redirect');
+      // Check if this is an invite link (has sessionId parameter)
       const sessionId = searchParams.get('sessionId');
+      const redirect = searchParams.get('redirect');
       
-      if (redirect === '/join' && sessionId) {
-        navigate(`/join?sessionId=${sessionId}`);
+      // If sessionId exists, this is an invite link
+      if (sessionId) {
+        // Navigate to join page, which will auto-join and redirect to session
+        navigate(`/join?sessionId=${sessionId}`, { replace: true });
       } else if (redirect) {
-        navigate(redirect);
+        // Handle other redirect cases
+        navigate(redirect, { replace: true });
       } else {
-        navigate('/dashboard');
+        // Default: go to dashboard
+        navigate('/dashboard', { replace: true });
       }
     } catch (err: any) {
       if (err instanceof ApiError || err.response) {
