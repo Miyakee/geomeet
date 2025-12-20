@@ -13,13 +13,13 @@ interface RegisterDialogProps {
 }
 
 export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
-    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [verificationCode, setVerificationCode] = useState('2025'); // 固定验证码
 
     const handleSignUp = async () => {
-        if (!name || !email || !verificationCode || !password ) {
+        if (!username || !email || !verificationCode || !password ) {
             alert('input required fields');
             return;
         }
@@ -29,7 +29,7 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
             return;
         }
         const registerInfo: RegisterRequest = {
-            username: name,
+            username,
             password,
             email,
             verificationCode
@@ -37,7 +37,7 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
 
         await authApi.register(registerInfo);
 
-        setName('');
+        setUsername('');
         setPassword('');
         setEmail('');
         setVerificationCode('1234');
@@ -45,7 +45,7 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
     };
 
     const handleClose = () => {
-        setName('');
+        setUsername('');
         setEmail('');
         setVerificationCode('2025');
         onClose();
@@ -64,12 +64,12 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
                 <DialogContent>
                     <TextField 
                         fullWidth 
-                        id="name"
-                        label="Name" 
+                        id="username"
+                        label="Username"
                         variant="outlined"  
                         margin="normal"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                     />
                     <TextField
                         fullWidth

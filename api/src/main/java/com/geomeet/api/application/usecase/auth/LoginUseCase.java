@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase.login;
+package com.geomeet.api.application.usecase.auth;
 
 import com.geomeet.api.application.command.LoginCommand;
 import com.geomeet.api.application.result.LoginResult;

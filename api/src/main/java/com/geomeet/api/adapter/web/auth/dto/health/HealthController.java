@@ -1,4 +1,4 @@
-package com.geomeet.api.adapter.web.health;
+package com.geomeet.api.adapter.web.auth.dto.health;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

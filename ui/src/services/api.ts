@@ -198,14 +198,14 @@ async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   });
 }
 
-export class RegisterRequest {
+export interface RegisterRequest {
   username: string;
   password: string;
   email: string;
   verificationCode: string;
 }
 
-class RegisterResponse {
+export interface RegisterResponse {
   token: string;
   username: string;
   email: string;

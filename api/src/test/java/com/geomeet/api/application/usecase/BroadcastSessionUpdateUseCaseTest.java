@@ -7,7 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.geomeet.api.application.usecase.login.UserRepository;
+import com.geomeet.api.application.usecase.auth.UserRepository;
 import com.geomeet.api.application.usecase.session.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;

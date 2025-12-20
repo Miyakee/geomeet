@@ -1,7 +1,7 @@
 package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.result.GetSessionDetailsResult;
-import com.geomeet.api.application.usecase.login.UserRepository;
+import com.geomeet.api.application.usecase.auth.UserRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
