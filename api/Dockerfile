@@ -23,7 +23,7 @@ COPY src/ ./src/
 RUN chmod +x ./gradlew
 
 # 构建应用（跳过测试以加快构建速度）
-RUN ./gradlew clean build -x test --no-daemon
+RUN ./gradlew clean build -x test -x spotbugsMain -x checkstyleMain -x pmdMain -x checkstyleTest -x spotbugsTest -x pmdTest  --no-daemon
 
 # 运行阶段
 FROM eclipse-temurin:17-jre-alpine

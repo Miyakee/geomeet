@@ -21,12 +21,27 @@ output "private_subnet_ids" {
 output "db_endpoint" {
   description = "RDS database endpoint"
   value       = module.database.db_endpoint
-  sensitive   = true
+  sensitive   = false  # Changed to false to allow printing
+}
+
+output "db_endpoint_address" {
+  description = "RDS database endpoint address (hostname)"
+  value       = module.database.db_endpoint_address
 }
 
 output "db_port" {
   description = "RDS database port"
   value       = module.database.db_port
+}
+
+output "db_name" {
+  description = "Database name"
+  value       = module.database.db_name
+}
+
+output "db_instance_id" {
+  description = "RDS instance identifier"
+  value       = module.database.db_instance_id
 }
 
 # Compute Outputs

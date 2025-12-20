@@ -7,6 +7,9 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    dns:
+      - 169.254.169.253  # VPC DNS server
+      - 8.8.8.8          # Google DNS as fallback
     environment:
       - SPRING_PROFILES_ACTIVE=aws
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_ENDPOINT}:5432/${DB_NAME:-geomeet}

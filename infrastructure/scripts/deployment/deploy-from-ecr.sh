@@ -93,32 +93,209 @@ echo ""
 
 echo -e "${YELLOW}📦 步骤 4: 准备配置文件...${NC}"
 
-# 从 GitHub 拉取配置文件（如果需要）
-PROJECT_DIR="/tmp/geomeet"
-GITHUB_REPO="${GITHUB_REPO:-https://github.com/Miyakee/geomeet.git}"
+# GitHub 配置（使用 SSH）
+GITHUB_REPO="${GITHUB_REPO:-git@github.com:Miyakee/geomeet.git}"
 GITHUB_BRANCH="${GITHUB_BRANCH:-master}"
+PROJECT_DIR="/tmp/geomeet-repo"
 
+# 检查并安装 Git
+if ! command -v git &> /dev/null; then
+    echo -e "${YELLOW}⚠️  Git 未安装，尝试安装...${NC}"
+    if command -v yum &> /dev/null; then
+        sudo yum install -y git 2>/dev/null || {
+            echo -e "${RED}❌ 无法安装 Git，请手动安装: sudo yum install git -y${NC}"
+            exit 1
+        }
+    elif command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y git 2>/dev/null || {
+            echo -e "${RED}❌ 无法安装 Git，请手动安装: sudo apt-get install git -y${NC}"
+            exit 1
+        }
+    else
+        echo -e "${RED}❌ 无法自动安装 Git，请手动安装${NC}"
+        exit 1
+    fi
+fi
+
+# 检查 SSH 密钥是否配置
+if [ ! -f ~/.ssh/id_rsa ] && [ ! -f ~/.ssh/id_ed25519 ]; then
+    echo -e "${YELLOW}⚠️  未检测到 SSH 密钥${NC}"
+    echo "  如果这是第一次使用，GitHub 可能会提示添加主机密钥"
+    echo "  或者使用 HTTPS 方式（需要访问令牌）"
+fi
+
+# 克隆或更新仓库（如果需要）
 if [ ! -f "$DEPLOY_DIR/docker-compose.yml" ] || [ ! -f "$DEPLOY_DIR/nginx.conf" ]; then
-    echo "配置文件不存在，从 GitHub 拉取..."
+    echo "配置文件不存在，从 GitHub 克隆仓库..."
     
     if [ ! -d "$PROJECT_DIR" ]; then
-        cd /tmp
-        git clone -b $GITHUB_BRANCH $GITHUB_REPO geomeet
+        echo "  克隆仓库到 $PROJECT_DIR..."
+        # 首次克隆
+        if git clone -b "$GITHUB_BRANCH" "$GITHUB_REPO" "$PROJECT_DIR" 2>&1; then
+            echo -e "${GREEN}✅ 仓库克隆成功${NC}"
+        else
+            echo -e "${RED}❌ 仓库克隆失败${NC}"
+            echo "  可能的原因："
+            echo "    1. SSH 密钥未配置或未添加到 GitHub"
+            echo "    2. 仓库 URL 不正确"
+            echo "    3. 网络连接问题"
+            echo ""
+            echo "  尝试使用内联配置作为后备..."
+            USE_INLINE_CONFIG=true
+        fi
     else
-        cd $PROJECT_DIR
-        git fetch origin
-        git checkout $GITHUB_BRANCH 2>/dev/null || git checkout -b $GITHUB_BRANCH origin/$GITHUB_BRANCH
-        git reset --hard origin/$GITHUB_BRANCH
+        echo "  更新现有仓库..."
+        cd "$PROJECT_DIR" || exit 1
+        if git fetch origin 2>&1 && git checkout "$GITHUB_BRANCH" 2>/dev/null && git reset --hard "origin/$GITHUB_BRANCH" 2>&1; then
+            echo -e "${GREEN}✅ 仓库更新成功${NC}"
+        else
+            echo -e "${YELLOW}⚠️  仓库更新失败，使用现有文件${NC}"
+        fi
     fi
     
-    if [ -f "$PROJECT_DIR/infrastructure/deploy/docker-compose.yml" ]; then
-        cp $PROJECT_DIR/infrastructure/deploy/docker-compose.yml $DEPLOY_DIR/
-        echo "✅ docker-compose.yml 已复制"
+    # 复制配置文件
+    if [ "$USE_INLINE_CONFIG" != "true" ] && [ -d "$PROJECT_DIR" ]; then
+        # 复制 docker-compose.yml
+        if [ -f "$PROJECT_DIR/infrastructure/config/docker-compose.yml" ]; then
+            cp "$PROJECT_DIR/infrastructure/config/docker-compose.yml" "$DEPLOY_DIR/"
+            echo -e "${GREEN}✅ docker-compose.yml 已复制${NC}"
+        else
+            echo -e "${YELLOW}⚠️  未找到 docker-compose.yml，使用内联配置...${NC}"
+            USE_INLINE_CONFIG=true
+        fi
+        
+        # 复制 nginx.conf
+        if [ -f "$PROJECT_DIR/infrastructure/config/nginx.conf" ]; then
+            cp "$PROJECT_DIR/infrastructure/config/nginx.conf" "$DEPLOY_DIR/"
+            echo -e "${GREEN}✅ nginx.conf 已复制${NC}"
+        else
+            echo -e "${YELLOW}⚠️  未找到 nginx.conf，使用内联配置...${NC}"
+            USE_INLINE_CONFIG=true
+        fi
     fi
     
-    if [ -f "$PROJECT_DIR/infrastructure/deploy/nginx.conf" ]; then
-        cp $PROJECT_DIR/infrastructure/deploy/nginx.conf $DEPLOY_DIR/
-        echo "✅ nginx.conf 已复制"
+    # 如果克隆失败或文件不存在，使用内联配置
+    if [ "$USE_INLINE_CONFIG" = "true" ]; then
+        echo ""
+        echo -e "${YELLOW}使用内联配置文件...${NC}"
+        
+        # 创建 docker-compose.yml
+        cat > "$DEPLOY_DIR/docker-compose.yml" << 'EOF'
+version: '3.8'
+
+services:
+  api:
+    image: geomeet-api:latest
+    container_name: geomeet-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=aws
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_ENDPOINT}:5432/${DB_NAME:-geomeet}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SERVER_PORT=8080
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - geomeet-network
+
+  nginx:
+    image: geomeet-ui:latest
+    container_name: geomeet-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - geomeet-network
+
+networks:
+  geomeet-network:
+    driver: bridge
+EOF
+        echo -e "${GREEN}✅ docker-compose.yml 已创建（内联配置）${NC}"
+        
+        # 创建 nginx.conf
+        cat > "$DEPLOY_DIR/nginx.conf" << 'EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log warn;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
+
+    server {
+        listen 80;
+        server_name _;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /api {
+            proxy_pass http://api:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+        location /ws {
+            proxy_pass http://api:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location /health {
+            proxy_pass http://api:8080/actuator/health;
+            access_log off;
+        }
+    }
+}
+EOF
+        echo -e "${GREEN}✅ nginx.conf 已创建（内联配置）${NC}"
     fi
 else
     echo "✅ 配置文件已存在"

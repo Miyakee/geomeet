@@ -3,9 +3,6 @@ if (typeof global === 'undefined') {
   (window as any).global = window;
 }
 
-// CRITICAL: Import polyfills FIRST - before any other imports
-import './polyfills';
-
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
