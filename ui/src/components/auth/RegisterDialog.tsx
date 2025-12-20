@@ -1,11 +1,12 @@
-import * as React from 'react';
 import { useState } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
-import {DialogContent, TextField} from "@mui/material";
-import {authApi, LoginRequest, RegisterRequest} from "../../services/api.ts";
+import {DialogContent, TextField, Alert, CircularProgress} from "@mui/material";
+import {authApi, RegisterRequest, ApiError} from "../../services/api.ts";
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface RegisterDialogProps {
     open: boolean;
@@ -17,31 +18,69 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [verificationCode, setVerificationCode] = useState('2025'); // 固定验证码
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const { setAuthFromResponse } = useAuth();
+    const navigate = useNavigate();
 
     const handleSignUp = async () => {
         if (!username || !email || !verificationCode || !password ) {
-            alert('input required fields');
+            setError('Please fill in all required fields');
             return;
         }
 
         if (verificationCode !== '2025') {
-            alert('verification code error，please input：2025');
+            setError('Verification code error, please input: 2025');
             return;
         }
-        const registerInfo: RegisterRequest = {
-            username,
-            password,
-            email,
-            verificationCode
-        };
 
-        await authApi.register(registerInfo);
+        setError(null);
+        setLoading(true);
 
-        setUsername('');
-        setPassword('');
-        setEmail('');
-        setVerificationCode('1234');
-        onClose();
+        try {
+            const registerInfo: RegisterRequest = {
+                username,
+                password,
+                email,
+                verificationCode
+            };
+
+            const response = await authApi.register(registerInfo);
+
+            // 注册成功后，设置认证信息并跳转到 dashboard
+            setAuthFromResponse(response.token, response.username, response.email);
+
+            // 重置表单
+            setUsername('');
+            setPassword('');
+            setEmail('');
+            setVerificationCode('2025');
+            
+            // 关闭弹窗
+            onClose();
+            
+            // 跳转到 dashboard
+            navigate('/dashboard', { replace: true });
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            if (err instanceof ApiError || err.response) {
+                const data = err.response?.data || err.response;
+                if (data?.message) {
+                    setError(data.message);
+                } else if (err.message) {
+                    setError(err.message);
+                } else {
+                    setError('Registration failed. Please try again.');
+                }
+            } else if (err.message) {
+                setError(err.message);
+            } else {
+                setError('Registration failed. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleClose = () => {
@@ -62,6 +101,11 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
                    Sign Up
                 </DialogTitle>
                 <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                     <TextField 
                         fullWidth 
                         id="username"
@@ -101,8 +145,14 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSignUp} variant="contained">Register</Button>
+                    <Button onClick={handleClose} disabled={loading}>Cancel</Button>
+                    <Button 
+                        onClick={handleSignUp} 
+                        variant="contained"
+                        disabled={loading}
+                    >
+                        {loading ? <CircularProgress size={20} /> : 'Register'}
+                    </Button>
                 </DialogActions>
             </Dialog>
     );

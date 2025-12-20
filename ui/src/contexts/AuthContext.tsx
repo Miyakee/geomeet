@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (credentials: LoginRequest) => Promise<void>;
+  setAuthFromResponse: (token: string, username: string, email: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
   isInitialized: boolean;
@@ -94,6 +95,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const setAuthFromResponse = (token: string, username: string, email: string) => {
+    setToken(token);
+    
+    // Decode token to get user ID
+    const decoded = decodeToken(token);
+    const userData = {
+      id: decoded?.userId || 0,
+      username,
+      email,
+    };
+    setUser(userData);
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -107,6 +123,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user,
         token,
         login,
+        setAuthFromResponse,
         logout,
         isAuthenticated: !!token,
         isInitialized,
