@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.login;
 
 import com.geomeet.api.application.command.LoginCommand;
 import com.geomeet.api.application.result.LoginResult;
@@ -7,6 +7,7 @@ import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.exception.InactiveUserException;
 import com.geomeet.api.domain.exception.InvalidCredentialsException;
 import com.geomeet.api.domain.service.PasswordEncoder;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,15 +15,12 @@ import org.springframework.stereotype.Service;
  * Orchestrates the authentication flow and coordinates domain logic.
  */
 @Service
+@AllArgsConstructor
 public class LoginUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public LoginUseCase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * Executes the login use case.

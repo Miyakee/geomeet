@@ -10,6 +10,9 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.UpdateMeetingLocationCommand;
 import com.geomeet.api.application.result.UpdateMeetingLocationResult;
+import com.geomeet.api.application.usecase.location.UpdateMeetingLocationUseCase;
+import com.geomeet.api.application.usecase.session.BroadcastMeetingLocationUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.Location;

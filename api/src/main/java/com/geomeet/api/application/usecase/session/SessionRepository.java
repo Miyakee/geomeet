@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.valueobject.SessionId;

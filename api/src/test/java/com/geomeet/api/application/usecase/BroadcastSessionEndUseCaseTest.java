@@ -6,6 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.result.EndSessionResult;
+import com.geomeet.api.application.usecase.session.BroadcastSessionEndUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;

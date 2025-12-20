@@ -1,11 +1,14 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.JoinSessionResult;
+import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,18 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the session joining flow.
  */
 @Service
+@AllArgsConstructor
 public class JoinSessionUseCase {
 
     private final SessionRepository sessionRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
 
-    public JoinSessionUseCase(
-        SessionRepository sessionRepository,
-        SessionParticipantRepository sessionParticipantRepository
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.sessionParticipantRepository = sessionParticipantRepository;
-    }
 
     /**
      * Executes the join session use case.

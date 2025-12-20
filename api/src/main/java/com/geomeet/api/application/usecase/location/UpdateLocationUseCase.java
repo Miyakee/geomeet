@@ -1,7 +1,10 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.location;
 
 import com.geomeet.api.application.command.UpdateLocationCommand;
 import com.geomeet.api.application.result.UpdateLocationResult;
+import com.geomeet.api.application.usecase.session.BroadcastLocationUpdateUseCase;
+import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
@@ -9,6 +12,7 @@ import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the location update flow.
  */
 @Service
+@AllArgsConstructor
 public class UpdateLocationUseCase {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -26,17 +31,6 @@ public class UpdateLocationUseCase {
     private final ParticipantLocationRepository participantLocationRepository;
     private final BroadcastLocationUpdateUseCase broadcastLocationUpdateUseCase;
 
-    public UpdateLocationUseCase(
-        SessionRepository sessionRepository,
-        SessionParticipantRepository sessionParticipantRepository,
-        ParticipantLocationRepository participantLocationRepository,
-        BroadcastLocationUpdateUseCase broadcastLocationUpdateUseCase
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.sessionParticipantRepository = sessionParticipantRepository;
-        this.participantLocationRepository = participantLocationRepository;
-        this.broadcastLocationUpdateUseCase = broadcastLocationUpdateUseCase;
-    }
 
     /**
      * Executes the update location use case.

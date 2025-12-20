@@ -11,6 +11,11 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.UpdateLocationCommand;
 import com.geomeet.api.application.result.UpdateLocationResult;
+import com.geomeet.api.application.usecase.location.ParticipantLocationRepository;
+import com.geomeet.api.application.usecase.location.UpdateLocationUseCase;
+import com.geomeet.api.application.usecase.session.BroadcastLocationUpdateUseCase;
+import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;

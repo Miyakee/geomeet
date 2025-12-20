@@ -1,11 +1,14 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.location;
 
 import com.geomeet.api.application.command.UpdateMeetingLocationCommand;
 import com.geomeet.api.application.result.UpdateMeetingLocationResult;
+import com.geomeet.api.application.usecase.session.BroadcastMeetingLocationUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,18 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the meeting location update flow.
  */
 @Service
+@AllArgsConstructor
 public class UpdateMeetingLocationUseCase {
 
     private final SessionRepository sessionRepository;
     private final BroadcastMeetingLocationUseCase broadcastMeetingLocationUseCase;
-
-    public UpdateMeetingLocationUseCase(
-        SessionRepository sessionRepository,
-        BroadcastMeetingLocationUseCase broadcastMeetingLocationUseCase
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.broadcastMeetingLocationUseCase = broadcastMeetingLocationUseCase;
-    }
 
     /**
      * Executes the update meeting location use case.

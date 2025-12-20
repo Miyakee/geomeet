@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.GenerateInviteLinkCommand;
 import com.geomeet.api.application.result.GenerateInviteLinkResult;
+import com.geomeet.api.application.usecase.session.GenerateInviteLinkUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;

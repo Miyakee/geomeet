@@ -1,6 +1,6 @@
 package com.geomeet.api.infrastructure.persistence;
 
-import com.geomeet.api.application.usecase.UserRepository;
+import com.geomeet.api.application.usecase.login.UserRepository;
 import com.geomeet.api.domain.entity.User;
 import com.geomeet.api.infrastructure.persistence.entity.UserEntity;
 import com.geomeet.api.infrastructure.persistence.mapper.UserMapper;

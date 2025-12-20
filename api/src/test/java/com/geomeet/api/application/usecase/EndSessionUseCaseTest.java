@@ -10,6 +10,9 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.result.EndSessionResult;
+import com.geomeet.api.application.usecase.session.BroadcastSessionEndUseCase;
+import com.geomeet.api.application.usecase.session.EndSessionUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;

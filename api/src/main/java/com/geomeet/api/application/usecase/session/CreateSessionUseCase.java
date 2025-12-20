@@ -1,9 +1,10 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.command.CreateSessionCommand;
 import com.geomeet.api.application.result.CreateSessionResult;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,18 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the session creation flow.
  */
 @Service
+@AllArgsConstructor
 public class CreateSessionUseCase {
 
     private final SessionRepository sessionRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
 
-    public CreateSessionUseCase(
-        SessionRepository sessionRepository,
-        SessionParticipantRepository sessionParticipantRepository
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.sessionParticipantRepository = sessionParticipantRepository;
-    }
 
     /**
      * Executes the create session use case.

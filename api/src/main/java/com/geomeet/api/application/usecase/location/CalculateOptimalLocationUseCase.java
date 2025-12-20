@@ -1,7 +1,10 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.location;
 
 import com.geomeet.api.application.command.CalculateOptimalLocationCommand;
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
+import com.geomeet.api.application.usecase.session.BroadcastOptimalLocationUseCase;
+import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
@@ -10,6 +13,7 @@ import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the optimal location calculation flow.
  */
 @Service
+@AllArgsConstructor
 public class CalculateOptimalLocationUseCase {
 
     private final SessionRepository sessionRepository;
@@ -25,17 +30,6 @@ public class CalculateOptimalLocationUseCase {
     private final ParticipantLocationRepository participantLocationRepository;
     private final BroadcastOptimalLocationUseCase broadcastOptimalLocationUseCase;
 
-    public CalculateOptimalLocationUseCase(
-        SessionRepository sessionRepository,
-        SessionParticipantRepository sessionParticipantRepository,
-        ParticipantLocationRepository participantLocationRepository,
-        BroadcastOptimalLocationUseCase broadcastOptimalLocationUseCase
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.sessionParticipantRepository = sessionParticipantRepository;
-        this.participantLocationRepository = participantLocationRepository;
-        this.broadcastOptimalLocationUseCase = broadcastOptimalLocationUseCase;
-    }
 
     /**
      * Executes the calculate optimal location use case.

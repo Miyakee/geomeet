@@ -1,6 +1,6 @@
 package com.geomeet.api.infrastructure.persistence;
 
-import com.geomeet.api.application.usecase.ParticipantLocationRepository;
+import com.geomeet.api.application.usecase.location.ParticipantLocationRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.infrastructure.persistence.entity.ParticipantLocationEntity;
 import com.geomeet.api.infrastructure.persistence.mapper.ParticipantLocationMapper;

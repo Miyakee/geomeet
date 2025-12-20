@@ -1,10 +1,12 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.command.GenerateInviteLinkCommand;
 import com.geomeet.api.application.result.GenerateInviteLinkResult;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,13 +14,10 @@ import org.springframework.stereotype.Service;
  * Orchestrates the invite link generation flow.
  */
 @Service
+@AllArgsConstructor
 public class GenerateInviteLinkUseCase {
 
     private final SessionRepository sessionRepository;
-
-    public GenerateInviteLinkUseCase(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
-    }
 
     /**
      * Executes the generate invite link use case.

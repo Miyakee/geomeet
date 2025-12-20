@@ -12,6 +12,9 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.JoinSessionResult;
+import com.geomeet.api.application.usecase.session.JoinSessionUseCase;
+import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.exception.DomainException;

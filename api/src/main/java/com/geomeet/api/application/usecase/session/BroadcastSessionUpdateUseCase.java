@@ -1,72 +1,65 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
-import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.result.GetSessionDetailsResult;
+import com.geomeet.api.application.usecase.login.UserRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * Application service (Use Case) for getting session details.
- * Orchestrates the session details retrieval flow.
+ * Application service (Use Case) for broadcasting session updates via WebSocket.
+ * Orchestrates the session update broadcast flow.
  */
 @Service
-public class GetSessionDetailsUseCase {
+@AllArgsConstructor
+public class BroadcastSessionUpdateUseCase {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final SessionRepository sessionRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
     private final UserRepository userRepository;
-
-    public GetSessionDetailsUseCase(
-        SessionRepository sessionRepository,
-        SessionParticipantRepository sessionParticipantRepository,
-        UserRepository userRepository
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.sessionParticipantRepository = sessionParticipantRepository;
-        this.userRepository = userRepository;
-    }
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * Executes the get session details use case.
-     * Retrieves session information and all participants.
+     * Executes the broadcast session update use case.
+     * Retrieves the latest session details and broadcasts to all subscribers.
      *
-     * @param command the get session details command
-     * @return session details result with participants
-     * @throws DomainException if session not found, user not found, or access denied
+     * @param sessionIdString the session ID string
      */
-    public GetSessionDetailsResult execute(GetSessionDetailsCommand command) {
-        // Find session by sessionId
-        SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
+    public void execute(String sessionIdString) {
+        SessionId sessionIdVO = SessionId.fromString(sessionIdString);
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+            .orElse(null);
 
-        // Check if user is a participant or initiator
-        boolean isParticipant = sessionParticipantRepository.existsBySessionIdAndUserId(
-            session.getId(), command.getUserId()
-        );
-        if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
-            throw new DomainException("Access denied: User is not a participant or initiator");
+        if (session == null) {
+            return;
         }
 
         // Get initiator info
         User initiator = userRepository.findById(session.getInitiatorId())
-            .orElseThrow(() -> new DomainException("Initiator not found"));
+            .orElse(null);
+
+        if (initiator == null) {
+            return;
+        }
 
         // Get all participants
         List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
         List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
             .map(participant -> {
                 User user = userRepository.findById(participant.getUserId())
-                    .orElseThrow(() -> new DomainException("User not found for participant"));
+                    .orElse(null);
+                if (user == null) {
+                    return null;
+                }
                 return GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())
@@ -75,6 +68,7 @@ public class GetSessionDetailsUseCase {
                     .joinedAt(participant.getJoinedAt().format(DATE_TIME_FORMATTER))
                     .build();
             })
+            .filter(java.util.Objects::nonNull)
             .collect(Collectors.toList());
 
         // Check if initiator is in the participants list, if not, add them
@@ -93,8 +87,8 @@ public class GetSessionDetailsUseCase {
             participantInfos.add(0, initiatorInfo); // Add at the beginning
         }
 
-        // Return result
-        return GetSessionDetailsResult.builder()
+        // Build result
+        GetSessionDetailsResult result = GetSessionDetailsResult.builder()
             .id(session.getId())
             .sessionId(session.getSessionId().getValue())
             .initiatorId(session.getInitiatorId())
@@ -103,11 +97,10 @@ public class GetSessionDetailsUseCase {
             .createdAt(session.getCreatedAt().format(DATE_TIME_FORMATTER))
             .participants(participantInfos)
             .participantCount((long) participantInfos.size())
-            .meetingLocationLatitude(session.getMeetingLocation() != null
-                    ? session.getMeetingLocation().getLatitude().getValue() : null)
-            .meetingLocationLongitude(session.getMeetingLocation() != null
-                    ? session.getMeetingLocation().getLongitude().getValue() : null)
             .build();
+
+        // Broadcast to all subscribers of this session
+        messagingTemplate.convertAndSend("/topic/session/" + sessionIdString, result);
     }
 }
 

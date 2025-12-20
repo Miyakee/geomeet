@@ -1,11 +1,14 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.result.EndSessionResult;
+import com.geomeet.api.application.usecase.session.BroadcastSessionEndUseCase;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,20 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
  * Orchestrates the session end flow.
  */
 @Service
+@AllArgsConstructor
 public class EndSessionUseCase {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final SessionRepository sessionRepository;
     private final BroadcastSessionEndUseCase broadcastSessionEndUseCase;
-
-    public EndSessionUseCase(
-        SessionRepository sessionRepository,
-        BroadcastSessionEndUseCase broadcastSessionEndUseCase
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.broadcastSessionEndUseCase = broadcastSessionEndUseCase;
-    }
 
     /**
      * Executes the end session use case.

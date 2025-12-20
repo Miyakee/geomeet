@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.result.EndSessionResult;
 import com.geomeet.api.domain.entity.Session;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
  * Orchestrates the session end broadcast flow.
  */
 @Service
+@AllArgsConstructor
 public class BroadcastSessionEndUseCase {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -22,13 +23,6 @@ public class BroadcastSessionEndUseCase {
     private final SessionRepository sessionRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public BroadcastSessionEndUseCase(
-        SessionRepository sessionRepository,
-        SimpMessagingTemplate messagingTemplate
-    ) {
-        this.sessionRepository = sessionRepository;
-        this.messagingTemplate = messagingTemplate;
-    }
 
     /**
      * Executes the broadcast session end use case.

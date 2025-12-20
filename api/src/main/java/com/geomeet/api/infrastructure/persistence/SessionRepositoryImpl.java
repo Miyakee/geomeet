@@ -1,6 +1,6 @@
 package com.geomeet.api.infrastructure.persistence;
 
-import com.geomeet.api.application.usecase.SessionRepository;
+import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.infrastructure.persistence.entity.SessionEntity;

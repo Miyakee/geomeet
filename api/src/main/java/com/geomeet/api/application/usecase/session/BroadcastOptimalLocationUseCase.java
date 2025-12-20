@@ -1,6 +1,7 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
+import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -9,13 +10,10 @@ import org.springframework.stereotype.Service;
  * Orchestrates the optimal location broadcast flow.
  */
 @Service
+@AllArgsConstructor
 public class BroadcastOptimalLocationUseCase {
 
     private final SimpMessagingTemplate messagingTemplate;
-
-    public BroadcastOptimalLocationUseCase(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
 
     /**
      * Executes the broadcast optimal location use case.

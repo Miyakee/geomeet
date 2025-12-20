@@ -11,10 +11,11 @@ import com.geomeet.api.application.command.UpdateMeetingLocationCommand;
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
 import com.geomeet.api.application.result.UpdateLocationResult;
 import com.geomeet.api.application.result.UpdateMeetingLocationResult;
-import com.geomeet.api.application.usecase.CalculateOptimalLocationUseCase;
-import com.geomeet.api.application.usecase.UpdateLocationUseCase;
-import com.geomeet.api.application.usecase.UpdateMeetingLocationUseCase;
+import com.geomeet.api.application.usecase.location.CalculateOptimalLocationUseCase;
+import com.geomeet.api.application.usecase.location.UpdateLocationUseCase;
+import com.geomeet.api.application.usecase.location.UpdateMeetingLocationUseCase;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,137 +31,105 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/sessions")
+@AllArgsConstructor
 public class LocationController {
 
-    private final UpdateLocationUseCase updateLocationUseCase;
-    private final CalculateOptimalLocationUseCase calculateOptimalLocationUseCase;
-    private final UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
+  private final UpdateLocationUseCase updateLocationUseCase;
+  private final CalculateOptimalLocationUseCase calculateOptimalLocationUseCase;
+  private final UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
 
-    public LocationController(
-        UpdateLocationUseCase updateLocationUseCase,
-        CalculateOptimalLocationUseCase calculateOptimalLocationUseCase,
-        UpdateMeetingLocationUseCase updateMeetingLocationUseCase
-    ) {
-        this.updateLocationUseCase = updateLocationUseCase;
-        this.calculateOptimalLocationUseCase = calculateOptimalLocationUseCase;
-        this.updateMeetingLocationUseCase = updateMeetingLocationUseCase;
-    }
 
-    /**
-     * Update the current user's location in a session.
-     * This endpoint allows participants to update their location.
-     *
-     * @param sessionId the session ID
-     * @param request the location update request
-     * @param authentication the authenticated user
-     * @return location update response
-     */
-    @PutMapping("/{sessionId}/location")
-    public ResponseEntity<UpdateLocationResponse> updateLocation(
-        @PathVariable String sessionId,
-        @Valid @RequestBody UpdateLocationRequest request,
-        Authentication authentication
-    ) {
-        // Extract user ID from JWT token
-        Long userId = (Long) authentication.getPrincipal();
+  /**
+   * Update the current user's location in a session.
+   * This endpoint allows participants to update their location.
+   *
+   * @param sessionId      the session ID
+   * @param request        the location update request
+   * @param authentication the authenticated user
+   * @return location update response
+   */
+  @PutMapping("/{sessionId}/location")
+  public ResponseEntity<UpdateLocationResponse> updateLocation(
+      @PathVariable String sessionId,
+      @Valid @RequestBody UpdateLocationRequest request,
+      Authentication authentication
+  ) {
+    // Extract user ID from JWT token
+    Long userId = (Long) authentication.getPrincipal();
 
-        // Execute use case
-        UpdateLocationCommand command = UpdateLocationCommand.of(
-            sessionId,
-            userId,
-            request.getLatitude(),
-            request.getLongitude(),
-            request.getAccuracy()
-        );
-        UpdateLocationResult result = updateLocationUseCase.execute(command);
+    // Execute use case
+    UpdateLocationCommand command = UpdateLocationCommand.of(
+        sessionId,
+        userId,
+        request.getLatitude(),
+        request.getLongitude(),
+        request.getAccuracy()
+    );
+    UpdateLocationResult result = updateLocationUseCase.execute(command);
 
-        // Convert result to response DTO
-        UpdateLocationResponse response = UpdateLocationResponse.builder()
-            .participantId(result.getParticipantId())
-            .sessionId(result.getSessionId())
-            .sessionIdString(result.getSessionIdString())
-            .userId(result.getUserId())
-            .latitude(result.getLatitude())
-            .longitude(result.getLongitude())
-            .accuracy(result.getAccuracy())
-            .updatedAt(result.getUpdatedAt())
-            .message(result.getMessage())
-            .build();
+    // Convert result to response DTO
+    UpdateLocationResponse response = UpdateLocationResponse.create(result);
 
-        return ResponseEntity.ok(response);
-    }
+    return ResponseEntity.ok(response);
+  }
 
-    /**
-     * Calculate the optimal meeting location for a session.
-     * This endpoint calculates the geometric center of all participant locations.
-     *
-     * @param sessionId the session ID
-     * @param authentication the authenticated user
-     * @return optimal location response
-     */
-    @PostMapping("/{sessionId}/optimal-location")
-    public ResponseEntity<CalculateOptimalLocationResponse> calculateOptimalLocation(
-        @PathVariable String sessionId,
-        Authentication authentication
-    ) {
-        // Extract user ID from JWT token
-        Long userId = (Long) authentication.getPrincipal();
+  /**
+   * Calculate the optimal meeting location for a session.
+   * This endpoint calculates the geometric center of all participant locations.
+   *
+   * @param sessionId      the session ID
+   * @param authentication the authenticated user
+   * @return optimal location response
+   */
+  @PostMapping("/{sessionId}/optimal-location")
+  public ResponseEntity<CalculateOptimalLocationResponse> calculateOptimalLocation(
+      @PathVariable String sessionId,
+      Authentication authentication
+  ) {
+    // Extract user ID from JWT token
+    Long userId = (Long) authentication.getPrincipal();
 
-        // Execute use case
-        CalculateOptimalLocationCommand command = CalculateOptimalLocationCommand.of(sessionId, userId);
-        CalculateOptimalLocationResult result = calculateOptimalLocationUseCase.execute(command);
+    // Execute use case
+    CalculateOptimalLocationCommand command = CalculateOptimalLocationCommand.of(sessionId, userId);
+    CalculateOptimalLocationResult result = calculateOptimalLocationUseCase.execute(command);
 
-        // Convert result to response DTO
-        CalculateOptimalLocationResponse response = CalculateOptimalLocationResponse.builder()
-            .sessionId(result.getSessionId())
-            .sessionIdString(result.getSessionIdString())
-            .optimalLatitude(result.getOptimalLatitude())
-            .optimalLongitude(result.getOptimalLongitude())
-            .totalTravelDistance(result.getTotalTravelDistance())
-            .participantCount(result.getParticipantCount())
-            .message(result.getMessage())
-            .build();
+    // Convert result to response DTO
+    CalculateOptimalLocationResponse response = CalculateOptimalLocationResponse.create(result);
 
-        return ResponseEntity.ok(response);
-    }
+    return ResponseEntity.ok(response);
+  }
 
-    /**
-     * Update the meeting location for a session.
-     * Only the session initiator can update the meeting location.
-     *
-     * @param sessionId the session ID
-     * @param request the meeting location update request
-     * @param authentication the authenticated user
-     * @return meeting location update response
-     */
-    @PutMapping("/{sessionId}/meeting-location")
-    public ResponseEntity<UpdateMeetingLocationResponse> updateMeetingLocation(
-        @PathVariable String sessionId,
-        @Valid @RequestBody UpdateMeetingLocationRequest request,
-        Authentication authentication
-    ) {
-        // Extract user ID from JWT token
-        Long userId = (Long) authentication.getPrincipal();
+  /**
+   * Update the meeting location for a session.
+   * Only the session initiator can update the meeting location.
+   *
+   * @param sessionId      the session ID
+   * @param request        the meeting location update request
+   * @param authentication the authenticated user
+   * @return meeting location update response
+   */
+  @PutMapping("/{sessionId}/meeting-location")
+  public ResponseEntity<UpdateMeetingLocationResponse> updateMeetingLocation(
+      @PathVariable String sessionId,
+      @Valid @RequestBody UpdateMeetingLocationRequest request,
+      Authentication authentication
+  ) {
+    // Extract user ID from JWT token
+    Long userId = (Long) authentication.getPrincipal();
 
-        // Execute use case
-        UpdateMeetingLocationCommand command = UpdateMeetingLocationCommand.of(
-            sessionId,
-            userId,
-            request.getLatitude(),
-            request.getLongitude()
-        );
-        UpdateMeetingLocationResult result = updateMeetingLocationUseCase.execute(command);
+    // Execute use case
+    UpdateMeetingLocationCommand command = UpdateMeetingLocationCommand.of(
+        sessionId,
+        userId,
+        request.getLatitude(),
+        request.getLongitude()
+    );
+    UpdateMeetingLocationResult result = updateMeetingLocationUseCase.execute(command);
 
-        // Convert result to response DTO
-        UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.builder()
-            .sessionId(result.getSessionId())
-            .sessionIdString(result.getSessionIdString())
-            .latitude(result.getLatitude())
-            .longitude(result.getLongitude())
-            .message(result.getMessage())
-            .build();
+    // Convert result to response DTO
+    UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.create(result);
 
-        return ResponseEntity.ok(response);
-    }
+    return ResponseEntity.ok(response);
+  }
 }
 

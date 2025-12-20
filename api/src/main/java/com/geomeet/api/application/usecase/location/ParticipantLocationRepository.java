@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.location;
 
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import java.util.List;

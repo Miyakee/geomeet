@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
+import com.geomeet.api.application.usecase.session.BroadcastOptimalLocationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

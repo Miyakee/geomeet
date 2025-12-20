@@ -1,4 +1,4 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.domain.entity.SessionParticipant;
 import java.util.List;

@@ -1,6 +1,7 @@
-package com.geomeet.api.application.usecase;
+package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.result.UpdateLocationResult;
+import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -9,13 +10,11 @@ import org.springframework.stereotype.Service;
  * Orchestrates the location update broadcast flow.
  */
 @Service
+@AllArgsConstructor
 public class BroadcastLocationUpdateUseCase {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public BroadcastLocationUpdateUseCase(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
 
     /**
      * Executes the broadcast location update use case.

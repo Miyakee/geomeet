@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.command.LoginCommand;
 import com.geomeet.api.application.result.LoginResult;
+import com.geomeet.api.application.usecase.login.LoginUseCase;
+import com.geomeet.api.application.usecase.login.UserRepository;
 import com.geomeet.api.domain.entity.User;
 import com.geomeet.api.domain.exception.InactiveUserException;
 import com.geomeet.api.domain.exception.InvalidCredentialsException;
