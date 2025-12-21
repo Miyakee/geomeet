@@ -291,7 +291,8 @@ class SessionControllerTest {
             .joinedAt("2024-01-01T00:00:00")
             .build();
 
-        GetSessionDetailsResult.ParticipantLocationInfo locationInfo = GetSessionDetailsResult.ParticipantLocationInfo.builder()
+        GetSessionDetailsResult.ParticipantLocationInfo locationInfo =
+            GetSessionDetailsResult.ParticipantLocationInfo.builder()
             .participantId(200L)
             .userId(userId)
             .latitude(1.3521)
