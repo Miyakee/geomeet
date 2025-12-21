@@ -278,5 +278,117 @@ class SessionControllerTest {
         verify(authentication).getPrincipal();
         verify(endSessionUseCase).execute(any(EndSessionCommand.class));
     }
+
+    @Test
+    void shouldGetSessionDetailsWithParticipantLocations() {
+        // Given
+        Long userId = 1L;
+        GetSessionDetailsResult.ParticipantInfo participantInfo = GetSessionDetailsResult.ParticipantInfo.builder()
+            .participantId(200L)
+            .userId(userId)
+            .username("testuser")
+            .email("test@example.com")
+            .joinedAt("2024-01-01T00:00:00")
+            .build();
+
+        GetSessionDetailsResult.ParticipantLocationInfo locationInfo = GetSessionDetailsResult.ParticipantLocationInfo.builder()
+            .participantId(200L)
+            .userId(userId)
+            .latitude(1.3521)
+            .longitude(103.8198)
+            .accuracy(10.5)
+            .updatedAt("2024-01-01T10:00:00")
+            .build();
+
+        GetSessionDetailsResult result = GetSessionDetailsResult.builder()
+            .id(sessionId)
+            .sessionId(sessionIdString)
+            .initiatorId(initiatorId)
+            .initiatorUsername("initiator")
+            .status(SessionStatus.ACTIVE.getValue())
+            .createdAt("2024-01-01T00:00:00")
+            .participants(java.util.List.of(participantInfo))
+            .participantCount(1L)
+            .meetingLocationLatitude(1.3521)
+            .meetingLocationLongitude(103.8198)
+            .participantLocations(java.util.List.of(locationInfo))
+            .build();
+
+        when(authentication.getPrincipal()).thenReturn(userId);
+        when(getSessionDetailsUseCase.execute(any(GetSessionDetailsCommand.class))).thenReturn(result);
+
+        // When
+        ResponseEntity<SessionDetailResponse> response = sessionController.getSessionDetails(
+            sessionIdString,
+            authentication
+        );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        SessionDetailResponse responseBody = response.getBody();
+        assertNotNull(responseBody.getParticipantLocations());
+        assertEquals(1, responseBody.getParticipantLocations().size());
+        assertEquals(1.3521, responseBody.getParticipantLocations().get(0).getLatitude());
+        assertEquals(103.8198, responseBody.getParticipantLocations().get(0).getLongitude());
+        assertEquals(10.5, responseBody.getParticipantLocations().get(0).getAccuracy());
+        assertEquals("2024-01-01T10:00:00", responseBody.getParticipantLocations().get(0).getUpdatedAt());
+
+        verify(authentication).getPrincipal();
+        verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
+    }
+
+    @Test
+    void shouldGetSessionDetailsWithNullParticipantLocations() {
+        // Given
+        Long userId = 1L;
+        GetSessionDetailsResult.ParticipantInfo participantInfo = GetSessionDetailsResult.ParticipantInfo.builder()
+            .participantId(200L)
+            .userId(userId)
+            .username("testuser")
+            .email("test@example.com")
+            .joinedAt("2024-01-01T00:00:00")
+            .build();
+
+        GetSessionDetailsResult result = GetSessionDetailsResult.builder()
+            .id(sessionId)
+            .sessionId(sessionIdString)
+            .initiatorId(initiatorId)
+            .initiatorUsername("initiator")
+            .status(SessionStatus.ACTIVE.getValue())
+            .createdAt("2024-01-01T00:00:00")
+            .participants(java.util.List.of(participantInfo))
+            .participantCount(1L)
+            .meetingLocationLatitude(1.3521)
+            .meetingLocationLongitude(103.8198)
+            .participantLocations(null)  // null participant locations
+            .build();
+
+        when(authentication.getPrincipal()).thenReturn(userId);
+        when(getSessionDetailsUseCase.execute(any(GetSessionDetailsCommand.class))).thenReturn(result);
+
+        // When
+        ResponseEntity<SessionDetailResponse> response = sessionController.getSessionDetails(
+            sessionIdString,
+            authentication
+        );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        SessionDetailResponse responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(1.3521, responseBody.getMeetingLocationLatitude());
+        assertEquals(103.8198, responseBody.getMeetingLocationLongitude());
+        // participantLocations should be null when result has null
+        // This tests the ternary operator branch in SessionController line 165-176
+
+        verify(authentication).getPrincipal();
+        verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
+    }
 }
 

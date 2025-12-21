@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.usecase.auth.UserRepository;
+import com.geomeet.api.application.usecase.location.ParticipantLocationRepository;
 import com.geomeet.api.application.usecase.session.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
@@ -43,6 +44,9 @@ class GetSessionDetailsUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private  ParticipantLocationRepository participantLocationRepository;
+
 
     private GetSessionDetailsUseCase getSessionDetailsUseCase;
 
@@ -60,7 +64,8 @@ class GetSessionDetailsUseCaseTest {
         getSessionDetailsUseCase = new GetSessionDetailsUseCase(
             sessionRepository,
             sessionParticipantRepository,
-            userRepository
+            userRepository,
+            participantLocationRepository
         );
 
         sessionId = 100L;
@@ -329,6 +334,7 @@ class GetSessionDetailsUseCaseTest {
             .thenReturn(false);
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
         when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
         // When
         GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
@@ -337,6 +343,149 @@ class GetSessionDetailsUseCaseTest {
         assertNotNull(result);
         assertNull(result.getMeetingLocationLatitude());
         assertNull(result.getMeetingLocationLongitude());
+    }
+
+    @Test
+    void shouldIncludeParticipantLocationsWithAllFields() {
+        // Given
+        Long participantLocationId = 300L;
+        Long participantId = 200L;
+        LocalDateTime now = LocalDateTime.now();
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                participantLocationId,
+                participantId,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                now,  // updatedAt
+                now,  // createdAt
+                null,  // createdBy
+                null  // updatedBy
+            );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getParticipantLocations());
+        assertEquals(1, result.getParticipantLocations().size());
+        assertEquals(1.3521, result.getParticipantLocations().get(0).getLatitude());
+        assertEquals(103.8198, result.getParticipantLocations().get(0).getLongitude());
+        assertEquals(10.5, result.getParticipantLocations().get(0).getAccuracy());
+        assertNotNull(result.getParticipantLocations().get(0).getUpdatedAt());
+    }
+
+    @Test
+    void shouldIncludeParticipantLocationsWithNullAccuracy() {
+        // Given - location with null accuracy
+        Long participantLocationId = 300L;
+        Long participantId = 200L;
+        LocalDateTime now = LocalDateTime.now();
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                participantLocationId,
+                participantId,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                null,  // accuracy (null)
+                now,  // updatedAt
+                now,  // createdAt
+                null,  // createdBy
+                null  // updatedBy
+            );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getParticipantLocations());
+        assertEquals(1, result.getParticipantLocations().size());
+        assertNull(result.getParticipantLocations().get(0).getAccuracy());
+    }
+
+    @Test
+    void shouldIncludeParticipantLocationsWithNullUpdatedAt() {
+        // Given - location with null updatedAt
+        Long participantLocationId = 300L;
+        Long participantId = 200L;
+        LocalDateTime now = LocalDateTime.now();
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                participantLocationId,
+                participantId,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                null,  // updatedAt (null)
+                now,  // createdAt
+                null,  // createdBy
+                null  // updatedBy
+            );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getParticipantLocations());
+        assertEquals(1, result.getParticipantLocations().size());
+        assertNull(result.getParticipantLocations().get(0).getUpdatedAt());
+    }
+
+    @Test
+    void shouldReturnEmptyParticipantLocationsWhenNoneExist() {
+        // Given
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getParticipantLocations());
+        assertEquals(0, result.getParticipantLocations().size());
     }
 }
 

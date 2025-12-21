@@ -3,18 +3,30 @@ import { render, screen } from '@testing-library/react';
 import { OptimalLocationMap } from '../OptimalLocationMap';
 
 // Mock react-leaflet
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map-container">{children}</div>
-  ),
-  TileLayer: () => <div data-testid="tile-layer">TileLayer</div>,
-  Marker: ({ position }: { position: [number, number] }) => (
-    <div data-testid={`marker-${position[0]}-${position[1]}`}>Marker</div>
-  ),
-  Popup: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="popup">{children}</div>
-  ),
-}));
+const mockMap = {
+  fitBounds: vi.fn(),
+  setView: vi.fn(),
+  getZoom: vi.fn(() => 13),
+  setZoom: vi.fn(),
+};
+
+vi.mock('react-leaflet', async () => {
+  const actual = await vi.importActual('react-leaflet');
+  return {
+    ...actual,
+    MapContainer: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="map-container">{children}</div>
+    ),
+    TileLayer: () => <div data-testid="tile-layer">TileLayer</div>,
+    Marker: ({ position }: { position: [number, number] }) => (
+      <div data-testid={`marker-${position[0]}-${position[1]}`}>Marker</div>
+    ),
+    Popup: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="popup">{children}</div>
+    ),
+    useMap: () => mockMap,
+  };
+});
 
 describe('OptimalLocationMap', () => {
   beforeEach(() => {
@@ -117,7 +129,9 @@ describe('OptimalLocationMap', () => {
     // Wait for component to mount
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(screen.getByText('No locations available to display on map')).toBeInTheDocument();
+    // When currentUserLocation is provided, map should be displayed
+    expect(screen.getByText('Meeting Location Map')).toBeInTheDocument();
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
   });
 
   it('should prioritize optimal location over current user location', async () => {
