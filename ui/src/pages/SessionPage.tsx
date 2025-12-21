@@ -116,7 +116,33 @@ const SessionPage = () => {
 
   const handleMeetingLocationUpdate = useCallback((meetingLocation: UpdateMeetingLocationResponse) => {
     updateMeetingLocationFromResponse(meetingLocation);
-  }, [updateMeetingLocationFromResponse]);
+    // Also update session object to keep it in sync
+    if (session) {
+      updateSession({
+        ...session,
+        meetingLocationLatitude: meetingLocation.latitude,
+        meetingLocationLongitude: meetingLocation.longitude,
+      });
+    }
+  }, [updateMeetingLocationFromResponse, session, updateSession]);
+
+  // Wrapper function to update meeting location and sync with session
+  const handleUpdateMeetingLocation = useCallback(async (latitude: number, longitude: number) => {
+    try {
+      await updateMeetingLocation(latitude, longitude);
+      // Update session object immediately after successful update
+      if (session) {
+        updateSession({
+          ...session,
+          meetingLocationLatitude: latitude,
+          meetingLocationLongitude: longitude,
+        });
+      }
+    } catch (err) {
+      // Error is already handled by updateMeetingLocation
+      throw err;
+    }
+  }, [updateMeetingLocation, session, updateSession]);
 
   const handleSessionEnd = useCallback((notification: SessionEndNotification) => {
     // Update session status to Ended
@@ -324,7 +350,7 @@ const SessionPage = () => {
               longitude: currentLocation.coords.longitude,
             } : null}
             isInitiator={isInitiator}
-            onUpdateLocation={updateMeetingLocation}
+            onUpdateLocation={handleUpdateMeetingLocation}
             loading={updatingMeetingLocation}
             error={meetingLocationError}
           />
@@ -370,6 +396,7 @@ const SessionPage = () => {
             currentUserLocation={currentLocation ? {
               latitude: currentLocation.coords.latitude,
               longitude: currentLocation.coords.longitude,
+              userId: user?.id
             } : null}
             meetingLocation={meetingLocation ? {
               latitude: meetingLocation.latitude,
@@ -407,7 +434,7 @@ const SessionPage = () => {
                     size="small"
                     onClick={async () => {
                       try {
-                        await updateMeetingLocation(
+                        await handleUpdateMeetingLocation(
                           optimalLocation.optimalLatitude,
                           optimalLocation.optimalLongitude,
                         );

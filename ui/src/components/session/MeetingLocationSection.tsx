@@ -13,8 +13,9 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
-import { Edit, LocationOn, Check, Close } from '@mui/icons-material';
+import { Edit, LocationOn, Check, Close, Search } from '@mui/icons-material';
 import { calculateHaversineDistance, formatDistance } from '../../utils/distanceCalculator';
+import { forwardGeocode } from '../../services/geocodingService';
 
 interface MeetingLocationSectionProps {
   meetingLocation: { latitude: number; longitude: number } | null;
@@ -40,6 +41,8 @@ export const MeetingLocationSection = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [latitude, setLatitude] = useState<string>('');
   const [longitude, setLongitude] = useState<string>('');
+  const [addressSearch, setAddressSearch] = useState<string>('');
+  const [searching, setSearching] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleOpenEditDialog = () => {
@@ -50,6 +53,7 @@ export const MeetingLocationSection = ({
       setLatitude('');
       setLongitude('');
     }
+    setAddressSearch('');
     setValidationError(null);
     setEditDialogOpen(true);
   };
@@ -57,6 +61,34 @@ export const MeetingLocationSection = ({
   const handleCloseEditDialog = () => {
     setEditDialogOpen(false);
     setValidationError(null);
+    setAddressSearch('');
+  };
+
+  const handleSearchAddress = async () => {
+    if (!addressSearch || addressSearch.trim().length === 0) {
+      setValidationError('Please enter a location name or address to search.');
+      return;
+    }
+
+    setSearching(true);
+    setValidationError(null);
+
+    try {
+      const coordinates = await forwardGeocode(addressSearch.trim());
+      
+      if (coordinates) {
+        setLatitude(coordinates.latitude.toFixed(6));
+        setLongitude(coordinates.longitude.toFixed(6));
+        setValidationError(null);
+      } else {
+        setValidationError('Location not found. Please try a different location name or be more specific.');
+      }
+    } catch (error: any) {
+      console.error('Address search error:', error);
+      setValidationError('Failed to search location. Please try again.');
+    } finally {
+      setSearching(false);
+    }
   };
 
   const validateCoordinates = (lat: string, lon: string): string | null => {
@@ -200,6 +232,42 @@ export const MeetingLocationSection = ({
             {validationError && (
               <Alert severity="error">{validationError}</Alert>
             )}
+
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <TextField
+                label="Search Location Name or Address"
+                value={addressSearch}
+                onChange={(e) => {
+                  setAddressSearch(e.target.value);
+                  setValidationError(null);
+                }}
+                fullWidth
+                placeholder="e.g., Central Park, New York or 1600 Amphitheatre Parkway, Mountain View"
+                helperText="Enter a location name or address to search"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !searching) {
+                    handleSearchAddress();
+                  }
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleSearchAddress}
+                disabled={searching || !addressSearch.trim()}
+                startIcon={<Search />}
+                sx={{ mt: 0.5, minWidth: 100 }}
+              >
+                {searching ? 'Searching...' : 'Search'}
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', my: 1 }}>
+              <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+              <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+                OR
+              </Typography>
+              <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+            </Box>
 
             <TextField
               label="Latitude"
