@@ -31,6 +31,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot-www:/var/www/certbot:ro
+      - certbot-conf:/etc/letsencrypt:ro
     depends_on:
       - api
     networks:
@@ -39,6 +41,21 @@ services:
       - VITE_GEOCODING_PROVIDER=auto
       - VITE_OPENCAGE_API_KEY=${OPENCAGE_API_KEY}
       - VITE_POSITIONSTACK_API_KEY=${POSITIONSTACK_API_KEY}
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: geomeet-certbot
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - geomeet-network
+
+volumes:
+  certbot-www:
+  certbot-conf:
+
 networks:
   geomeet-network:
     driver: bridge
