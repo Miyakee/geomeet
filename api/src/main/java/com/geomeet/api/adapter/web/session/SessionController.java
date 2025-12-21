@@ -162,6 +162,18 @@ public class SessionController {
         .participantCount(result.getParticipantCount())
         .meetingLocationLatitude(result.getMeetingLocationLatitude())
         .meetingLocationLongitude(result.getMeetingLocationLongitude())
+        .participantLocations(result.getParticipantLocations() != null
+            ? result.getParticipantLocations().stream()
+                .map(location -> com.geomeet.api.adapter.web.session.dto.ParticipantLocationInfo.builder()
+                    .participantId(location.getParticipantId())
+                    .userId(location.getUserId())
+                    .latitude(location.getLatitude())
+                    .longitude(location.getLongitude())
+                    .accuracy(location.getAccuracy())
+                    .updatedAt(location.getUpdatedAt())
+                    .build())
+                .collect(java.util.stream.Collectors.toList())
+            : null)
         .build();
 
     return ResponseEntity.ok(response);

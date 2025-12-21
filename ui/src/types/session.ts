@@ -10,6 +10,15 @@ export interface ParticipantInfo {
   joinedAt: string;
 }
 
+export interface ParticipantLocationInfo {
+  participantId: number | null;
+  userId: number;
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  updatedAt: string;
+}
+
 export interface SessionDetailResponse {
   id: number;
   sessionId: string;
@@ -21,6 +30,7 @@ export interface SessionDetailResponse {
   participantCount: number;
   meetingLocationLatitude?: number | null;
   meetingLocationLongitude?: number | null;
+  participantLocations?: ParticipantLocationInfo[] | null;
 }
 
 export interface ParticipantLocation {

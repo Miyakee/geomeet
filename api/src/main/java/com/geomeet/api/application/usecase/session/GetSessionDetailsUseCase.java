@@ -3,6 +3,8 @@ package com.geomeet.api.application.usecase.session;
 import com.geomeet.api.application.command.GetSessionDetailsCommand;
 import com.geomeet.api.application.result.GetSessionDetailsResult;
 import com.geomeet.api.application.usecase.auth.UserRepository;
+import com.geomeet.api.application.usecase.location.ParticipantLocationRepository;
+import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
@@ -27,6 +29,7 @@ public class GetSessionDetailsUseCase {
     private final SessionRepository sessionRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
     private final UserRepository userRepository;
+    private final ParticipantLocationRepository participantLocationRepository;
 
 
     /**
@@ -87,6 +90,21 @@ public class GetSessionDetailsUseCase {
             participantInfos.add(0, initiatorInfo); // Add at the beginning
         }
 
+        // Get all participant locations for this session
+        List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
+        List<GetSessionDetailsResult.ParticipantLocationInfo> participantLocationInfos = participantLocations.stream()
+            .map(location -> GetSessionDetailsResult.ParticipantLocationInfo.builder()
+                .participantId(location.getParticipantId())
+                .userId(location.getUserId())
+                .latitude(location.getLocation().getLatitude().getValue())
+                .longitude(location.getLocation().getLongitude().getValue())
+                .accuracy(location.getLocation().getAccuracy() != null 
+                    ? location.getLocation().getAccuracy() : null)
+                .updatedAt(location.getUpdatedAt() != null 
+                    ? location.getUpdatedAt().format(DATE_TIME_FORMATTER) : null)
+                .build())
+            .collect(Collectors.toList());
+
         // Return result
         return GetSessionDetailsResult.builder()
             .id(session.getId())
@@ -101,6 +119,7 @@ public class GetSessionDetailsUseCase {
                     ? session.getMeetingLocation().getLatitude().getValue() : null)
             .meetingLocationLongitude(session.getMeetingLocation() != null
                     ? session.getMeetingLocation().getLongitude().getValue() : null)
+            .participantLocations(participantLocationInfos)
             .build();
     }
 }

@@ -113,7 +113,7 @@ interface OptimalLocationMapProps {
   currentUserLocation?: {
     latitude: number;
     longitude: number;
-    userId: number;
+    userId?: number;
   } | null;
   meetingLocation?: {
     latitude: number;
@@ -186,7 +186,6 @@ export const OptimalLocationMap = ({
         : defaultCenter;
 
   // Calculate bounds to fit all markers (including current user location)
-  // Note: If meeting location is set, we don't show optimal location (meeting location takes priority)
   // Also exclude current user from participantLocations to avoid duplicate markers
   const allLocations: Array<[number, number]> = [];
   if (meetingLocation) {
@@ -195,8 +194,8 @@ export const OptimalLocationMap = ({
   if (currentUserLocation) {
     allLocations.push([currentUserLocation.latitude, currentUserLocation.longitude]);
   }
-  // Only include optimal location if meeting location is not set
-  if (optimalLocation && !meetingLocation) {
+  // Always include optimal location if it exists (for reference)
+  if (optimalLocation) {
     allLocations.push([optimalLocation.latitude, optimalLocation.longitude]);
   }
   // Exclude current user from participant locations to avoid duplicate markers
@@ -250,6 +249,36 @@ export const OptimalLocationMap = ({
           {/* Auto-fit bounds to show all markers */}
           <MapBoundsFitter locations={allLocations} />
 
+          {/* Optimal location marker (yellow) - always show if calculated */}
+          {optimalLocation && (
+              <Marker
+                  position={[optimalLocation.latitude, optimalLocation.longitude]}
+                  icon={OptimalLocationIcon}
+              >
+                <Popup>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      Optimal Meeting Location
+                    </Typography>
+                    <Typography variant="body2">
+                      {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
+                    </Typography>
+                    {optimalLocation.totalTravelDistance !== undefined && (
+                        <Typography variant="body2" color="text.secondary">
+                          Total distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
+                        </Typography>
+                    )}
+                    {optimalLocation.participantCount !== undefined && (
+                        <Typography variant="body2" color="text.secondary">
+                          Based on {optimalLocation.participantCount} participant(s)
+                        </Typography>
+                    )}
+                  </Box>
+                </Popup>
+              </Marker>
+          )}
+
+
           {/* Meeting location marker (set by initiator) */}
           {meetingLocation && (
             <Marker
@@ -272,35 +301,6 @@ export const OptimalLocationMap = ({
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     Set by session initiator
                   </Typography>
-                </Box>
-              </Popup>
-            </Marker>
-          )}
-
-          {/* Optimal location marker - only show if meeting location is not set */}
-          {optimalLocation && !meetingLocation && (
-            <Marker
-              position={[optimalLocation.latitude, optimalLocation.longitude]}
-              icon={OptimalLocationIcon}
-            >
-              <Popup>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Optimal Meeting Location
-                  </Typography>
-                  <Typography variant="body2">
-                    {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
-                  </Typography>
-                  {optimalLocation.totalTravelDistance !== undefined && (
-                    <Typography variant="body2" color="text.secondary">
-                      Total distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
-                    </Typography>
-                  )}
-                  {optimalLocation.participantCount !== undefined && (
-                    <Typography variant="body2" color="text.secondary">
-                      Based on {optimalLocation.participantCount} participant(s)
-                    </Typography>
-                  )}
                 </Box>
               </Popup>
             </Marker>

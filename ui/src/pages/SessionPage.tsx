@@ -177,6 +177,26 @@ const SessionPage = () => {
     }
   }, [session]);
 
+  // Initialize participant locations from session data
+  // This ensures new users who join can see all existing participant locations
+  useEffect(() => {
+    if (session && session.participantLocations) {
+      const locationsMap = new Map<number, ParticipantLocation>();
+      session.participantLocations.forEach((locationInfo) => {
+        // Only add locations for other participants (exclude current user)
+        if (locationInfo.userId !== user?.id) {
+          locationsMap.set(locationInfo.userId, {
+            latitude: locationInfo.latitude,
+            longitude: locationInfo.longitude,
+            accuracy: locationInfo.accuracy ?? undefined,
+            updatedAt: locationInfo.updatedAt,
+          });
+        }
+      });
+      setParticipantLocations(locationsMap);
+    }
+  }, [session?.participantLocations, user?.id]);
+
   // Initialize meeting location from session data
   // This ensures new users who join after meeting location is set can see it
   useEffect(() => {

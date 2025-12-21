@@ -25,5 +25,6 @@ public class SessionDetailResponse {
     private Long participantCount;
     private Double meetingLocationLatitude;
     private Double meetingLocationLongitude;
+    private List<ParticipantLocationInfo> participantLocations;
 }
 
