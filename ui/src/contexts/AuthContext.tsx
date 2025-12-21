@@ -35,7 +35,21 @@ interface AuthProviderProps {
 // Helper function to decode JWT token and extract user ID
 const decodeToken = (token: string): { userId: number; username: string } | null => {
   try {
-    const base64Url = token.split('.')[1];
+    // Validate token format (should have 3 parts separated by dots)
+    if (!token) {
+      return null;
+    }
+    
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+    
+    const base64Url = parts[1];
+    if (!base64Url) {
+      return null;
+    }
+    
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)

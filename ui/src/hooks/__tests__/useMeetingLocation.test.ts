@@ -193,7 +193,9 @@ describe('useMeetingLocation', () => {
     expect(sessionApi.updateMeetingLocation).not.toHaveBeenCalled();
   });
 
-  it('should update meeting location from response', () => {
+  it('should update meeting location from response', async () => {
+    vi.mocked(reverseGeocode).mockResolvedValue('Test Address');
+    
     const { result } = renderHook(() => useMeetingLocation('test-session-id'));
 
     const mockResponse = {
@@ -204,13 +206,18 @@ describe('useMeetingLocation', () => {
       message: 'Meeting location updated',
     };
 
-    act(() => {
+    await act(async () => {
       result.current.updateMeetingLocationFromResponse(mockResponse);
     });
 
     expect(result.current.meetingLocation).toEqual({
       latitude: 1.3521,
       longitude: 103.8198,
+    });
+
+    // Wait for geocoding to complete
+    await waitFor(() => {
+      expect(result.current.meetingLocationAddress).toBe('Test Address');
     });
   });
 

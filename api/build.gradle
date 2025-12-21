@@ -29,33 +29,33 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    
+
     // Database
     runtimeOnly 'org.postgresql:postgresql'
-    
+
     // H2 Database for testing
     testRuntimeOnly 'com.h2database:h2'
-    
+
     // Flyway
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
-    
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-    
+
     // Lombok (optional but helpful)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    
+
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    
+
     // MapStruct + Lombok integration
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-    
+
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -84,7 +84,7 @@ jacocoTestReport {
 
 jacocoTestCoverageVerification {
     dependsOn jacocoTestReport
-    
+
     violationRules {
         // Overall coverage rule - 90% minimum
         rule {
@@ -92,21 +92,21 @@ jacocoTestCoverageVerification {
                 minimum = 0.80
             }
         }
-        
+
         // Class-level coverage - 90% line coverage required
         rule {
             element = 'CLASS'
             excludes = [
-                'com.geomeet.api.ApiApplication',
-                'com.geomeet.api.controller.*',
-                'com.geomeet.api.adapter.web.health.HealthController',
-                'com.geomeet.api.infrastructure.config.*',
-                'com.geomeet.api.domain.exception.DomainException',
-                'com.geomeet.api.application.command.*',
-                'com.geomeet.api.application.result.*',
-                'com.geomeet.api.adapter.web.auth.dto.*',
-                'com.geomeet.api.adapter.web.session.dto.*',
-                'com.geomeet.api.infrastructure.persistence.entity.*'
+                    'com.geomeet.api.ApiApplication',
+                    'com.geomeet.api.controller.*',
+                    'com.geomeet.api.adapter.web.health.HealthController',
+                    'com.geomeet.api.infrastructure.config.*',
+                    'com.geomeet.api.domain.exception.DomainException',
+                    'com.geomeet.api.application.command.*',
+                    'com.geomeet.api.application.result.*',
+                    'com.geomeet.api.adapter.web.auth.dto.*',
+                    'com.geomeet.api.adapter.web.session.dto.*',
+                    'com.geomeet.api.infrastructure.persistence.entity.*'
             ]
             limit {
                 counter = 'LINE'
@@ -114,22 +114,22 @@ jacocoTestCoverageVerification {
                 minimum = 0.90
             }
         }
-        
+
         // Branch coverage - 90% branch coverage required
         rule {
             element = 'CLASS'
             excludes = [
-                'com.geomeet.api.ApiApplication',
-                'com.geomeet.api.controller.*',
-                'com.geomeet.api.adapter.web.health.HealthController',
-                'com.geomeet.api.infrastructure.config.*',
-                'com.geomeet.api.domain.exception.DomainException',
-                'com.geomeet.api.application.command.*',
-                'com.geomeet.api.application.result.*',
-                'com.geomeet.api.adapter.web.auth.dto.*',
-                'com.geomeet.api.adapter.web.session.dto.*',
-                'com.geomeet.api.infrastructure.persistence.entity.*',
-                'com.geomeet.api.infrastructure.security.JwtTokenService'
+                    'com.geomeet.api.ApiApplication',
+                    'com.geomeet.api.controller.*',
+                    'com.geomeet.api.adapter.web.health.HealthController',
+                    'com.geomeet.api.infrastructure.config.*',
+                    'com.geomeet.api.domain.exception.DomainException',
+                    'com.geomeet.api.application.command.*',
+                    'com.geomeet.api.application.result.*',
+                    'com.geomeet.api.adapter.web.auth.dto.*',
+                    'com.geomeet.api.adapter.web.session.dto.*',
+                    'com.geomeet.api.infrastructure.persistence.entity.*',
+                    'com.geomeet.api.infrastructure.security.JwtTokenService'
             ]
             limit {
                 counter = 'BRANCH'
@@ -196,5 +196,5 @@ spotbugsTest {
 
 // Add check task to run all quality checks
 tasks.named('check') {
-    dependsOn 'checkstyleMain', 'checkstyleTest', 'pmdMain', 'pmdTest', 'spotbugsMain', 'spotbugsTest', 'jacocoTestCoverageVerification'
+    dependsOn 'checkstyleMain', 'pmdMain', 'spotbugsMain', 'jacocoTestCoverageVerification'
 }

@@ -49,6 +49,7 @@ export const ParticipantItem = ({
             )}
           </Box>
         }
+        primaryTypographyProps={{ component: 'div' }}
         secondary={
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -71,6 +72,7 @@ export const ParticipantItem = ({
             )}
           </Box>
         }
+        secondaryTypographyProps={{ component: 'div' }}
       />
     </ListItem>
   );

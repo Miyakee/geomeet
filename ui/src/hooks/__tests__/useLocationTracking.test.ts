@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useLocationTracking } from '../useLocationTracking';
 import { sessionApi } from '../../services/api';
 
@@ -12,6 +12,11 @@ vi.mock('../../services/api', async () => {
     },
   };
 });
+
+// Define GeolocationPositionError constants for testing
+const PERMISSION_DENIED = 1;
+const POSITION_UNAVAILABLE = 2;
+const TIMEOUT = 3;
 
 // Mock geolocation API
 const mockGeolocation = {
@@ -29,6 +34,11 @@ describe('useLocationTracking', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    // Mock isSecureContext for tests
+    Object.defineProperty(window, 'isSecureContext', {
+      value: true,
+      writable: true,
+    });
   });
 
   afterEach(() => {
@@ -58,10 +68,12 @@ describe('useLocationTracking', () => {
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
-    expect(result.current.locationError).toBe('Geolocation is not supported by your browser.');
+    expect(result.current.locationError).toBe('Geolocation is not supported by your browser. Please manually enter your location.');
   });
 
   it('should start location tracking successfully', async () => {
+    vi.useRealTimers();
+    
     // Restore geolocation for this test
     Object.defineProperty(global.navigator, 'geolocation', {
       value: mockGeolocation,
@@ -110,12 +122,11 @@ describe('useLocationTracking', () => {
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
-    // Advance timers to process any pending async operations
-    await act(async () => {
-      vi.advanceTimersByTime(100);
-    });
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(true);
+    }, { timeout: 2000 });
 
-    expect(result.current.locationEnabled).toBe(true);
     expect(sessionApi.updateLocation).toHaveBeenCalled();
   });
 
@@ -126,12 +137,12 @@ describe('useLocationTracking', () => {
       writable: true,
     });
 
-    const mockError: GeolocationPositionError = {
-      code: 1,
+    const mockError = {
+      code: PERMISSION_DENIED,
       message: 'User denied geolocation',
-      PERMISSION_DENIED: 1,
-      POSITION_UNAVAILABLE: 2,
-      TIMEOUT: 3,
+      PERMISSION_DENIED,
+      POSITION_UNAVAILABLE,
+      TIMEOUT,
     } as GeolocationPositionError;
 
     // Call error callback synchronously for testing
@@ -159,6 +170,8 @@ describe('useLocationTracking', () => {
   });
 
   it('should stop location tracking', async () => {
+    vi.useRealTimers();
+    
     // Restore geolocation for this test
     Object.defineProperty(global.navigator, 'geolocation', {
       value: mockGeolocation,
@@ -208,13 +221,10 @@ describe('useLocationTracking', () => {
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
-    // Advance timers to process any pending async operations
-    await act(async () => {
-      vi.advanceTimersByTime(100);
-    });
-
-    // Verify tracking started
-    expect(result.current.locationEnabled).toBe(true);
+    // Wait for tracking to start
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(true);
+    }, { timeout: 2000 });
 
     // Then stop tracking
     await act(async () => {

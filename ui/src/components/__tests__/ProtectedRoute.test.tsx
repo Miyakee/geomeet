@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
 import * as AuthContext from '../../contexts/AuthContext';
 
@@ -10,26 +10,19 @@ vi.mock('../../contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// Mock Navigate to prevent actual navigation
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    Navigate: ({ to }: { to: string }) => {
+      // Just render a div with the target path for testing
+      return <div data-testid="navigate-to">{to}</div>;
+    },
+  };
+});
+
 const TestComponent = () => <div>Protected Content</div>;
-
-const renderWithRouter = (isAuthenticated: boolean, isInitialized: boolean = true) => {
-  vi.mocked(AuthContext.useAuth).mockReturnValue({
-    user: isAuthenticated ? { id: 1, username: 'test', email: 'test@test.com' } : null,
-    token: isAuthenticated ? 'test-token' : null,
-    login: vi.fn(),
-    logout: vi.fn(),
-    isAuthenticated,
-    isInitialized,
-  });
-
-  return render(
-    <BrowserRouter>
-      <ProtectedRoute>
-        <TestComponent />
-      </ProtectedRoute>
-    </BrowserRouter>,
-  );
-};
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
@@ -37,19 +30,73 @@ describe('ProtectedRoute', () => {
   });
 
   it('should render children when authenticated', () => {
-    renderWithRouter(true);
+    vi.mocked(AuthContext.useAuth).mockReturnValue({
+      user: { id: 1, username: 'test', email: 'test@test.com' },
+      token: 'test-token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
+      isAuthenticated: true,
+      isInitialized: true,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/protected']}>
+        <ProtectedRoute>
+          <TestComponent />
+        </ProtectedRoute>
+      </MemoryRouter>,
+    );
+
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
 
   it('should redirect to login when not authenticated', () => {
-    renderWithRouter(false);
-    // Should redirect to /login
-    expect(window.location.pathname).toBe('/login');
+    vi.mocked(AuthContext.useAuth).mockReturnValue({
+      user: null,
+      token: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
+      isAuthenticated: false,
+      isInitialized: true,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/protected']}>
+        <ProtectedRoute>
+          <TestComponent />
+        </ProtectedRoute>
+      </MemoryRouter>,
+    );
+
+    // Should navigate to login page
+    const navigateElement = screen.getByTestId('navigate-to');
+    expect(navigateElement).toBeInTheDocument();
+    expect(navigateElement.textContent).toContain('/login');
+    // Protected content should not be visible
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
   it('should not render children while initializing', () => {
-    renderWithRouter(false, false);
+    vi.mocked(AuthContext.useAuth).mockReturnValue({
+      user: null,
+      token: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
+      isAuthenticated: false,
+      isInitialized: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/protected']}>
+        <ProtectedRoute>
+          <TestComponent />
+        </ProtectedRoute>
+      </MemoryRouter>,
+    );
+
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 });
-

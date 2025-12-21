@@ -1,6 +1,7 @@
 package com.geomeet.api.adapter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.geomeet.api.adapter.web.auth.RegisterRequest;
 import com.geomeet.api.adapter.web.auth.dto.LoginRequest;
 import com.geomeet.api.application.usecase.auth.UserRepository;
 import com.geomeet.api.domain.entity.User;
@@ -108,6 +109,50 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
             .andExpect(jsonPath("$.username").value("testuser"));
+    }
+
+    @Test
+    void testRegisterSuccess() throws Exception {
+        String registerRequest = objectMapper.writeValueAsString(
+            new RegisterRequest("newuser", "password123", "newuser@example.com", "123456")
+        );
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").exists())
+            .andExpect(jsonPath("$.username").value("newuser"))
+            .andExpect(jsonPath("$.email").value("newuser@example.com"))
+            .andExpect(jsonPath("$.message").value("Login successful"));
+    }
+
+    @Test
+    void testRegisterWithExistingEmail() throws Exception {
+        String registerRequest = objectMapper.writeValueAsString(
+            new RegisterRequest("differentuser", "password123", "test@example.com", "123456")
+        );
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("register staff Failed"))
+            .andExpect(jsonPath("$.message").value("Invalid email: existing email"));
+    }
+
+    @Test
+    void testRegisterWithExistingUsername() throws Exception {
+        String registerRequest = objectMapper.writeValueAsString(
+            new RegisterRequest("testuser", "password123", "different@example.com", "123456")
+        );
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("register staff Failed"))
+            .andExpect(jsonPath("$.message").value("Invalid email: existing email"));
     }
 }
 

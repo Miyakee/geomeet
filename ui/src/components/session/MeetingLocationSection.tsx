@@ -141,14 +141,17 @@ export const MeetingLocationSection = ({
           </Box>
           {isInitiator && (
             <Tooltip title="Edit meeting location">
-              <IconButton
-                color="primary"
-                onClick={handleOpenEditDialog}
-                disabled={loading}
-                size="small"
-              >
-                <Edit />
-              </IconButton>
+              <span>
+                <IconButton
+                  color="primary"
+                  onClick={handleOpenEditDialog}
+                  disabled={loading}
+                  size="small"
+                  aria-label="Edit meeting location"
+                >
+                  <Edit />
+                </IconButton>
+              </span>
             </Tooltip>
           )}
         </Box>
