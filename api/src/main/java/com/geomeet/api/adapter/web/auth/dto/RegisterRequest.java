@@ -1,4 +1,4 @@
-package com.geomeet.api.adapter.web.auth;
+package com.geomeet.api.adapter.web.auth.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;

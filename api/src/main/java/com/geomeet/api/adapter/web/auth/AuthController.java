@@ -2,6 +2,7 @@ package com.geomeet.api.adapter.web.auth;
 
 import com.geomeet.api.adapter.web.auth.dto.LoginRequest;
 import com.geomeet.api.adapter.web.auth.dto.LoginResponse;
+import com.geomeet.api.adapter.web.auth.dto.RegisterRequest;
 import com.geomeet.api.application.command.LoginCommand;
 import com.geomeet.api.application.command.RegisterCommand;
 import com.geomeet.api.application.result.LoginResult;

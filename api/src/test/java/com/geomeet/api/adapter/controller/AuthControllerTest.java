@@ -1,7 +1,7 @@
 package com.geomeet.api.adapter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.geomeet.api.adapter.web.auth.RegisterRequest;
+import com.geomeet.api.adapter.web.auth.dto.RegisterRequest;
 import com.geomeet.api.adapter.web.auth.dto.LoginRequest;
 import com.geomeet.api.application.usecase.auth.UserRepository;
 import com.geomeet.api.domain.entity.User;
