@@ -44,6 +44,7 @@
         <exclude name="AvoidDeeplyNestedIfStmts"/>
         <exclude name="SignatureDeclareThrowsException"/>
         <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="UseObjectForClearerAPI"/>
     </rule>
 
     <!-- Error Prone -->
@@ -52,12 +53,7 @@
         <exclude name="UseLocaleWithCaseConversions"/>
         <exclude name="AvoidLiteralsInIfCondition"/>
         <exclude name="AvoidDuplicateLiterals"/>
-        <exclude name="AvoidDeeplyNestedIfStmts"/>
-        <exclude name="AvoidCatchingGenericException"/>
         <exclude name="EmptyCatchBlock"/>
-        <exclude name="UnusedFormalParameter"/>
-        <exclude name="SignatureDeclareThrowsException"/>
-        <exclude name="UselessParentheses"/>
     </rule>
 
     <!-- Performance -->
