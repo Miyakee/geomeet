@@ -128,19 +128,14 @@ const SessionPage = () => {
 
   // Wrapper function to update meeting location and sync with session
   const handleUpdateMeetingLocation = useCallback(async (latitude: number, longitude: number) => {
-    try {
-      await updateMeetingLocation(latitude, longitude);
-      // Update session object immediately after successful update
-      if (session) {
-        updateSession({
-          ...session,
-          meetingLocationLatitude: latitude,
-          meetingLocationLongitude: longitude,
-        });
-      }
-    } catch (err) {
-      // Error is already handled by updateMeetingLocation
-      throw err;
+    await updateMeetingLocation(latitude, longitude);
+    // Update session object immediately after successful update
+    if (session) {
+      updateSession({
+        ...session,
+        meetingLocationLatitude: latitude,
+        meetingLocationLongitude: longitude,
+      });
     }
   }, [updateMeetingLocation, session, updateSession]);
 
@@ -416,7 +411,7 @@ const SessionPage = () => {
             currentUserLocation={currentLocation ? {
               latitude: currentLocation.coords.latitude,
               longitude: currentLocation.coords.longitude,
-              userId: user?.id
+              userId: user?.id,
             } : null}
             meetingLocation={meetingLocation ? {
               latitude: meetingLocation.latitude,

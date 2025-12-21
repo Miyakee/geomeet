@@ -108,10 +108,18 @@ const reverseGeocodePositionStack = async (
     if (result.label) {
       return result.label; // PositionStack provides formatted label
     }
-    if (result.name) parts.push(result.name);
-    if (result.locality) parts.push(result.locality);
-    if (result.region) parts.push(result.region);
-    if (result.country) parts.push(result.country);
+    if (result.name) {
+      parts.push(result.name);
+    }
+    if (result.locality) {
+      parts.push(result.locality);
+    }
+    if (result.region) {
+      parts.push(result.region);
+    }
+    if (result.country) {
+      parts.push(result.country);
+    }
     return parts.length > 0 ? parts.join(', ') : null;
   }
   return null;
@@ -148,11 +156,21 @@ const reverseGeocodeNominatim = async (
 
   // Build address string
   const parts: string[] = [];
-  if (address.road) parts.push(address.road);
-  if (address.house_number) parts.push(address.house_number);
-  if (address.suburb) parts.push(address.suburb);
-  if (address.city) parts.push(address.city);
-  if (address.country) parts.push(address.country);
+  if (address.road) {
+    parts.push(address.road);
+  }
+  if (address.house_number) {
+    parts.push(address.house_number);
+  }
+  if (address.suburb) {
+    parts.push(address.suburb);
+  }
+  if (address.city) {
+    parts.push(address.city);
+  }
+  if (address.country) {
+    parts.push(address.country);
+  }
 
   return parts.length > 0 ? parts.join(', ') : null;
 };
@@ -301,15 +319,25 @@ export const reverseGeocode = async (
   } else {
     providers.push(provider);
     // Add fallbacks
-    if (provider !== 'opencage' && OPENCAGE_API_KEY) providers.push('opencage');
-    if (provider !== 'positionstack' && POSITIONSTACK_API_KEY) providers.push('positionstack');
-    if (provider !== 'nominatim') providers.push('nominatim');
+    if (provider !== 'opencage' && OPENCAGE_API_KEY) {
+      providers.push('opencage');
+    }
+    if (provider !== 'positionstack' && POSITIONSTACK_API_KEY) {
+      providers.push('positionstack');
+    }
+    if (provider !== 'nominatim') {
+      providers.push('nominatim');
+    }
   }
 
   for (const currentProvider of providers) {
     // Skip if API key is missing
-    if (currentProvider === 'opencage' && !OPENCAGE_API_KEY) continue;
-    if (currentProvider === 'positionstack' && !POSITIONSTACK_API_KEY) continue;
+    if (currentProvider === 'opencage' && !OPENCAGE_API_KEY) {
+      continue;
+    }
+    if (currentProvider === 'positionstack' && !POSITIONSTACK_API_KEY) {
+      continue;
+    }
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
@@ -333,10 +361,14 @@ export const reverseGeocode = async (
         }
       } catch (error: any) {
         if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-          if (attempt < retries) continue;
+          if (attempt < retries) {
+            continue;
+          }
         } else {
           console.warn(`Reverse geocoding error (${currentProvider}):`, error);
-          if (attempt < retries) continue;
+          if (attempt < retries) {
+            continue;
+          }
         }
       }
     }
@@ -393,15 +425,25 @@ export const forwardGeocode = async (
   } else {
     providers.push(provider);
     // Add fallbacks
-    if (provider !== 'opencage' && OPENCAGE_API_KEY) providers.push('opencage');
-    if (provider !== 'positionstack' && POSITIONSTACK_API_KEY) providers.push('positionstack');
-    if (provider !== 'nominatim') providers.push('nominatim');
+    if (provider !== 'opencage' && OPENCAGE_API_KEY) {
+      providers.push('opencage');
+    }
+    if (provider !== 'positionstack' && POSITIONSTACK_API_KEY) {
+      providers.push('positionstack');
+    }
+    if (provider !== 'nominatim') {
+      providers.push('nominatim');
+    }
   }
 
   for (const currentProvider of providers) {
     // Skip if API key is missing
-    if (currentProvider === 'opencage' && !OPENCAGE_API_KEY) continue;
-    if (currentProvider === 'positionstack' && !POSITIONSTACK_API_KEY) continue;
+    if (currentProvider === 'opencage' && !OPENCAGE_API_KEY) {
+      continue;
+    }
+    if (currentProvider === 'positionstack' && !POSITIONSTACK_API_KEY) {
+      continue;
+    }
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
@@ -426,10 +468,14 @@ export const forwardGeocode = async (
         }
       } catch (error: any) {
         if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-          if (attempt < retries) continue;
+          if (attempt < retries) {
+            continue;
+          }
         } else {
           console.warn(`Forward geocoding error (${currentProvider}):`, error);
-          if (attempt < retries) continue;
+          if (attempt < retries) {
+            continue;
+          }
         }
       }
     }

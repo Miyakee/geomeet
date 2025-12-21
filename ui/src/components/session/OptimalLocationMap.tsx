@@ -129,7 +129,7 @@ function MapBoundsFitter({ locations }: { locations: Array<[number, number]> }) 
   // Create a stable string representation of locations for comparison
   const locationsKey = useMemo(
     () => locations.map(([lat, lng]) => `${lat.toFixed(6)},${lng.toFixed(6)}`).join('|'),
-    [locations]
+    [locations],
   );
 
   useEffect(() => {
@@ -251,31 +251,31 @@ export const OptimalLocationMap = ({
 
           {/* Optimal location marker (yellow) - always show if calculated */}
           {optimalLocation && (
-              <Marker
-                  position={[optimalLocation.latitude, optimalLocation.longitude]}
-                  icon={OptimalLocationIcon}
-              >
-                <Popup>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold">
+            <Marker
+              position={[optimalLocation.latitude, optimalLocation.longitude]}
+              icon={OptimalLocationIcon}
+            >
+              <Popup>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold">
                       Optimal Meeting Location
-                    </Typography>
-                    <Typography variant="body2">
-                      {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
-                    </Typography>
-                    {optimalLocation.totalTravelDistance !== undefined && (
-                        <Typography variant="body2" color="text.secondary">
+                  </Typography>
+                  <Typography variant="body2">
+                    {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
+                  </Typography>
+                  {optimalLocation.totalTravelDistance !== undefined && (
+                    <Typography variant="body2" color="text.secondary">
                           Total distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
-                        </Typography>
-                    )}
-                    {optimalLocation.participantCount !== undefined && (
-                        <Typography variant="body2" color="text.secondary">
+                    </Typography>
+                  )}
+                  {optimalLocation.participantCount !== undefined && (
+                    <Typography variant="body2" color="text.secondary">
                           Based on {optimalLocation.participantCount} participant(s)
-                        </Typography>
-                    )}
-                  </Box>
-                </Popup>
-              </Marker>
+                    </Typography>
+                  )}
+                </Box>
+              </Popup>
+            </Marker>
           )}
 
 
