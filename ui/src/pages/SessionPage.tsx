@@ -1,46 +1,45 @@
-import { useState, useCallback, useEffect } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Box,
   Alert,
-  CircularProgress,
-  Divider,
+  Box,
   Button,
+  CircularProgress,
+  Container,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
+  DialogTitle,
+  Divider,
+  Paper,
+  Typography,
 } from '@mui/material';
-import { LocationOn, Stop } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useParams } from 'react-router-dom';
-import { useSessionData } from '../hooks/useSessionData';
-import { useInviteLink } from '../hooks/useInviteLink';
-import { useLocationTracking } from '../hooks/useLocationTracking';
-import { useOptimalLocation } from '../hooks/useOptimalLocation';
-import { useMeetingLocation } from '../hooks/useMeetingLocation';
-import { useEndSession } from '../hooks/useEndSession';
-import { useWebSocket, SessionEndNotification } from '../hooks/useWebSocket';
-import { SessionHeader } from '../components/session/SessionHeader';
-import { ParticipantList } from '../components/session/ParticipantList';
-import { LocationTrackingSection } from '../components/session/LocationTrackingSection';
-import { InviteSection } from '../components/session/InviteSection';
-import { MeetingLocationSection } from '../components/session/MeetingLocationSection';
-import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
+import {LocationOn, Stop} from '@mui/icons-material';
+import {useAuth} from '../contexts/AuthContext';
+import {useParams} from 'react-router-dom';
+import {useSessionData} from '../hooks/useSessionData';
+import {useInviteLink} from '../hooks/useInviteLink';
+import {useLocationTracking} from '../hooks/useLocationTracking';
+import {useOptimalLocation} from '../hooks/useOptimalLocation';
+import {useMeetingLocation} from '../hooks/useMeetingLocation';
+import {useEndSession} from '../hooks/useEndSession';
+import {SessionEndNotification, useWebSocket} from '../hooks/useWebSocket';
+import {SessionHeader} from '../components/session/SessionHeader';
+import {ParticipantList} from '../components/session/ParticipantList';
+import {LocationTrackingSection} from '../components/session/LocationTrackingSection';
+import {InviteSection} from '../components/session/InviteSection';
+import {MeetingLocationSection} from '../components/session/MeetingLocationSection';
+import {OptimalLocationMap} from '../components/session/OptimalLocationMap';
 import {
   ParticipantLocation,
-  ParticipantLocationInfo,
-  SessionDetailResponse
+  SessionDetailResponse,
 } from '../types/session';
-import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
+import {CalculateOptimalLocationResponse, UpdateMeetingLocationResponse} from '../services/api';
 
 const SessionPage = () => {
-  const { sessionId } = useParams<{ sessionId: string }>();
-  const { user } = useAuth();
-  const { session, loading, error, updateSession } = useSessionData(sessionId);
+  const {sessionId} = useParams<{ sessionId: string }>();
+  const {user} = useAuth();
+  const {session, loading, error, updateSession} = useSessionData(sessionId);
   const {
     inviteLink,
     inviteCode,
@@ -61,11 +60,8 @@ const SessionPage = () => {
     startLocationTracking,
     setManualLocation,
     setShowManualInput,
-    restoreLocation,
   } = useLocationTracking(sessionId, session?.status);
 
-  // Remove current user's location from participantLocations when location tracking is disabled
-  // 注意：session 结束时不清除位置，保留最后的位置显示
   useEffect(() => {
     if (!locationEnabled && session?.status !== 'Ended' && user?.id) {
       setParticipantLocations((prev) => {
@@ -148,8 +144,10 @@ const SessionPage = () => {
     }
   }, [updateMeetingLocationFromResponse, session, updateSession]);
 
-  // Wrapper function to update meeting location and sync with session
-  const handleUpdateMeetingLocation = useCallback(async (latitude: number, longitude: number) => {
+  const handleUpdateMeetingLocation = useCallback(async (latitude?: number, longitude?: number) => {
+    if (!latitude || !longitude) {
+      return;
+    }
     await updateMeetingLocation(latitude, longitude);
     // Update session object immediately after successful update
     if (session) {
@@ -184,84 +182,64 @@ const SessionPage = () => {
     onSessionEnd: handleSessionEnd,
   });
 
-  // Update participant names from session data
-  useEffect(() => {
-    if (session) {
-      const names = new Map<number, string>();
-      session.participants.forEach((participant) => {
-        names.set(participant.userId, participant.username);
-      });
-      setParticipantNames(names);
-    }
-  }, [session]);
+  const generateParticipantsNameMap = useCallback(() => {
+    const names = new Map<number, string>();
+    session?.participants.forEach((participant) => {
+      names.set(participant.userId, participant.username);
+    });
+    setParticipantNames(names);
+  }, [session?.participants, setParticipantNames]);
 
-  // Initialize participant locations from session data
-  // This ensures new users who join can see all existing participant locations
-  // Also restore current user's location if it exists in session data
-  useEffect(() => {
-    if (session && session.participantLocations) {
-      const locationsMap = new Map<number, ParticipantLocation>();
-      let currentUserLocationInfo: ParticipantLocationInfo | null = null;
-      
-      for (const locationInfo of session.participantLocations) {
-        if (locationInfo.userId === user?.id) {
-          // Save current user's location to restore it
-          currentUserLocationInfo = locationInfo;
-        } else {
-          // Add locations for other participants
-          locationsMap.set(locationInfo.userId, {
-            latitude: locationInfo.latitude,
-            longitude: locationInfo.longitude,
-            accuracy: locationInfo.accuracy ?? undefined,
-            updatedAt: locationInfo.updatedAt,
-          });
-        }
-      }
-      setParticipantLocations(locationsMap);
-      
-      // Restore current user's location from session data if it exists and not already set
-      if (currentUserLocationInfo && !currentLocation) {
-        restoreLocation(
-          currentUserLocationInfo.latitude,
-          currentUserLocationInfo.longitude,
-          currentUserLocationInfo.accuracy ?? undefined,
-        );
+  const generateParticipantsLocation = useCallback(() => {
+    if(!session?.participantLocations){
+      return;
+    }
+    const locationsMap = new Map<number, ParticipantLocation>();
+
+    for (const locationInfo of session.participantLocations) {
+      if (locationInfo.userId !== user?.id) {
+        // Add locations for other participants
+        locationsMap.set(locationInfo.userId, {
+          latitude: locationInfo.latitude,
+          longitude: locationInfo.longitude,
+          accuracy: locationInfo.accuracy ?? undefined,
+          updatedAt: locationInfo.updatedAt,
+        });
       }
     }
-  }, [session?.participantLocations, user?.id, currentLocation, restoreLocation]);
+    setParticipantLocations(locationsMap);
+  }, [session?.participantLocations, setParticipantLocations]);
 
-  // Initialize meeting location from session data
-  // This ensures new users who join after meeting location is set can see it
-  useEffect(() => {
-    if (session) {
-      if (session.meetingLocationLatitude != null && session.meetingLocationLongitude != null) {
-        // Always update to ensure new users see the meeting location
-        // Check if the location has changed to avoid unnecessary updates
-        if (!meetingLocation ||
-            meetingLocation.latitude !== session.meetingLocationLatitude ||
-            meetingLocation.longitude !== session.meetingLocationLongitude) {
-          updateMeetingLocationFromResponse({
-            sessionId: session.id,
-            sessionIdString: session.sessionId,
-            latitude: session.meetingLocationLatitude,
-            longitude: session.meetingLocationLongitude,
-            message: '',
-          });
-        }
+  const updateMeetingLocationBySessionRes = useCallback(() => {
+    if (session?.meetingLocationLatitude && session.meetingLocationLongitude) {
+      // Always update to ensure new users see the meeting location
+      // Check if the location has changed to avoid unnecessary updates
+      if (!meetingLocation ||
+                meetingLocation.latitude !== session.meetingLocationLatitude ||
+                meetingLocation.longitude !== session.meetingLocationLongitude) {
+        updateMeetingLocationFromResponse({
+          sessionId: session.id,
+          sessionIdString: session.sessionId,
+          latitude: session.meetingLocationLatitude,
+          longitude: session.meetingLocationLongitude,
+          message: '',
+        });
       }
     }
-  }, [
-    session?.meetingLocationLatitude,
-    session?.meetingLocationLongitude,
-    session?.id,
-    session?.sessionId,
-    updateMeetingLocationFromResponse,
-    meetingLocation,
-    session,
-  ]);
+  }, [session, meetingLocation, updateMeetingLocationFromResponse]);
 
-  // Initialize session end notification from session data when page loads
-  // This ensures the alert is shown even after page refresh
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+    generateParticipantsNameMap();
+    updateMeetingLocationBySessionRes();
+    if (session.participantLocations) {
+      generateParticipantsLocation();
+    }
+  }, [session, generateParticipantsNameMap, generateParticipantsLocation, updateMeetingLocationBySessionRes]);
+
+
   useEffect(() => {
     if (session && session.status === 'Ended' && !sessionEndNotification) {
       const hasMeetingLocation = session.meetingLocationLatitude != null && session.meetingLocationLongitude != null;
@@ -279,7 +257,6 @@ const SessionPage = () => {
     }
   }, [session, sessionEndNotification]);
 
-  // Load invite link when session is loaded and user is initiator
   useEffect(() => {
     if (session && session.initiatorId === user?.id && !inviteLink && !loadingInvite) {
       loadInviteLink();
@@ -298,9 +275,9 @@ const SessionPage = () => {
             alignItems: 'center',
           }}
         >
-          <CircularProgress />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            Loading session...
+          <CircularProgress/>
+          <Typography variant="body1" sx={{mt: 2}}>
+                        Loading session...
           </Typography>
         </Box>
       </Container>
@@ -318,7 +295,7 @@ const SessionPage = () => {
             alignItems: 'center',
           }}
         >
-          <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+          <Alert severity="error" sx={{width: '100%', mb: 2}}>
             {error}
           </Alert>
         </Box>
@@ -351,24 +328,25 @@ const SessionPage = () => {
             width: '100%',
           }}
         >
-          <SessionHeader session={session} isInitiator={isInitiator} />
+          <SessionHeader session={session} isInitiator={isInitiator}/>
 
           {/* Session End Notification */}
           {(sessionEndNotification) && (
             <Alert
               severity={sessionEndNotification.hasMeetingLocation ? 'success' : 'warning'}
-              sx={{ mb: 2 }}
+              sx={{mb: 2}}
               onClose={() => setSessionEndNotification(null)}
             >
               {sessionEndNotification.hasMeetingLocation ? (
                 <Box>
                   <Typography variant="body1" fontWeight="bold" gutterBottom>
-                    Session Ended - Final Meeting Location
+                                        Session Ended - Final Meeting Location
                   </Typography>
                   <Typography variant="body2">
-                    The session has ended. The final meeting location has been set:
+                                        The session has ended. The final meeting location has been
+                                        set:
                   </Typography>
-                  <Typography variant="body2" sx={{ mt: 1, fontWeight: 'medium' }}>
+                  <Typography variant="body2" sx={{mt: 1, fontWeight: 'medium'}}>
                     {sessionEndNotification.meetingLocationLatitude?.toFixed(6)},{' '}
                     {sessionEndNotification.meetingLocationLongitude?.toFixed(6)}
                   </Typography>
@@ -376,10 +354,10 @@ const SessionPage = () => {
               ) : (
                 <Box>
                   <Typography variant="body1" fontWeight="bold" gutterBottom>
-                    Session Cancelled
+                                        Session Cancelled
                   </Typography>
                   <Typography variant="body2">
-                    The session has been ended without a final meeting location.
+                                        The session has been ended without a final meeting location.
                   </Typography>
                 </Box>
               )}
@@ -388,20 +366,20 @@ const SessionPage = () => {
 
           {/* End Session Button - Only visible to initiator for active sessions */}
           {isInitiator && session.status === 'Active' && (
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{mb: 2, display: 'flex', justifyContent: 'flex-end'}}>
               <Button
                 variant="outlined"
                 color="error"
-                startIcon={<Stop />}
+                startIcon={<Stop/>}
                 onClick={() => setEndSessionDialogOpen(true)}
                 disabled={endingSession}
               >
-                End Session
+                                End Session
               </Button>
             </Box>
           )}
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{my: 2}}/>
 
           <ParticipantList
             session={session}
@@ -410,7 +388,7 @@ const SessionPage = () => {
             participantAddresses={participantAddresses}
           />
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{my: 3}}/>
 
           {/* Meeting Location Section */}
           <MeetingLocationSection
@@ -428,7 +406,7 @@ const SessionPage = () => {
             error={meetingLocationError}
           />
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{my: 3}}/>
 
 
           <LocationTrackingSection
@@ -446,7 +424,7 @@ const SessionPage = () => {
             onCloseManualInput={() => setShowManualInput(false)}
           />
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{my: 3}}/>
 
           {/* Optimal Location Map */}
           <OptimalLocationMap
@@ -480,19 +458,19 @@ const SessionPage = () => {
           />
 
           {/* Calculate Optimal Location Button */}
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{mb: 3, display: 'flex', justifyContent: 'center'}}>
             <Button
               variant="contained"
-              startIcon={<LocationOn />}
+              startIcon={<LocationOn/>}
               onClick={calculateOptimalLocation}
-              disabled={calculatingOptimalLocation || participantLocations.size === 0}
+              disabled={session.status === 'Ended' || calculatingOptimalLocation || participantLocations.size === 0}
             >
               {calculatingOptimalLocation ? 'Calculating...' : 'Calculate Optimal Location'}
             </Button>
           </Box>
 
           {optimalLocationError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{mb: 2}}>
               {optimalLocationError}
             </Alert>
           )}
@@ -500,21 +478,17 @@ const SessionPage = () => {
           {optimalLocation && (
             <Alert
               severity="success"
-              sx={{ mb: 2 }}
+              sx={{mb: 2}}
               action={
                 isInitiator && (
                   <Button
                     color="inherit"
                     size="small"
                     onClick={async () => {
-                      try {
-                        await handleUpdateMeetingLocation(
-                          optimalLocation.optimalLatitude,
-                          optimalLocation.optimalLongitude,
-                        );
-                      } catch (err) {
-                        // Error is handled by useMeetingLocation hook
-                      }
+                      await handleUpdateMeetingLocation(
+                        optimalLocation?.optimalLatitude,
+                        optimalLocation?.optimalLongitude,
+                      );
                     }}
                     disabled={updatingMeetingLocation}
                   >
@@ -523,11 +497,12 @@ const SessionPage = () => {
                 )
               }
             >
-              Optimal location calculated! Total travel distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
+                            Optimal location calculated! Total travel
+                            distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
             </Alert>
           )}
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{my: 3}}/>
 
           {isInitiator && (
             <>
@@ -540,15 +515,15 @@ const SessionPage = () => {
                 onCopyInviteLink={handleCopyInviteLink}
                 onCopyInviteCode={handleCopyInviteCode}
               />
-              <Divider sx={{ my: 3 }} />
+              <Divider sx={{my: 3}}/>
             </>
           )}
 
           <Typography variant="body2" color="text.secondary">
-            Session created: {new Date(session.createdAt).toLocaleString()}
+                        Session created: {new Date(session.createdAt).toLocaleString()}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Created by: {session.initiatorUsername}
+                        Created by: {session.initiatorUsername}
           </Typography>
         </Paper>
       </Box>
@@ -561,35 +536,36 @@ const SessionPage = () => {
         aria-describedby="end-session-dialog-description"
       >
         <DialogTitle id="end-session-dialog-title">
-          End Session
+                    End Session
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="end-session-dialog-description">
-            Are you sure you want to end this session? This action cannot be undone.
+                        Are you sure you want to end this session? This action cannot be undone.
             {meetingLocation && (
               <>
-                <br />
-                <br />
-                The final meeting location will be shared with all participants.
+                <br/>
+                <br/>
+                                The final meeting location will be shared with all participants.
               </>
             )}
             {!meetingLocation && (
               <>
-                <br />
-                <br />
-                No meeting location has been set. The session will be marked as cancelled.
+                <br/>
+                <br/>
+                                No meeting location has been set. The session will be marked as
+                                cancelled.
               </>
             )}
           </DialogContentText>
           {endSessionError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity="error" sx={{mt: 2}}>
               {endSessionError}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEndSessionDialogOpen(false)} disabled={endingSession}>
-            Cancel
+                        Cancel
           </Button>
           <Button
             onClick={async () => {
@@ -603,7 +579,7 @@ const SessionPage = () => {
             variant="contained"
             color="error"
             disabled={endingSession}
-            startIcon={<Stop />}
+            startIcon={<Stop/>}
           >
             {endingSession ? 'Ending...' : 'End Session'}
           </Button>

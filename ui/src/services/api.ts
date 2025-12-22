@@ -190,6 +190,7 @@ export interface EndSessionResponse {
   message: string;
 }
 
+//TODO intercepter
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   return request<T>(url, {

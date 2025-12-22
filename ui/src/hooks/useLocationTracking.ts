@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { sessionApi } from '../services/api';
 import { calculateHaversineDistance } from '../utils/distanceCalculator';
 
@@ -258,9 +258,6 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
       locationUpdateIntervalRef.current = null;
     }
     setLocationEnabled(false);
-    setCurrentLocation(null);
-    latestPositionRef.current = null;
-    lastSavedLocationRef.current = null; // 清除保存的位置记录
     setShowManualInput(false);
   };
 
@@ -297,30 +294,6 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
     };
   }, []);
 
-  // Restore location from session data (for page refresh)
-  const restoreLocation = useCallback((latitude: number, longitude: number, accuracy?: number) => {
-    const restoredPosition: GeolocationPosition = {
-      coords: {
-        latitude,
-        longitude,
-        accuracy: accuracy ?? 100,
-        altitude: null,
-        altitudeAccuracy: null,
-        heading: null,
-        speed: null,
-        toJSON: () => ({}),
-      } as GeolocationCoordinates,
-      timestamp: Date.now(),
-      toJSON: () => ({}),
-    };
-    setCurrentLocation(restoredPosition);
-    // Also update lastSavedLocationRef to prevent unnecessary updates
-    lastSavedLocationRef.current = {
-      latitude,
-      longitude,
-    };
-  }, []);
-
   return {
     locationEnabled,
     locationError,
@@ -332,7 +305,6 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
     stopLocationTracking,
     setManualLocation,
     setShowManualInput,
-    restoreLocation,
   };
 };
 

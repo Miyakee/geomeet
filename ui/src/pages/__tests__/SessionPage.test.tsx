@@ -111,7 +111,6 @@ describe('SessionPage', () => {
       stopLocationTracking: vi.fn(),
       setManualLocation: vi.fn(),
       setShowManualInput: vi.fn(),
-      restoreLocation: vi.fn(),
     });
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({

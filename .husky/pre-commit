@@ -1,0 +1,70 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-commit hook to automatically fix linting issues
+# This hook runs lint fixers based on which files have been staged
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Running pre-commit lint fixes...${NC}"
+
+# Get staged files
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$staged_files" ]; then
+    echo -e "${GREEN}No staged files. Skipping lint fixes.${NC}"
+    exit 0
+fi
+
+# Check if ui directory has changes
+ui_changed=false
+
+while IFS= read -r file; do
+    if [[ "$file" == ui/* ]] && [[ "$file" == *.ts || "$file" == *.tsx || "$file" == *.js || "$file" == *.jsx ]]; then
+        ui_changed=true
+    fi
+done <<< "$staged_files"
+
+# If no relevant changes, skip fixes
+if [ "$ui_changed" = false ]; then
+    echo -e "${GREEN}No relevant files to lint fix.${NC}"
+    exit 0
+fi
+
+# Run frontend lint fix if ui changed
+if [ "$ui_changed" = true ]; then
+    echo -e "${YELLOW}UI changes detected. Running ESLint auto-fix...${NC}"
+    
+    cd ui || exit 1
+    
+    # Run ESLint with --fix flag
+    if npm run lint -- --fix 2>&1; then
+        # Check if any files were modified by the fix
+        modified_files=$(git diff --name-only)
+        if [ -n "$modified_files" ]; then
+            echo -e "${YELLOW}ESLint auto-fix made changes. Staging fixed files...${NC}"
+            echo -e "${YELLOW}Modified files:${NC}"
+            echo "$modified_files"
+            # Automatically stage the fixed files
+            git add -u
+            echo -e "${GREEN}Fixed files have been staged. Continuing with commit...${NC}"
+        else
+            echo -e "${GREEN}Frontend lint fixes applied (no changes needed)${NC}"
+        fi
+    else
+        echo -e "${RED}ESLint auto-fix failed or found unfixable issues!${NC}"
+        echo -e "${YELLOW}Please fix the remaining issues manually.${NC}"
+        cd ..
+        exit 1
+    fi
+    
+    cd ..
+fi
+
+echo -e "${GREEN}Pre-commit lint fixes completed!${NC}"

@@ -117,7 +117,7 @@ geomeet/
 │   │   └── init-ssl.sh      # SSL certificate initialization
 │   ├── terraform/           # AWS infrastructure as code
 │   └── docs/                # Infrastructure documentation
-├── .githooks/               # Git hooks for code quality
+├── .husky/                  # Git hooks managed by Husky
 ├── docker-compose.yml        # Local PostgreSQL database setup
 ├── DOCKER.md                 # Docker documentation
 └── README.md                 # This file
@@ -181,11 +181,30 @@ password=postgres
 
 ### 4. Install Git Hooks
 
+Husky will automatically install Git hooks when you install dependencies:
+
 ```bash
-./.githooks/install.sh
+cd ui
+npm install
 ```
 
-This installs pre-push hooks for code quality checks. The hook will automatically run before you push code.
+Or manually install hooks:
+
+```bash
+cd ui
+npm run prepare
+```
+
+This installs Git hooks for code quality checks:
+
+- **Pre-commit Hook**: Automatically fixes linting issues before committing
+  - Frontend: Runs ESLint with `--fix` to auto-fix TypeScript/JavaScript issues
+  - Automatically stages fixed files
+- **Pre-push Hook**: Runs code quality checks before pushing
+  - Backend: Checkstyle, PMD, SpotBugs, Tests
+  - Frontend: ESLint, Tests
+
+The hooks will automatically run when you commit or push code.
 
 ### 5. Start Backend
 
@@ -521,7 +540,7 @@ Pre-push hooks automatically run these checks before pushing code. The hooks are
     - ESLint (linting)
     - Unit tests
 
-If no relevant changes are detected, checks are skipped. See [.githooks/README.md](.githooks/README.md) for more details.
+If no relevant changes are detected, checks are skipped. Hooks are managed by Husky and located in `.husky/` directory.
 
 ## 🧪 Testing
 

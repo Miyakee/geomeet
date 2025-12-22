@@ -237,18 +237,7 @@ describe('useLocationTracking', () => {
     expect(mockGeolocation.clearWatch).toHaveBeenCalledWith(watchId);
   });
 
-  it('should restore location from session data', () => {
-    const { result } = renderHook(() => useLocationTracking('test-session-id'));
 
-    act(() => {
-      result.current.restoreLocation(37.7749, -122.4194, 10);
-    });
-
-    expect(result.current.currentLocation).not.toBeNull();
-    expect(result.current.currentLocation?.coords.latitude).toBe(37.7749);
-    expect(result.current.currentLocation?.coords.longitude).toBe(-122.4194);
-    expect(result.current.currentLocation?.coords.accuracy).toBe(10);
-  });
 
   it('should not update location when session is ended', async () => {
     vi.useRealTimers();
@@ -285,7 +274,7 @@ describe('useLocationTracking', () => {
 
     const { result, rerender } = renderHook(
       ({ sessionStatus }) => useLocationTracking('test-session-id', sessionStatus),
-      { initialProps: { sessionStatus: 'Active' } }
+      { initialProps: { sessionStatus: 'Active' } },
     );
 
     // Start tracking

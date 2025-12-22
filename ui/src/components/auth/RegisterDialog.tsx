@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
-import {DialogContent, TextField, Alert, CircularProgress} from '@mui/material';
-import {authApi, RegisterRequest, ApiError, sessionApi} from '../../services/api.ts';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import {
+  Alert,
+  CircularProgress,
+  DialogContent,
+  IconButton,
+  InputAdornment,
+  TextField,
+} from '@mui/material';
+import {ApiError, authApi, RegisterRequest, sessionApi} from '../../services/api.ts';
+import {useAuth} from '../../contexts/AuthContext';
+import {useNavigate} from 'react-router-dom';
+import {Visibility, VisibilityOff} from '@mui/icons-material';
 
 interface RegisterDialogProps {
     open: boolean;
@@ -21,6 +29,7 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
   const [verificationCode, setVerificationCode] = useState('2025'); // 固定验证码
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { setAuthFromResponse } = useAuth();
   const navigate = useNavigate();
@@ -126,11 +135,24 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
           fullWidth
           id="password"
           label="Password"
-          type="password"
           variant="outlined"
+          type={showPassword ? 'text' : 'password'}
           margin="normal"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff/> : <Visibility/>}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
         <TextField 
           fullWidth 

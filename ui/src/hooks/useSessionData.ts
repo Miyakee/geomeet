@@ -45,16 +45,12 @@ export const useSessionData = (sessionId: string | undefined) => {
     loadSessionData();
   }, [sessionId, loadSessionData]);
 
-  const updateSession = useCallback((updatedSession: SessionDetailResponse) => {
-    setSession(updatedSession);
-  }, []);
-
   return {
     session,
     loading,
     error,
     reload: loadSessionData,
-    updateSession,
+    updateSession: setSession,
   };
 };
 

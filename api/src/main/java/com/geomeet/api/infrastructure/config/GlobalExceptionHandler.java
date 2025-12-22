@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse = ErrorResponse.of(
         HttpStatus.INTERNAL_SERVER_ERROR.value(),
         "Internal Server Error",
-        ex.getMessage(),
+        "Ops...Please try later",
         request.getDescription(false).replace("uri=", "")
     );
 

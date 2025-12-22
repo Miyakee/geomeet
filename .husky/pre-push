@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
 # Pre-push hook to run code quality checks
 # This hook runs checks based on which directories have been modified

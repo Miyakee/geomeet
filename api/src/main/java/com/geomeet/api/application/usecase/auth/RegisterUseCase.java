@@ -36,11 +36,11 @@ public class RegisterUseCase {
    * @throws DomainException if authentication fails
    */
   public LoginResult execute(RegisterCommand command) {
-    // Find user by email
+//     Find user by email
     Optional<User> emailAndUserName =
         userRepository.findByEmailAndUserName(command.getEmail(), command.getUsername());
     if (emailAndUserName.isPresent()) {
-      throw new InvalidRegisterException("Invalid email: existing email");
+      throw new InvalidRegisterException("Invalid email: existing email or username");
     }
 
     // create new User
