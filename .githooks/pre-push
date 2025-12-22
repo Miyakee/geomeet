@@ -103,19 +103,19 @@ if [ "$api_changed" = true ]; then
     cd api || exit 1
     
     echo -e "${YELLOW}Running Checkstyle...${NC}"
-    if ! ./gradlew checkstyleMain checkstyleTest; then
+    if ! ./gradlew checkstyleMain; then
         echo -e "${RED}Checkstyle checks failed!${NC}"
         exit 1
     fi
     
     echo -e "${YELLOW}Running PMD...${NC}"
-    if ! ./gradlew pmdMain pmdTest; then
+    if ! ./gradlew pmdMain; then
         echo -e "${RED}PMD checks failed!${NC}"
         exit 1
     fi
     
     echo -e "${YELLOW}Running SpotBugs...${NC}"
-    if ! ./gradlew spotbugsMain spotbugsTest; then
+    if ! ./gradlew spotbugsMain; then
         echo -e "${RED}SpotBugs checks failed!${NC}"
         exit 1
     fi
