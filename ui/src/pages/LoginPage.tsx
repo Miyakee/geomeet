@@ -28,6 +28,7 @@ const LoginPage = () => {
   const {login} = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('sessionId');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -181,6 +182,7 @@ const LoginPage = () => {
           <RegisterDialog
             open={registerDialogOpen} 
             onClose={() => setRegisterDialogOpen(false)}
+            sessionId={sessionId}
           />
 
           <Box sx={{mt: 2, textAlign: 'center'}}>

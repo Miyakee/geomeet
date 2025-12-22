@@ -31,6 +31,7 @@ describe('LoginPage', () => {
       token: null,
       login: mockLogin,
       logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: false,
       isInitialized: true,
     });

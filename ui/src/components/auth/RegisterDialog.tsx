@@ -4,16 +4,17 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import {DialogContent, TextField, Alert, CircularProgress} from '@mui/material';
-import {authApi, RegisterRequest, ApiError} from '../../services/api.ts';
+import {authApi, RegisterRequest, ApiError, sessionApi} from '../../services/api.ts';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface RegisterDialogProps {
     open: boolean;
     onClose: () => void;
+    sessionId?: string | null;
 }
 
-export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
+export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,20 +49,26 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
 
       const response = await authApi.register(registerInfo);
 
-      // 注册成功后，设置认证信息并跳转到 dashboard
       setAuthFromResponse(response.token, response.username, response.email);
 
-      // 重置表单
       setUsername('');
       setPassword('');
       setEmail('');
       setVerificationCode('2025');
             
-      // 关闭弹窗
       onClose();
             
-      // 跳转到 dashboard
-      navigate('/dashboard', { replace: true });
+      if (sessionId) {
+        try {
+          const joinResult = await sessionApi.joinSession(sessionId);
+          navigate(`/session/${joinResult.sessionIdString}`, { replace: true });
+        } catch (joinErr: any) {
+          console.error('Join session error:', joinErr);
+          navigate(`/session/${sessionId}`, { replace: true });
+        }
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       console.error('Registration error:', err);
       if (err instanceof ApiError || err.response) {
@@ -119,6 +126,7 @@ export const RegisterDialog = ({ open, onClose }: RegisterDialogProps) => {
           fullWidth
           id="password"
           label="Password"
+          type="password"
           variant="outlined"
           margin="normal"
           value={password}
