@@ -187,24 +187,27 @@ export const OptimalLocationMap = ({
 
   // Calculate bounds to fit all markers (including current user location)
   // Also exclude current user from participantLocations to avoid duplicate markers
-  const allLocations: Array<[number, number]> = [];
-  if (meetingLocation) {
-    allLocations.push([meetingLocation.latitude, meetingLocation.longitude]);
-  }
-  if (currentUserLocation) {
-    allLocations.push([currentUserLocation.latitude, currentUserLocation.longitude]);
-  }
-  // Always include optimal location if it exists (for reference)
-  if (optimalLocation) {
-    allLocations.push([optimalLocation.latitude, optimalLocation.longitude]);
-  }
-  // Exclude current user from participant locations to avoid duplicate markers
-  const currentUserId = currentUserLocation?.userId;
-  participantLocations.forEach((location, userId) => {
-    if (userId !== currentUserId) {
-      allLocations.push([location.latitude, location.longitude]);
+  const allLocations: Array<[number, number]> = useMemo(() => {
+    const locations: Array<[number, number]> = [];
+    if (meetingLocation) {
+      locations.push([meetingLocation.latitude, meetingLocation.longitude]);
     }
-  });
+    if (currentUserLocation) {
+      locations.push([currentUserLocation.latitude, currentUserLocation.longitude]);
+    }
+    // Always include optimal location if it exists (for reference)
+    if (optimalLocation) {
+      locations.push([optimalLocation.latitude, optimalLocation.longitude]);
+    }
+    // Exclude current user from participant locations to avoid duplicate markers
+    const currentUserId = currentUserLocation?.userId;
+    participantLocations.forEach((location, userId) => {
+      if (userId !== currentUserId) {
+        locations.push([location.latitude, location.longitude]);
+      }
+    });
+    return locations;
+  }, [meetingLocation, currentUserLocation, optimalLocation, participantLocations]);
 
   if (!mounted || typeof window === 'undefined') {
     return (
@@ -309,6 +312,7 @@ export const OptimalLocationMap = ({
           {/* Current user location marker (dark blue) */}
           {currentUserLocation && (
             <Marker
+              key={`current-user-${currentUserLocation.latitude}-${currentUserLocation.longitude}`}
               position={[currentUserLocation.latitude, currentUserLocation.longitude]}
               icon={CurrentUserIcon}
             >

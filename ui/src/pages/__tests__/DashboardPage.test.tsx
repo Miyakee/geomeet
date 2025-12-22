@@ -57,6 +57,7 @@ describe('DashboardPage', () => {
       token: 'test-token',
       login: vi.fn(),
       logout: mockLogout,
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: true,
       isInitialized: true,
     });

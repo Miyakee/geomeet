@@ -1,21 +1,21 @@
-import { useState, useMemo } from 'react';
+import {useMemo, useState} from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  TextField,
   Alert,
+  Box,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  Paper,
+  TextField,
   Tooltip,
+  Typography,
 } from '@mui/material';
-import { Edit, LocationOn, Check, Close, Search } from '@mui/icons-material';
-import { calculateHaversineDistance, formatDistance } from '../../utils/distanceCalculator';
-import { forwardGeocode } from '../../services/geocodingService';
+import {Check, Close, Edit, LocationOn, Search} from '@mui/icons-material';
+import {calculateHaversineDistance, formatDistance} from '../../utils/distanceCalculator';
+import {forwardGeocode} from '../../services/geocodingService';
 
 interface MeetingLocationSectionProps {
   meetingLocation: { latitude: number; longitude: number } | null;
@@ -23,6 +23,7 @@ interface MeetingLocationSectionProps {
   loadingAddress?: boolean;
   currentUserLocation?: { latitude: number; longitude: number } | null;
   isInitiator: boolean;
+  sessionStatus: string;
   onUpdateLocation: (latitude: number, longitude: number) => Promise<void>;
   loading?: boolean;
   error?: string | null;
@@ -34,6 +35,7 @@ export const MeetingLocationSection = ({
   loadingAddress = false,
   currentUserLocation,
   isInitiator,
+  sessionStatus,
   onUpdateLocation,
   loading = false,
   error = null,
@@ -163,15 +165,16 @@ export const MeetingLocationSection = ({
     }
   };
 
+  const isSessionEnd = sessionStatus ==='Ended';
   return (
     <>
-      <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={2} sx={{ p: 2, mb: 3  }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <LocationOn color="primary" />
-            <Typography variant="h6">Meeting Location</Typography>
+            <Typography variant="h6">{isSessionEnd? 'Final Meeting Location': 'Meeting Location'}</Typography>
           </Box>
-          {isInitiator && (
+          {isInitiator && !isSessionEnd && (
             <Tooltip title="Edit meeting location">
               <span>
                 <IconButton
@@ -255,7 +258,7 @@ export const MeetingLocationSection = ({
                 onClick={handleSearchAddress}
                 disabled={searching || !addressSearch.trim()}
                 startIcon={<Search />}
-                sx={{ mt: 0.5, minWidth: 100 }}
+                sx={{ mt: 0.5, minWidth: 100, height:48 }}
               >
                 {searching ? 'Searching...' : 'Search'}
               </Button>

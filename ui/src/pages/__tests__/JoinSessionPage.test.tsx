@@ -45,6 +45,7 @@ describe('JoinSessionPage', () => {
       token: 'test-token',
       login: vi.fn(),
       logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: true,
       isInitialized: true,
     });
@@ -288,6 +289,7 @@ describe('JoinSessionPage', () => {
       token: null,
       login: vi.fn(),
       logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: false,
       isInitialized: true,
     });

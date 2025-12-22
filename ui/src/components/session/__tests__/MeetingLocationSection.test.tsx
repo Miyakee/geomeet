@@ -25,6 +25,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -37,6 +38,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -50,6 +52,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -68,6 +71,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={meetingLocation}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -87,6 +91,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         meetingLocationAddress="Orchard Road, Singapore"
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -105,6 +110,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         loadingAddress={true}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -128,6 +134,7 @@ describe('MeetingLocationSection', () => {
         meetingLocation={meetingLocation}
         currentUserLocation={currentUserLocation}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -140,6 +147,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -153,6 +161,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={false}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -171,6 +180,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={meetingLocation}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -192,6 +202,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={meetingLocation}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -214,6 +225,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -244,6 +256,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -275,6 +288,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -317,6 +331,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -350,6 +365,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );
@@ -370,6 +386,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
         error="Failed to update location"
       />,
@@ -383,6 +400,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
         loading={true}
       />,
@@ -400,6 +418,7 @@ describe('MeetingLocationSection', () => {
       <MeetingLocationSection
         meetingLocation={null}
         isInitiator={true}
+        sessionStatus="Active"
         onUpdateLocation={mockOnUpdateLocation}
       />,
     );

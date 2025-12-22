@@ -170,5 +170,54 @@ describe('LocationTrackingSection', () => {
 
     expect(screen.getByText('Getting your location...')).toBeInTheDocument();
   });
+
+  it('should disable switch when session is ended', () => {
+    render(
+      <LocationTrackingSection
+        locationEnabled={false}
+        locationError={null}
+        currentLocation={null}
+        updatingLocation={false}
+        sessionStatus="Ended"
+        onToggle={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    const switchElement = screen.getByRole('checkbox');
+    expect(switchElement).toBeDisabled();
+  });
+
+  it('should not show manual input buttons when session is ended', () => {
+    render(
+      <LocationTrackingSection
+        locationEnabled={false}
+        locationError="Location permission denied"
+        currentLocation={null}
+        updatingLocation={false}
+        sessionStatus="Ended"
+        onToggle={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Search Location')).not.toBeInTheDocument();
+  });
+
+  it('should not show update location button when session is ended', () => {
+    render(
+      <LocationTrackingSection
+        locationEnabled={true}
+        locationError={null}
+        currentLocation={mockGeolocationPosition}
+        updatingLocation={false}
+        sessionStatus="Ended"
+        onToggle={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Update Location')).not.toBeInTheDocument();
+  });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -22,6 +22,7 @@ interface LocationTrackingSectionProps {
   currentLocation: GeolocationPosition | null;
   updatingLocation: boolean;
   showManualInput?: boolean;
+  sessionStatus?: string;
   onToggle: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRetry: () => void;
   onSetManualLocation?: (latitude: number, longitude: number) => void;
@@ -34,17 +35,30 @@ export const LocationTrackingSection = ({
   currentLocation,
   updatingLocation,
   showManualInput = false,
+  sessionStatus,
   onToggle,
   onRetry,
   onSetManualLocation,
   onCloseManualInput,
 }: LocationTrackingSectionProps) => {
+  const isSessionEnded = sessionStatus === 'Ended';
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [addressSearch, setAddressSearch] = useState('');
   const [searching, setSearching] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Close manual input dialog when session ends
+  useEffect(() => {
+    if (isSessionEnded && manualDialogOpen) {
+      handleCloseManualDialog();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSessionEnded]);
+
   const handleOpenManualDialog = () => {
+    if (isSessionEnded) {
+      return;
+    }
     setAddressSearch('');
     setValidationError(null);
     setManualDialogOpen(true);
@@ -144,7 +158,7 @@ export const LocationTrackingSection = ({
               <Switch
                 checked={locationEnabled}
                 onChange={onToggle}
-                disabled={updatingLocation}
+                disabled={updatingLocation || isSessionEnded}
               />
             }
             label={locationEnabled ? 'Enabled' : 'Disabled'}
@@ -161,7 +175,7 @@ export const LocationTrackingSection = ({
                     Retry
                   </Button>
                 )}
-                {(showManualInput || locationError.includes('manually') || locationError.includes('HTTPS')) && (
+                {(showManualInput || locationError.includes('manually') || locationError.includes('HTTPS')) && !isSessionEnded && (
                   <Button
                     color="inherit"
                     size="small"
@@ -183,20 +197,22 @@ export const LocationTrackingSection = ({
             {currentLocation.coords.longitude.toFixed(6)} (Accuracy: ±
             {Math.round(currentLocation.coords.accuracy)}m)
             {updatingLocation && <CircularProgress size={16} sx={{ ml: 1 }} />}
-            <Button
-              size="small"
-              startIcon={<EditLocation />}
-              onClick={handleOpenManualDialog}
-              sx={{ ml: 2 }}
-            >
-              Update Location
-            </Button>
+            {!isSessionEnded && (
+              <Button
+                size="small"
+                startIcon={<EditLocation />}
+                onClick={handleOpenManualDialog}
+                sx={{ ml: 2 }}
+              >
+                Update Location
+              </Button>
+            )}
           </Alert>
         )}
         {locationEnabled && !currentLocation && (
           <Alert severity="info" sx={{ mb: 2 }}>
             Getting your location...
-            {(showManualInput || locationError) && (
+            {(showManualInput || locationError) && !isSessionEnded && (
               <Button
                 size="small"
                 startIcon={<Search />}
@@ -208,7 +224,7 @@ export const LocationTrackingSection = ({
             )}
           </Alert>
         )}
-        {!locationEnabled && (
+        {!locationEnabled && !isSessionEnded && (
           <Button
             variant="outlined"
             startIcon={<Search />}
@@ -220,7 +236,7 @@ export const LocationTrackingSection = ({
         )}
       </Box>
 
-      <Dialog open={manualDialogOpen} onClose={handleCloseManualDialog} maxWidth="sm" fullWidth>
+      <Dialog open={manualDialogOpen && !isSessionEnded} onClose={handleCloseManualDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Search Location</DialogTitle>
         <DialogContent>
           {validationError && (
@@ -251,7 +267,7 @@ export const LocationTrackingSection = ({
               startIcon={<Search />}
               onClick={handleSearchAddress}
               disabled={searching || !addressSearch.trim()}
-              sx={{ mt: 1, minWidth: 100 }}
+              sx={{ mt: 1, mb: 3, minWidth: 100 }}
             >
               {searching ? <CircularProgress size={20} /> : 'Search'}
             </Button>
