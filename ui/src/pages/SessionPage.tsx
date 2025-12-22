@@ -30,7 +30,11 @@ import { LocationTrackingSection } from '../components/session/LocationTrackingS
 import { InviteSection } from '../components/session/InviteSection';
 import { MeetingLocationSection } from '../components/session/MeetingLocationSection';
 import { OptimalLocationMap } from '../components/session/OptimalLocationMap';
-import { ParticipantLocation, SessionDetailResponse } from '../types/session';
+import {
+  ParticipantLocation,
+  ParticipantLocationInfo,
+  SessionDetailResponse
+} from '../types/session';
 import { CalculateOptimalLocationResponse, UpdateMeetingLocationResponse } from '../services/api';
 
 const SessionPage = () => {
@@ -57,7 +61,20 @@ const SessionPage = () => {
     startLocationTracking,
     setManualLocation,
     setShowManualInput,
-  } = useLocationTracking(sessionId);
+    restoreLocation,
+  } = useLocationTracking(sessionId, session?.status);
+
+  // Remove current user's location from participantLocations when location tracking is disabled
+  // 注意：session 结束时不清除位置，保留最后的位置显示
+  useEffect(() => {
+    if (!locationEnabled && session?.status !== 'Ended' && user?.id) {
+      setParticipantLocations((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(user.id);
+        return newMap;
+      });
+    }
+  }, [locationEnabled, session?.status, user?.id]);
 
   const [participantLocations, setParticipantLocations] = useState<Map<number, ParticipantLocation>>(new Map());
   const [participantAddresses, setParticipantAddresses] = useState<Map<number, string>>(new Map());
@@ -95,12 +112,17 @@ const SessionPage = () => {
   }, [updateSession]);
 
   const handleLocationUpdate = useCallback((location: ParticipantLocation, userId: number) => {
+    // Exclude current user's location from participantLocations
+    // Current user's location should be managed via currentLocation state
+    if (userId === user?.id) {
+      return;
+    }
     setParticipantLocations((prev) => {
       const newMap = new Map(prev);
       newMap.set(userId, location);
       return newMap;
     });
-  }, []);
+  }, [user?.id]);
 
   const handleAddressUpdate = useCallback((address: string, userId: number) => {
     setParticipantAddresses((prev) => {
@@ -149,6 +171,7 @@ const SessionPage = () => {
     }
     // Store notification for display
     setSessionEndNotification(notification);
+    // 不清除当前用户的位置，保留最后的位置显示
   }, [session, updateSession]);
 
   useWebSocket({
@@ -174,12 +197,18 @@ const SessionPage = () => {
 
   // Initialize participant locations from session data
   // This ensures new users who join can see all existing participant locations
+  // Also restore current user's location if it exists in session data
   useEffect(() => {
     if (session && session.participantLocations) {
       const locationsMap = new Map<number, ParticipantLocation>();
-      session.participantLocations.forEach((locationInfo) => {
-        // Only add locations for other participants (exclude current user)
-        if (locationInfo.userId !== user?.id) {
+      let currentUserLocationInfo: ParticipantLocationInfo | null = null;
+      
+      for (const locationInfo of session.participantLocations) {
+        if (locationInfo.userId === user?.id) {
+          // Save current user's location to restore it
+          currentUserLocationInfo = locationInfo;
+        } else {
+          // Add locations for other participants
           locationsMap.set(locationInfo.userId, {
             latitude: locationInfo.latitude,
             longitude: locationInfo.longitude,
@@ -187,10 +216,19 @@ const SessionPage = () => {
             updatedAt: locationInfo.updatedAt,
           });
         }
-      });
+      }
       setParticipantLocations(locationsMap);
+      
+      // Restore current user's location from session data if it exists and not already set
+      if (currentUserLocationInfo && !currentLocation) {
+        restoreLocation(
+          currentUserLocationInfo.latitude,
+          currentUserLocationInfo.longitude,
+          currentUserLocationInfo.accuracy ?? undefined,
+        );
+      }
     }
-  }, [session?.participantLocations, user?.id]);
+  }, [session?.participantLocations, user?.id, currentLocation, restoreLocation]);
 
   // Initialize meeting location from session data
   // This ensures new users who join after meeting location is set can see it
@@ -199,8 +237,8 @@ const SessionPage = () => {
       if (session.meetingLocationLatitude != null && session.meetingLocationLongitude != null) {
         // Always update to ensure new users see the meeting location
         // Check if the location has changed to avoid unnecessary updates
-        if (!meetingLocation || 
-            meetingLocation.latitude !== session.meetingLocationLatitude || 
+        if (!meetingLocation ||
+            meetingLocation.latitude !== session.meetingLocationLatitude ||
             meetingLocation.longitude !== session.meetingLocationLongitude) {
           updateMeetingLocationFromResponse({
             sessionId: session.id,
@@ -221,6 +259,25 @@ const SessionPage = () => {
     meetingLocation,
     session,
   ]);
+
+  // Initialize session end notification from session data when page loads
+  // This ensures the alert is shown even after page refresh
+  useEffect(() => {
+    if (session && session.status === 'Ended' && !sessionEndNotification) {
+      const hasMeetingLocation = session.meetingLocationLatitude != null && session.meetingLocationLongitude != null;
+      const notification: SessionEndNotification = {
+        sessionId: session.id,
+        sessionIdString: session.sessionId,
+        status: 'Ended',
+        endedAt: session.createdAt, // Use createdAt as fallback since we don't have endedAt in session data
+        message: 'Session ended',
+        hasMeetingLocation,
+        meetingLocationLatitude: session.meetingLocationLatitude ?? null,
+        meetingLocationLongitude: session.meetingLocationLongitude ?? null,
+      };
+      setSessionEndNotification(notification);
+    }
+  }, [session, sessionEndNotification]);
 
   // Load invite link when session is loaded and user is initiator
   useEffect(() => {
@@ -297,9 +354,9 @@ const SessionPage = () => {
           <SessionHeader session={session} isInitiator={isInitiator} />
 
           {/* Session End Notification */}
-          {sessionEndNotification && (
-            <Alert 
-              severity={sessionEndNotification.hasMeetingLocation ? 'success' : 'warning'} 
+          {(sessionEndNotification) && (
+            <Alert
+              severity={sessionEndNotification.hasMeetingLocation ? 'success' : 'warning'}
               sx={{ mb: 2 }}
               onClose={() => setSessionEndNotification(null)}
             >
@@ -365,6 +422,7 @@ const SessionPage = () => {
               longitude: currentLocation.coords.longitude,
             } : null}
             isInitiator={isInitiator}
+            sessionStatus={session.status}
             onUpdateLocation={handleUpdateMeetingLocation}
             loading={updatingMeetingLocation}
             error={meetingLocationError}
@@ -379,6 +437,7 @@ const SessionPage = () => {
             currentLocation={currentLocation}
             updatingLocation={updatingLocation}
             showManualInput={showManualInput}
+            sessionStatus={session?.status}
             onToggle={handleLocationToggle}
             onRetry={() => {
               startLocationTracking();
@@ -439,8 +498,8 @@ const SessionPage = () => {
           )}
 
           {optimalLocation && (
-            <Alert 
-              severity="success" 
+            <Alert
+              severity="success"
               sx={{ mb: 2 }}
               action={
                 isInitiator && (

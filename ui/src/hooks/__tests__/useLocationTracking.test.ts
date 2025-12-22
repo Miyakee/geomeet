@@ -236,5 +236,105 @@ describe('useLocationTracking', () => {
     expect(result.current.locationEnabled).toBe(false);
     expect(mockGeolocation.clearWatch).toHaveBeenCalledWith(watchId);
   });
+
+  it('should restore location from session data', () => {
+    const { result } = renderHook(() => useLocationTracking('test-session-id'));
+
+    act(() => {
+      result.current.restoreLocation(37.7749, -122.4194, 10);
+    });
+
+    expect(result.current.currentLocation).not.toBeNull();
+    expect(result.current.currentLocation?.coords.latitude).toBe(37.7749);
+    expect(result.current.currentLocation?.coords.longitude).toBe(-122.4194);
+    expect(result.current.currentLocation?.coords.accuracy).toBe(10);
+  });
+
+  it('should not update location when session is ended', async () => {
+    vi.useRealTimers();
+    
+    Object.defineProperty(global.navigator, 'geolocation', {
+      value: mockGeolocation,
+      writable: true,
+    });
+
+    const mockPosition: GeolocationPosition = {
+      coords: {
+        latitude: 37.7749,
+        longitude: -122.4194,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    } as GeolocationPosition;
+
+    vi.mocked(sessionApi.updateLocation).mockResolvedValue({
+      participantId: 1,
+      sessionId: 1,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10,
+      updatedAt: new Date().toISOString(),
+      message: 'Location updated successfully',
+    });
+
+    const { result, rerender } = renderHook(
+      ({ sessionStatus }) => useLocationTracking('test-session-id', sessionStatus),
+      { initialProps: { sessionStatus: 'Active' } }
+    );
+
+    // Start tracking
+    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+      if (success) {
+        success(mockPosition);
+      }
+    });
+    mockGeolocation.watchPosition.mockReturnValue(1);
+
+    await act(async () => {
+      result.current.handleLocationToggle({
+        target: { checked: true },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(true);
+    }, { timeout: 2000 });
+
+    // End session
+    rerender({ sessionStatus: 'Ended' });
+
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(false);
+    }, { timeout: 2000 });
+
+    // Try to set manual location - should fail
+    await act(async () => {
+      await result.current.setManualLocation(37.7749, -122.4194);
+    });
+
+    expect(result.current.locationError).toBe('Cannot update location for an ended session');
+  });
+
+  it('should not allow starting location tracking when session is ended', async () => {
+    Object.defineProperty(global.navigator, 'geolocation', {
+      value: mockGeolocation,
+      writable: true,
+    });
+
+    const { result } = renderHook(() => useLocationTracking('test-session-id', 'Ended'));
+
+    await act(async () => {
+      result.current.startLocationTracking();
+    });
+
+    expect(result.current.locationError).toBe('Cannot start location tracking for an ended session');
+    expect(result.current.locationEnabled).toBe(false);
+  });
 });
 

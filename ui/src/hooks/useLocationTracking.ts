@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { sessionApi } from '../services/api';
+import { calculateHaversineDistance } from '../utils/distanceCalculator';
 
-export const useLocationTracking = (sessionId: string | undefined) => {
+export const useLocationTracking = (sessionId: string | undefined, sessionStatus?: string) => {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
@@ -10,21 +11,53 @@ export const useLocationTracking = (sessionId: string | undefined) => {
   const watchIdRef = useRef<number | null>(null);
   const locationUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const latestPositionRef = useRef<GeolocationPosition | null>(null);
+  const lastSavedLocationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const MIN_DISTANCE_METERS = 10; // 最小距离阈值（米）
+  const MIN_DISTANCE_KM = MIN_DISTANCE_METERS / 1000; // 转换为公里
 
-  const updateLocationToServer = async (position: GeolocationPosition) => {
+  const updateLocationToServer = async (position: GeolocationPosition, forceUpdate: boolean = false) => {
     if (!sessionId) {
       return;
+    }
+
+    // 如果 session 已结束，不更新位置
+    if (sessionStatus === 'Ended') {
+      return;
+    }
+
+    const newLat = position.coords.latitude;
+    const newLon = position.coords.longitude;
+
+    // 检查距离：如果上次保存的位置存在，且距离小于阈值，则跳过更新
+    if (!forceUpdate && lastSavedLocationRef.current) {
+      const distance = calculateHaversineDistance(
+        lastSavedLocationRef.current.latitude,
+        lastSavedLocationRef.current.longitude,
+        newLat,
+        newLon,
+      );
+      
+      if (distance < MIN_DISTANCE_KM) {
+        // 距离小于10米，不更新服务器，但更新本地显示
+        setCurrentLocation(position);
+        return;
+      }
     }
 
     try {
       setUpdatingLocation(true);
       setLocationError(null);
       await sessionApi.updateLocation(sessionId, {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
+        latitude: newLat,
+        longitude: newLon,
         accuracy: position.coords.accuracy,
       });
       setCurrentLocation(position);
+      // 保存成功发送的位置
+      lastSavedLocationRef.current = {
+        latitude: newLat,
+        longitude: newLon,
+      };
     } catch (err: any) {
       console.error('Failed to update location:', err);
       setLocationError('Failed to update location. Please try again.');
@@ -93,6 +126,12 @@ export const useLocationTracking = (sessionId: string | undefined) => {
   };
 
   const startLocationTracking = () => {
+    // 如果 session 已结束，不允许启动位置跟踪
+    if (sessionStatus === 'Ended') {
+      setLocationError('Cannot start location tracking for an ended session');
+      return;
+    }
+
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser. Please manually enter your location.');
       setShowManualInput(true);
@@ -117,7 +156,8 @@ export const useLocationTracking = (sessionId: string | undefined) => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setCurrentLocation(position);
-        updateLocationToServer(position);
+        // 首次获取位置时强制更新（forceUpdate = true）
+        updateLocationToServer(position, true);
         setLocationEnabled(true);
         setShowManualInput(false);
 
@@ -160,10 +200,16 @@ export const useLocationTracking = (sessionId: string | undefined) => {
     );
   };
 
-  // 手动设置位置
-  const setManualLocation = async (latitude: number, longitude: number) => {
+  // enableTracking: false
+  const setManualLocation = async (latitude: number, longitude: number, enableTracking: boolean = false) => {
     if (!sessionId) {
       setLocationError('Session ID is required');
+      return;
+    }
+
+    // 如果 session 已结束，不允许手动设置位置
+    if (sessionStatus === 'Ended') {
+      setLocationError('Cannot update location for an ended session');
       return;
     }
 
@@ -187,8 +233,12 @@ export const useLocationTracking = (sessionId: string | undefined) => {
       } as GeolocationPosition;
       
       setCurrentLocation(manualPosition);
-      await updateLocationToServer(manualPosition);
-      setLocationEnabled(true);
+      // 手动设置位置时强制更新（forceUpdate = true）
+      await updateLocationToServer(manualPosition, true);
+      // 只有在明确要求启用跟踪时才启用，搜索位置时不自动启用跟踪 toggle
+      if (enableTracking) {
+        setLocationEnabled(true);
+      }
       setShowManualInput(false);
     } catch (err: any) {
       console.error('Failed to set manual location:', err);
@@ -210,6 +260,7 @@ export const useLocationTracking = (sessionId: string | undefined) => {
     setLocationEnabled(false);
     setCurrentLocation(null);
     latestPositionRef.current = null;
+    lastSavedLocationRef.current = null; // 清除保存的位置记录
     setShowManualInput(false);
   };
 
@@ -221,9 +272,52 @@ export const useLocationTracking = (sessionId: string | undefined) => {
     }
   };
 
+  // 当 session 状态变为 'Ended' 时，自动停止位置跟踪（但保留最后的位置）
+  useEffect(() => {
+    if (sessionStatus === 'Ended' && locationEnabled) {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (locationUpdateIntervalRef.current) {
+        clearInterval(locationUpdateIntervalRef.current);
+        locationUpdateIntervalRef.current = null;
+      }
+      setLocationEnabled(false);
+      // 不清除 currentLocation，保留最后的位置显示
+      latestPositionRef.current = null;
+      // 不清除 lastSavedLocationRef，保留位置记录
+      setShowManualInput(false);
+    }
+  }, [sessionStatus, locationEnabled]);
+
   useEffect(() => {
     return () => {
       stopLocationTracking();
+    };
+  }, []);
+
+  // Restore location from session data (for page refresh)
+  const restoreLocation = useCallback((latitude: number, longitude: number, accuracy?: number) => {
+    const restoredPosition: GeolocationPosition = {
+      coords: {
+        latitude,
+        longitude,
+        accuracy: accuracy ?? 100,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+        toJSON: () => ({}),
+      } as GeolocationCoordinates,
+      timestamp: Date.now(),
+      toJSON: () => ({}),
+    };
+    setCurrentLocation(restoredPosition);
+    // Also update lastSavedLocationRef to prevent unnecessary updates
+    lastSavedLocationRef.current = {
+      latitude,
+      longitude,
     };
   }, []);
 
@@ -238,6 +332,7 @@ export const useLocationTracking = (sessionId: string | undefined) => {
     stopLocationTracking,
     setManualLocation,
     setShowManualInput,
+    restoreLocation,
   };
 };
 

@@ -77,6 +77,7 @@ describe('SessionPage', () => {
       token: 'test-token',
       login: vi.fn(),
       logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: true,
       isInitialized: true,
     });
@@ -110,6 +111,7 @@ describe('SessionPage', () => {
       stopLocationTracking: vi.fn(),
       setManualLocation: vi.fn(),
       setShowManualInput: vi.fn(),
+      restoreLocation: vi.fn(),
     });
 
     vi.mocked(useOptimalLocationHook.useOptimalLocation).mockReturnValue({
@@ -216,6 +218,7 @@ describe('SessionPage', () => {
       token: 'test-token',
       login: vi.fn(),
       logout: vi.fn(),
+      setAuthFromResponse: vi.fn(),
       isAuthenticated: true,
       isInitialized: true,
     });
