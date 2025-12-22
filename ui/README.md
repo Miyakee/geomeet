@@ -84,6 +84,7 @@ src/
 
 - **Admin**: `admin` / `admin123`
 - **Test User**: `testuser` / `test123`
+- **Tty User**: `tty` / `tty123`
 
 ## Available Scripts
 

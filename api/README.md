@@ -51,59 +51,26 @@ spring.datasource.password=your_password
 
 The application will start on `http://localhost:8080`
 
-## Default Users
-
-When running in `local` profile, the following test users are automatically created:
-
-- **Admin User**:
-  - Username/Email: `admin` / `admin@geomeet.com`
-  - Password: `admin123`
-
-- **Test User**:
-  - Username/Email: `testuser` / `test@geomeet.com`
-  - Password: `test123`
-
-## API Endpoints
-
-### Authentication
-
-#### Login
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "usernameOrEmail": "admin",
-  "password": "admin123"
-}
-```
-
-**Success Response (200)**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "username": "admin",
-  "email": "admin@geomeet.com",
-  "message": "Login successful"
-}
-```
-
-**Error Response (401)**:
-```json
-{
-  "timestamp": "2024-01-01T12:00:00",
-  "status": 401,
-  "error": "Authentication Failed",
-  "message": "Invalid credentials",
-  "path": "/api/auth/login"
-}
-```
-
-### Health Check
+## Health Check
 
 ```http
 GET /health
 ```
+
+## WebSocket
+
+For detailed WebSocket documentation including connection setup, subscription topics, message formats, and examples, see [WebSocket Documentation](../README.md#-websocket) in the main README.
+
+## Default Users
+
+When running in `local` profile, the following test users are automatically created:
+
+| Username | Email | Password |
+|----------|-------|----------|
+| admin | admin@geomeet.com | admin123 |
+| testuser | test@geomeet.com | test123 |
+| tty | tty@geomeet.com | tty123 |
+
 
 ## Security
 
@@ -176,5 +143,115 @@ src/main/java/com/geomeet/api/
         └── auth/        # Authentication adapters
             ├── AuthController.java
             └── dto/      # Data Transfer Objects
+```
+
+
+## API Endpoints
+
+### Authentication
+
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "admin",
+  "password": "admin123"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "username": "admin",
+  "email": "admin@geomeet.com",
+  "message": "Login successful"
+}
+```
+
+### Session Management
+
+#### Create Session
+```http
+POST /api/sessions
+Authorization: Bearer <token>
+```
+
+#### Join Session
+```http
+POST /api/sessions/join
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "sessionId": "session-id-123"
+}
+```
+
+#### Get Session Details
+```http
+GET /api/sessions/{sessionId}
+Authorization: Bearer <token>
+```
+
+#### Generate Invite Link
+```http
+GET /api/sessions/{sessionId}/invite
+Authorization: Bearer <token>
+```
+
+**Response (200)**:
+```json
+{
+  "inviteLink": "https://example.com/join?sessionId=abc123",
+  "inviteCode": "ABC123"
+}
+```
+
+#### Update Location
+```http
+POST /api/sessions/{sessionId}/location
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "latitude": 1.3521,
+  "longitude": 103.8198,
+  "accuracy": 10.5
+}
+```
+
+#### Calculate Optimal Location
+```http
+POST /api/sessions/{sessionId}/optimal-location
+Authorization: Bearer <token>
+```
+
+**Response (200)**:
+```json
+{
+  "latitude": 1.3212,
+  "longitude": 103.8359
+}
+```
+
+#### Update Meeting Location (Initiator Only)
+```http
+PUT /api/sessions/{sessionId}/meeting-location
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "latitude": 1.3521,
+  "longitude": 103.8198
+}
+```
+
+#### End Session (Initiator Only)
+```http
+POST /api/sessions/{sessionId}/end
+Authorization: Bearer <token>
 ```
 

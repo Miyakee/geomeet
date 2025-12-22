@@ -9,9 +9,9 @@ The `pre-push` hook automatically runs code quality checks before pushing code t
 ### What it does:
 
 - **API changes**: If any files in the `api/` directory are modified, it runs:
-  - Checkstyle
-  - PMD
-  - SpotBugs
+  - Checkstyle (main code only)
+  - PMD (main code only)
+  - SpotBugs (main code only)
   - Tests
 
 - **UI changes**: If any files in the `ui/` directory are modified, it runs:
