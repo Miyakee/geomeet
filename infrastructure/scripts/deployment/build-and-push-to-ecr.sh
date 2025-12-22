@@ -12,8 +12,8 @@ NC='\033[0m' # No Color
 
 # 配置
 AWS_REGION="${AWS_REGION:-ap-southeast-1}"
-AWS_PROFILE="${AWS_PROFILE:-PowerUserPlusRole-160071257600}"
-PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+AWS_PROFILE="${AWS_PROFILE:-tw-esg}"
+PROJECT_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 
 echo "🚀 构建并推送镜像到 ECR..."
 
