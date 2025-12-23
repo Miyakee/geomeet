@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { sessionApi, CalculateOptimalLocationResponse, ApiError } from '../services/api';
+import { sessionApi, CalculateOptimalLocationResponse } from '../services/api';
+import { getStatusErrorMessage } from '../utils/errorHandler';
 
 export const useOptimalLocation = (sessionId: string | undefined) => {
   const [optimalLocation, setOptimalLocation] = useState<CalculateOptimalLocationResponse | null>(null);
@@ -19,21 +20,11 @@ export const useOptimalLocation = (sessionId: string | undefined) => {
       setOptimalLocation(result);
     } catch (err: any) {
       console.error('Failed to calculate optimal location:', err);
-      if (err instanceof ApiError || err.response) {
-        const status = err.status || err.response?.status;
-        const data = err.response?.data || err.response;
-        if (status === 403) {
-          setError('You do not have permission to calculate optimal location.');
-        } else if (status === 404) {
-          setError('Session not found.');
-        } else if (status === 400) {
-          setError(data?.message || 'Cannot calculate optimal location. At least one participant must share their location.');
-        } else {
-          setError('Failed to calculate optimal location. Please try again.');
-        }
-      } else {
-        setError('Failed to calculate optimal location. Please try again.');
-      }
+      setError(getStatusErrorMessage(err, {
+        403: 'You do not have permission to calculate optimal location.',
+        404: 'Session not found.',
+        400: 'Cannot calculate optimal location. At least one participant must share their location.',
+      }, 'Failed to calculate optimal location. Please try again.'));
     } finally {
       setLoading(false);
     }

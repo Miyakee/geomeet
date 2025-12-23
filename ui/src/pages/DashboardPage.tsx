@@ -14,6 +14,7 @@ import {Add, Logout, Person} from '@mui/icons-material';
 import {useAuth} from '../contexts/AuthContext';
 import {useNavigate} from 'react-router-dom';
 import {sessionApi} from '../services/api';
+import {getErrorMessage} from '../utils/errorHandler';
 
 const DashboardPage = () => {
   const {user, logout} = useAuth();
@@ -33,7 +34,8 @@ const DashboardPage = () => {
       const createdSession = await sessionApi.createSession();
       navigate(`/session/${createdSession.sessionId}`);
     } catch (err: any) {
-      setError('Failed to create session. Please try again.');
+      console.error('Failed to create session:', err);
+      setError(getErrorMessage(err, 'Failed to create session. Please try again.'));
     } finally {
       setLoading(false);
     }

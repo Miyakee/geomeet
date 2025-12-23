@@ -8,6 +8,7 @@ import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +53,7 @@ public class GetSessionDetailsUseCase {
         // Security: If session doesn't exist, return "Access denied" instead of "Session not found"
         // to prevent information disclosure through enumeration attacks
         if (sessionOpt.isEmpty()) {
-            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
+            throw ErrorCode.ACCESS_DENIED.toException();
         }
         
         Session session = sessionOpt.get();
@@ -62,19 +63,19 @@ public class GetSessionDetailsUseCase {
             session.getId(), command.getUserId()
         );
         if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
-            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
+            throw ErrorCode.ACCESS_DENIED.toException();
         }
 
         // Get initiator info
         User initiator = userRepository.findById(session.getInitiatorId())
-            .orElseThrow(() -> new GeomeetDomainException("Initiator not found"));
+            .orElseThrow(() -> ErrorCode.INITIATOR_NOT_FOUND.toException());
 
         // Get all participants
         List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
         List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
             .map(participant -> {
                 User user = userRepository.findById(participant.getUserId())
-                    .orElseThrow(() -> new GeomeetDomainException("User not found for participant"));
+                    .orElseThrow(() -> ErrorCode.USER_NOT_FOUND_FOR_PARTICIPANT.toException());
                 return GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())

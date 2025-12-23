@@ -93,7 +93,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldHandleDomainException() {
         // Given
-        GeomeetDomainException ex = new GeomeetDomainException("Domain error occurred");
+        GeomeetDomainException ex = new GeomeetDomainException("Domain error occurred",HttpStatus.BAD_REQUEST);
 
         // When
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainException(ex, webRequest);
@@ -106,6 +106,41 @@ class GlobalExceptionHandlerTest {
         assertEquals("Domain Error", response.getBody().getError());
         assertEquals("Domain error occurred", response.getBody().getMessage());
     }
+
+    @Test
+    void shouldHandleDomainExceptionWithHttpStatus() {
+        // Given - Exception with explicit HTTP status code
+        GeomeetDomainException ex = new GeomeetDomainException("Resource not found", HttpStatus.NOT_FOUND);
+
+        // When
+        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainException(ex, webRequest);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getBody().getStatus());
+        assertEquals("Not Found", response.getBody().getError());
+        assertEquals("Resource not found", response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldHandleDomainExceptionWithForbiddenStatus() {
+        // Given - Exception with FORBIDDEN status
+        GeomeetDomainException ex = new GeomeetDomainException("Access denied", HttpStatus.FORBIDDEN);
+
+        // When
+        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainException(ex, webRequest);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getBody().getStatus());
+        assertEquals("Access Denied", response.getBody().getError());
+        assertEquals("Access denied", response.getBody().getMessage());
+    }
+
 
     @Test
     void shouldHandleGenericException() {

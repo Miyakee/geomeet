@@ -3,6 +3,7 @@ package com.geomeet.api.application.usecase.session;
 import com.geomeet.api.application.command.GenerateInviteLinkCommand;
 import com.geomeet.api.application.result.GenerateInviteLinkResult;
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import lombok.AllArgsConstructor;
@@ -30,11 +31,11 @@ public class GenerateInviteLinkUseCase {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
+            .orElseThrow(() -> ErrorCode.SESSION_NOT_FOUND.toException());
 
         // Verify user is the initiator
         if (!session.getInitiatorId().equals(command.getUserId())) {
-            throw new GeomeetDomainException("Only the session initiator can generate invite links");
+            throw ErrorCode.CANNOT_GENERATE_INVITE_LINK.toException();
         }
 
         // Generate invite link with both sessionId and inviteCode

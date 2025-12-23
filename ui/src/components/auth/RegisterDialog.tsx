@@ -11,10 +11,11 @@ import {
   InputAdornment,
   TextField,
 } from '@mui/material';
-import {ApiError, authApi, RegisterRequest, sessionApi} from '../../services/api.ts';
+import {authApi, RegisterRequest, sessionApi} from '../../services/api.ts';
 import {useAuth} from '../../contexts/AuthContext';
 import {useNavigate} from 'react-router-dom';
 import {Visibility, VisibilityOff} from '@mui/icons-material';
+import {getErrorMessage} from '../../utils/errorHandler';
 
 interface RegisterDialogProps {
     open: boolean;
@@ -95,20 +96,7 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
       }
     } catch (err: any) {
       console.error('Registration error:', err);
-      if (err instanceof ApiError || err.response) {
-        const data = err.response?.data || err.response;
-        if (data?.message) {
-          setError(data.message);
-        } else if (err.message) {
-          setError(err.message);
-        } else {
-          setError('Registration failed. Please try again.');
-        }
-      } else if (err.message) {
-        setError(err.message);
-      } else {
-        setError('Registration failed. Please try again.');
-      }
+      setError(getErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }

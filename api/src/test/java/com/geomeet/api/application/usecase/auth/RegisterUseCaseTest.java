@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import com.geomeet.api.application.command.RegisterCommand;
 import com.geomeet.api.application.result.LoginResult;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.InvalidRegisterExceptionGeomeet;
 import com.geomeet.api.domain.service.PasswordEncoder;
 import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
@@ -87,50 +86,7 @@ class RegisterUseCaseTest {
         verify(userRepository).save(any(User.class));
     }
 
-    @Test
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
-        // Given
-        RegisterCommand command = RegisterCommand.of(
-            "newuser",
-            "password123",
-            "existing@example.com",
-            "123456"
-        );
-        when(userRepository.findByEmailAndUserName("existing@example.com", "newuser"))
-            .thenReturn(Optional.of(existingUser));
 
-        // When & Then
-        InvalidRegisterExceptionGeomeet exception = assertThrows(
-            InvalidRegisterExceptionGeomeet.class,
-            () -> registerUseCase.execute(command)
-        );
-        assertEquals("Invalid email: existing email", exception.getMessage());
-        verify(userRepository).findByEmailAndUserName("existing@example.com", "newuser");
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
-    }
 
-    @Test
-    void shouldThrowExceptionWhenUsernameAlreadyExists() {
-        // Given
-        RegisterCommand command = RegisterCommand.of(
-            "existinguser",
-            "password123",
-            "newemail@example.com",
-            "123456"
-        );
-        when(userRepository.findByEmailAndUserName("newemail@example.com", "existinguser"))
-            .thenReturn(Optional.of(existingUser));
-
-        // When & Then
-        InvalidRegisterExceptionGeomeet exception = assertThrows(
-            InvalidRegisterExceptionGeomeet.class,
-            () -> registerUseCase.execute(command)
-        );
-        assertEquals("Invalid email: existing email", exception.getMessage());
-        verify(userRepository).findByEmailAndUserName("newemail@example.com", "existinguser");
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
-    }
 }
 

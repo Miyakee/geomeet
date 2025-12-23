@@ -5,6 +5,7 @@ import com.geomeet.api.application.result.UpdateMeetingLocationResult;
 import com.geomeet.api.application.usecase.session.BroadcastMeetingLocationUseCase;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
@@ -36,11 +37,11 @@ public class UpdateMeetingLocationUseCase {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
+            .orElseThrow(() -> ErrorCode.SESSION_NOT_FOUND.toException());
 
         // Check if session is active
         if (!session.isActive()) {
-            throw new GeomeetDomainException("Cannot update meeting location for an ended session");
+            throw ErrorCode.CANNOT_UPDATE_MEETING_LOCATION_ENDED.toException();
         }
 
         // Create location value object

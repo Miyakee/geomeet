@@ -7,6 +7,7 @@ import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.service.LocationCalculator;
 import com.geomeet.api.domain.valueobject.Location;
@@ -44,11 +45,11 @@ public class CalculateOptimalLocationUseCase {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new GeomeetDomainException("Access denied: User is not a participant or initiator"));
+            .orElseThrow(() -> ErrorCode.ACCESS_DENIED.toException());
 
         // Check if session is active
         if (!session.isActive()) {
-            throw new GeomeetDomainException("Cannot calculate optimal location for an ended session");
+            throw ErrorCode.CANNOT_CALCULATE_OPTIMAL_LOCATION_ENDED.toException();
         }
 
         // Check if user is a participant or initiator
@@ -56,15 +57,14 @@ public class CalculateOptimalLocationUseCase {
             session.getId(), command.getUserId()
         );
         if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
-            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
+            throw ErrorCode.ACCESS_DENIED.toException();
         }
 
         // Get all participant locations for this session
         List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
 
         if (participantLocations.isEmpty()) {
-            throw new GeomeetDomainException(
-                    "No participant locations available. At least one participant must share their location.");
+            throw ErrorCode.INSUFFICIENT_PARTICIPANTS.toException();
         }
 
         // Extract Location value objects

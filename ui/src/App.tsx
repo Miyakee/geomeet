@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
+import { ApiInterceptorSetup } from './components/ApiInterceptorSetup';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import JoinSessionPage from './pages/JoinSessionPage';
@@ -23,6 +24,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
+        <ApiInterceptorSetup />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

@@ -3,6 +3,7 @@ package com.geomeet.api.application.usecase.session;
 import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.result.EndSessionResult;
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
@@ -36,11 +37,11 @@ public class EndSessionUseCase {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
+            .orElseThrow(() -> ErrorCode.SESSION_NOT_FOUND.toException());
 
         // Check if user is the initiator
         if (!session.getInitiatorId().equals(command.getUserId())) {
-            throw new GeomeetDomainException("Only the session initiator can end the session");
+            throw ErrorCode.CANNOT_END_SESSION.toException();
         }
 
         // End the session (this will validate that session is not already ended)

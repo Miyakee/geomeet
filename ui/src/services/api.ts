@@ -22,67 +22,175 @@ function buildUrl(path: string): string {
 export class ApiError extends Error {
   public response?: {
     status: number;
-    data?: any;
+    data?: ErrorResponse;
   };
 
   constructor(
     message: string,
     public status: number,
-    responseData?: any,
+    responseData?: ErrorResponse | any,
   ) {
     super(message);
     this.name = 'ApiError';
     this.response = {
       status,
-      data: responseData,
+      data: responseData as ErrorResponse,
     };
   }
 }
 
-// Helper function to make HTTP requests
+// Interceptor types
+type RequestInterceptor = (config: RequestInit) => RequestInit | Promise<RequestInit>;
+type ResponseInterceptor = <T>(data: T) => T | Promise<T>;
+type ErrorInterceptor = (error: ApiError) => void | Promise<void>;
+
+// Interceptor storage
+const requestInterceptors: RequestInterceptor[] = [];
+const responseInterceptors: ResponseInterceptor[] = [];
+const errorInterceptors: ErrorInterceptor[] = [];
+
+// Add interceptor functions
+export const apiInterceptors = {
+  request: {
+    use: (interceptor: RequestInterceptor) => {
+      requestInterceptors.push(interceptor);
+      return () => {
+        const index = requestInterceptors.indexOf(interceptor);
+        if (index > -1) {
+          requestInterceptors.splice(index, 1);
+        }
+      };
+    },
+  },
+  response: {
+    use: (interceptor: ResponseInterceptor) => {
+      responseInterceptors.push(interceptor);
+      return () => {
+        const index = responseInterceptors.indexOf(interceptor);
+        if (index > -1) {
+          responseInterceptors.splice(index, 1);
+        }
+      };
+    },
+  },
+  error: {
+    use: (interceptor: ErrorInterceptor) => {
+      errorInterceptors.push(interceptor);
+      return () => {
+        const index = errorInterceptors.indexOf(interceptor);
+        if (index > -1) {
+          errorInterceptors.splice(index, 1);
+        }
+      };
+    },
+  },
+};
+
+// Helper function to make HTTP requests with interceptors
 async function request<T>(
   url: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = getAuthToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const fullUrl = buildUrl(url);
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    let errorData: any;
-    try {
-      errorData = await response.json();
-    } catch {
-      errorData = { message: response.statusText };
+  try {
+    // Apply request interceptors
+    let requestConfig: RequestInit = { ...options };
+    for (const interceptor of requestInterceptors) {
+      requestConfig = await interceptor(requestConfig);
     }
 
+    // Build headers
+    const token = getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(requestConfig.headers as Record<string, string> || {}),
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const fullUrl = buildUrl(url);
+    const response = await fetch(fullUrl, {
+      ...requestConfig,
+      headers,
+    });
+
+    // Handle error responses
+    if (!response.ok) {
+      let errorData: ErrorResponse;
+      try {
+        errorData = await response.json();
+      } catch {
+        // If response is not JSON, create a standard ErrorResponse structure
+        errorData = {
+          timestamp: new Date().toISOString(),
+          status: response.status,
+          error: response.statusText || 'Error',
+          message: response.statusText || `HTTP ${response.status}`,
+          path: fullUrl,
+        };
+      }
+
+      // Ensure errorData has the standard ErrorResponse structure
+      if (!errorData.status) {
+        errorData.status = response.status;
+      }
+      if (!errorData.timestamp) {
+        errorData.timestamp = new Date().toISOString();
+      }
+
+      // Use message from ErrorResponse, fallback to error field, then statusText
+      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      
+      const error = new ApiError(
+        errorMessage,
+        errorData.status,
+        errorData,
+      );
+
+      // Apply error interceptors
+      for (const interceptor of errorInterceptors) {
+        try {
+          await interceptor(error);
+        } catch (interceptedError) {
+          // If interceptor throws, use that error
+          throw interceptedError;
+        }
+      }
+
+      // Re-throw the original error after interceptors have processed it
+      throw error;
+    }
+
+    // Handle successful responses
+    const contentType = response.headers.get('content-type');
+    let data: T;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // For non-JSON responses, return empty object
+      data = {} as T;
+    }
+
+    // Apply response interceptors
+    for (const interceptor of responseInterceptors) {
+      data = await interceptor<T>(data);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    // Wrap other errors
     throw new ApiError(
-      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-      response.status,
-      errorData,
+      error instanceof Error ? error.message : 'Unknown error occurred',
+      0,
+      { originalError: error },
     );
   }
-
-  // Handle empty responses
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return response.json();
-  }
-
-  // For non-JSON responses, return empty object
-  return {} as T;
 }
 
 export interface LoginRequest {
@@ -189,7 +297,7 @@ export interface EndSessionResponse {
   message: string;
 }
 
-//TODO intercepter
+// Interceptors are set up in apiInterceptors.ts
 // Helper function to ensure type safety
 async function postRequest<T>(url: string, data?: unknown): Promise<T> {
   return request<T>(url, {

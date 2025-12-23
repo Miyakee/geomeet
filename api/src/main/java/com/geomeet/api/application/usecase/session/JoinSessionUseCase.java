@@ -4,6 +4,7 @@ import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.JoinSessionResult;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
+import com.geomeet.api.domain.exception.ErrorCode;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.SessionId;
@@ -38,17 +39,17 @@ public class JoinSessionUseCase {
         // Find session by sessionId
         SessionId sessionId = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionId)
-            .orElseThrow(() -> new GeomeetDomainException("Invalid Session code"));
+            .orElseThrow(() -> ErrorCode.INVALID_SESSION_CODE.toException());
 
         // Verify invite code matches (security: prevents joining by guessing session ID)
         InviteCode providedInviteCode = InviteCode.fromString(command.getInviteCode());
         if (!session.getInviteCode().equals(providedInviteCode)) {
-            throw new GeomeetDomainException("Invalid invite code");
+            throw ErrorCode.INVALID_INVITE_CODE.toException();
         }
 
         // Check if session is active (invitation link expires when session ends)
         if (!session.isActive()) {
-            throw new GeomeetDomainException("Cannot join a session that has ended");
+            throw ErrorCode.SESSION_ENDED.toException();
         }
 
         // Check if user is already a participant

@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { sessionApi } from '../services/api';
 import { SessionDetailResponse } from '../types/session';
+import {getErrorMessage} from "../utils/errorHandler.ts";
 
 const JoinSessionPage = () => {
   const { isAuthenticated, isInitialized } = useAuth();
@@ -32,7 +33,7 @@ const JoinSessionPage = () => {
   // Only redirect after auth state is initialized to avoid false redirects
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
-      const redirectPath = sessionId ? `/login?redirect=/join&sessionId=${sessionId}` : '/login?redirect=/join';
+      const redirectPath = sessionId ? `/login?redirect=/join&sessionId=${sessionId}&inviteCode=${inviteCode}` : '/login?redirect=/join';
       navigate(redirectPath);
     }
   }, [isAuthenticated, isInitialized, navigate, sessionId]);
@@ -44,38 +45,6 @@ const JoinSessionPage = () => {
       setError(null);
       return;
     }
-
-    const checkSessionStatus = async () => {
-      setCheckingSession(true);
-      try {
-        const details = await sessionApi.getSessionDetails(sessionId.trim());
-        setSessionDetails(details);
-        
-        // Check if session is ended
-        if (details.status === 'Ended') {
-          setError('This session has ended. You cannot join an ended session.');
-        } else {
-          setError(null); // Clear error if session is active
-        }
-      } catch (err: any) {
-        // If session not found or other error, clear session details
-        setSessionDetails(null);
-        // Don't set error here - let the join attempt handle it
-        if (err.response?.status === 404) {
-          // Session not found - clear error, will be handled on join attempt
-          setError(null);
-        }
-      } finally {
-        setCheckingSession(false);
-      }
-    };
-
-    // Debounce: wait 500ms after user stops typing
-    const timer = setTimeout(() => {
-      checkSessionStatus();
-    }, 500);
-
-    return () => clearTimeout(timer);
   }, [sessionId, isAuthenticated]);
 
   const handleJoinSession = async () => {
@@ -115,13 +84,7 @@ const JoinSessionPage = () => {
     } catch (err: any) {
       hasAttemptedJoin.current = false; // Allow retry on error
       console.error('Join session error:', err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else if (err.message) {
-        setError(err.message);
-      }
+      setError(getErrorMessage(err, 'Failed to join session. Please check the session ID and invite code.'));
     } finally {
       setLoading(false);
     }

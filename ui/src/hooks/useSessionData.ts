@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { sessionApi, ApiError } from '../services/api';
+import { sessionApi } from '../services/api';
 import { SessionDetailResponse } from '../types/session';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export const useSessionData = (sessionId: string | undefined) => {
   const [session, setSession] = useState<SessionDetailResponse | null>(null);
@@ -19,13 +20,7 @@ export const useSessionData = (sessionId: string | undefined) => {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load session:', err);
-      if (err instanceof ApiError || err.response) {
-        if(err.message){
-          setError(err.message);
-        }
-      } else {
-        setError('Failed to load session. Please try again.');
-      }
+      setError(getErrorMessage(err, 'Failed to load session. Please try again.'));
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,8 @@ import com.geomeet.api.adapter.web.auth.dto.ErrorResponse;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.exception.InactiveUserExceptionGeomeet;
 import com.geomeet.api.domain.exception.InvalidCredentialsExceptionGeomeet;
-import com.geomeet.api.domain.exception.InvalidRegisterExceptionGeomeet;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,31 +16,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    @ExceptionHandler({InvalidRegisterExceptionGeomeet.class})
-    public ResponseEntity<ErrorResponse> handleInvalidRegisterException(
-        InvalidRegisterExceptionGeomeet ex,
-            WebRequest request
-    ) {
-        String path = request.getDescription(false).replace("uri=", "");
-        logger.warn("InvalidRegisterException: {} - Path: {}", ex.getMessage(), path, ex);
-
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                "register staff Failed",
-                ex.getMessage(),
-                path
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
@@ -109,26 +89,46 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         String path = request.getDescription(false).replace("uri=", "");
-        logger.warn("Domain exception: {} - Path: {}", ex.getMessage(), path, ex);
+        logger.warn("Geomeet DomainException exception: {} - Path: {}", ex.getMessage(), path, ex);
 
-        if (ex.getMessage() != null && ex.getMessage().contains("Access denied")) {
-            ErrorResponse errorResponse = ErrorResponse.of(
-                    HttpStatus.FORBIDDEN.value(),
-                    "Access Denied",
-                    ex.getMessage(),
-                    path
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-
+        // Get error title based on HTTP status code
+        HttpStatus httpStatus = HttpStatus.resolve(ex.getHttpStatus());
+        String errorTitle = httpStatus != null ? getErrorTitleForStatus(httpStatus) : "Error";
+        
         ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                "Domain Error",
+                ex.getHttpStatus(),
+                errorTitle,
                 ex.getMessage(),
                 path
         );
 
-        return ResponseEntity.badRequest().body(errorResponse);
+        return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
+    }
+
+    /**
+     * Get error title based on HTTP status code.
+     * 
+     * @param httpStatus the HTTP status code
+     * @return the error title string
+     */
+    private String getErrorTitleForStatus(HttpStatus httpStatus) {
+        if (httpStatus == HttpStatus.BAD_REQUEST) {
+            return "Bad Request";
+        } else if (httpStatus == HttpStatus.UNAUTHORIZED) {
+            return "Authentication Failed";
+        } else if (httpStatus == HttpStatus.FORBIDDEN) {
+            return "Access Denied";
+        } else if (httpStatus == HttpStatus.NOT_FOUND) {
+            return "Not Found";
+        } else if (httpStatus == HttpStatus.CONFLICT) {
+            return "Conflict";
+        } else if (httpStatus == HttpStatus.UNPROCESSABLE_ENTITY) {
+            return "Unprocessable Entity";
+        } else if (httpStatus == HttpStatus.INTERNAL_SERVER_ERROR) {
+            return "Internal Server Error";
+        } else {
+            return "Error";
+        }
     }
 
     @ExceptionHandler(Exception.class)

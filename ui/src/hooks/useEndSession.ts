@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { sessionApi, EndSessionResponse, ApiError } from '../services/api';
+import { sessionApi, EndSessionResponse } from '../services/api';
+import { getStatusErrorMessage } from '../utils/errorHandler';
 
 export const useEndSession = (sessionId: string | undefined) => {
   const [loading, setLoading] = useState(false);
@@ -18,21 +19,11 @@ export const useEndSession = (sessionId: string | undefined) => {
       return result;
     } catch (err: any) {
       console.error('Failed to end session:', err);
-      if (err instanceof ApiError || err.response) {
-        const status = err.status || err.response?.status;
-        const data = err.response?.data || err.response;
-        if (status === 403) {
-          setError('You do not have permission to end this session.');
-        } else if (status === 404) {
-          setError('Session not found.');
-        } else if (status === 400) {
-          setError(data?.message || 'Cannot end session. Session may already be ended.');
-        } else {
-          setError('Failed to end session. Please try again.');
-        }
-      } else {
-        setError('Failed to end session. Please try again.');
-      }
+      setError(getStatusErrorMessage(err, {
+        403: 'You do not have permission to end this session.',
+        404: 'Session not found.',
+        400: 'Cannot end session. Session may already be ended.',
+      }, 'Failed to end session. Please try again.'));
       return null;
     } finally {
       setLoading(false);
