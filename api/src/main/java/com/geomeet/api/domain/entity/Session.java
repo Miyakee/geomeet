@@ -1,5 +1,6 @@
 package com.geomeet.api.domain.entity;
 
+import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
@@ -18,6 +19,7 @@ public class Session {
 
     private Long id;
     private SessionId sessionId;
+    private InviteCode inviteCode; // Invitation code required to join the session
     private Long initiatorId; // User ID who created the session
     private SessionStatus status;
     private LocalDateTime createdAt;
@@ -39,6 +41,7 @@ public class Session {
     public static Session create(Long initiatorId) {
         Session session = new Session();
         session.sessionId = SessionId.generate();
+        session.inviteCode = InviteCode.generate();
         session.initiatorId = initiatorId;
         session.status = SessionStatus.ACTIVE;
         LocalDateTime now = LocalDateTime.now();
@@ -53,6 +56,7 @@ public class Session {
     public static Session reconstruct(
         Long id,
         SessionId sessionId,
+        InviteCode inviteCode,
         Long initiatorId,
         SessionStatus status,
         LocalDateTime createdAt,
@@ -64,6 +68,7 @@ public class Session {
         Session session = new Session();
         session.id = id;
         session.sessionId = sessionId;
+        session.inviteCode = inviteCode;
         session.initiatorId = initiatorId;
         session.status = status;
         session.createdAt = createdAt;
@@ -77,6 +82,46 @@ public class Session {
     /**
      * Factory method to reconstruct Session from persistence (backward compatibility).
      * Meeting location will be null.
+     */
+    public static Session reconstruct(
+        Long id,
+        SessionId sessionId,
+        InviteCode inviteCode,
+        Long initiatorId,
+        SessionStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String createdBy,
+        String updatedBy
+    ) {
+        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, null);
+    }
+
+    /**
+     * Factory method to reconstruct Session from persistence (backward compatibility for tests).
+     * Generates a random invite code if null is provided.
+     * WARNING: This should only be used in tests. Production code should always provide inviteCode.
+     */
+    public static Session reconstruct(
+        Long id,
+        SessionId sessionId,
+        Long initiatorId,
+        SessionStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String createdBy,
+        String updatedBy,
+        Location meetingLocation
+    ) {
+        // Generate invite code for backward compatibility (tests only)
+        InviteCode inviteCode = InviteCode.generate();
+        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, meetingLocation);
+    }
+
+    /**
+     * Factory method to reconstruct Session from persistence (backward compatibility for tests).
+     * Generates a random invite code if null is provided.
+     * WARNING: This should only be used in tests. Production code should always provide inviteCode.
      */
     public static Session reconstruct(
         Long id,

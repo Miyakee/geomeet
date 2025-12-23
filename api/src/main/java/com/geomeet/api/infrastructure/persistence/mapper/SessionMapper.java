@@ -1,6 +1,7 @@
 package com.geomeet.api.infrastructure.persistence.mapper;
 
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
@@ -28,6 +29,7 @@ public interface SessionMapper {
         return Session.reconstruct(
             entity.getId(),
             SessionId.fromString(entity.getSessionId()),
+            InviteCode.fromString(entity.getInviteCode()),
             entity.getInitiatorId(),
             SessionStatus.fromString(entity.getStatus()),
             entity.getCreatedAt(),
@@ -45,6 +47,7 @@ public interface SessionMapper {
         SessionEntity.SessionEntityBuilder builder = SessionEntity.builder()
             .id(domain.getId())
             .sessionId(domain.getSessionId().getValue())
+            .inviteCode(domain.getInviteCode() != null ? domain.getInviteCode().getValue() : null)
             .initiatorId(domain.getInitiatorId())
             .status(domain.getStatus().getValue())
             .createdAt(domain.getCreatedAt())

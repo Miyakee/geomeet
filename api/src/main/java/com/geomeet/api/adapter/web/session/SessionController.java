@@ -108,7 +108,7 @@ public class SessionController {
     Long userId = (Long) authentication.getPrincipal();
 
     // Execute use case
-    JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), userId);
+    JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), request.getInviteCode(), userId);
     JoinSessionResult result = joinSessionUseCase.execute(command);
 
     // Convert result to response DTO

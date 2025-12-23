@@ -30,139 +30,159 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class JoinSessionUseCaseTest {
 
-    @Mock
-    private SessionRepository sessionRepository;
+  @Mock
+  private SessionRepository sessionRepository;
 
-    @Mock
-    private SessionParticipantRepository sessionParticipantRepository;
+  @Mock
+  private SessionParticipantRepository sessionParticipantRepository;
 
-    private JoinSessionUseCase joinSessionUseCase;
+  private JoinSessionUseCase joinSessionUseCase;
 
-    private Long userId;
-    private String sessionIdString;
-    private SessionId sessionId;
-    private Session activeSession;
-    private Long sessionDbId;
+  private Long userId;
+  private String sessionIdString;
+  private SessionId sessionId;
+  private Session activeSession;
+  private Long sessionDbId;
 
-    @BeforeEach
-    void setUp() {
-        joinSessionUseCase = new JoinSessionUseCase(sessionRepository, sessionParticipantRepository);
-        userId = 1L;
-        sessionIdString = "test-session-id-123";
-        sessionId = SessionId.fromString(sessionIdString);
-        sessionDbId = 100L;
-        activeSession = Session.reconstruct(
-            sessionDbId,
-            sessionId,
-            2L, // initiatorId
-            SessionStatus.ACTIVE,
-            null, // createdAt
-            null, // updatedAt
-            null, // createdBy
-            null  // updatedBy
-        );
-    }
+  private String inviteCode;
 
-    @Test
-    void shouldExecuteJoinSessionSuccessfully() {
-        // Given
-        JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, userId);
-        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
-        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionDbId, userId))
-            .thenReturn(false);
+  @BeforeEach
+  void setUp() {
+    joinSessionUseCase = new JoinSessionUseCase(sessionRepository, sessionParticipantRepository);
+    userId = 1L;
+    sessionIdString = "test-session-id-123";
+    inviteCode = "test";
+    sessionId = SessionId.fromString(sessionIdString);
+    sessionDbId = 100L;
+    activeSession = Session.reconstruct(
+        sessionDbId,
+        sessionId,
+        2L, // initiatorId
+        SessionStatus.ACTIVE,
+        null, // createdAt
+        null, // updatedAt
+        null, // createdBy
+        null  // updatedBy
+    );
+  }
 
-        SessionParticipant participant = SessionParticipant.create(sessionDbId, userId);
-        SessionParticipant savedParticipant = SessionParticipant.reconstruct(
-            1L, // participantId
-            sessionDbId,
-            userId,
-            participant.getJoinedAt(),
-            participant.getCreatedAt(),
-            participant.getUpdatedAt(),
-            null, // createdBy
-            null  // updatedBy
-        );
-        when(sessionParticipantRepository.save(any(SessionParticipant.class)))
-            .thenReturn(savedParticipant);
+  @Test
+  void shouldExecuteJoinSessionSuccessfully() {
+    // Given
+    JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, inviteCode, userId);
+    when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
+    when(sessionParticipantRepository.findBySessionIdAndUserId(sessionDbId, userId))
+        .thenReturn(Optional.empty());
 
-        // When
-        JoinSessionResult result = joinSessionUseCase.execute(command);
+    SessionParticipant participant = SessionParticipant.create(sessionDbId, userId);
+    SessionParticipant savedParticipant = SessionParticipant.reconstruct(
+        1L, // participantId
+        sessionDbId,
+        userId,
+        participant.getJoinedAt(),
+        participant.getCreatedAt(),
+        participant.getUpdatedAt(),
+        null, // createdBy
+        null  // updatedBy
+    );
+    when(sessionParticipantRepository.save(any(SessionParticipant.class)))
+        .thenReturn(savedParticipant);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(savedParticipant.getId(), result.getParticipantId());
-        assertEquals(sessionDbId, result.getSessionId());
-        assertEquals(sessionIdString, result.getSessionIdString());
-        assertEquals(userId, result.getUserId());
-        assertNotNull(result.getJoinedAt());
-        assertEquals("Successfully joined the session", result.getMessage());
+    // When
+    JoinSessionResult result = joinSessionUseCase.execute(command);
 
-        verify(sessionRepository).findBySessionId(sessionId);
-        verify(sessionParticipantRepository).existsBySessionIdAndUserId(sessionDbId, userId);
-        verify(sessionParticipantRepository).save(any(SessionParticipant.class));
-    }
+    // Then
+    assertNotNull(result);
+    assertEquals(savedParticipant.getId(), result.getParticipantId());
+    assertEquals(sessionDbId, result.getSessionId());
+    assertEquals(sessionIdString, result.getSessionIdString());
+    assertEquals(userId, result.getUserId());
+    assertNotNull(result.getJoinedAt());
+    assertEquals("Successfully joined the session", result.getMessage());
 
-    @Test
-    void shouldThrowExceptionWhenSessionNotFound() {
-        // Given
-        JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, userId);
-        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
+    verify(sessionRepository).findBySessionId(sessionId);
+    verify(sessionParticipantRepository).findBySessionIdAndUserId(sessionDbId, userId);
+    verify(sessionParticipantRepository).save(any(SessionParticipant.class));
+  }
 
-        // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
-            joinSessionUseCase.execute(command);
-        });
+  @Test
+  void shouldThrowExceptionWhenSessionNotFound() {
+    // Given
+    JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, inviteCode, userId);
+    when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
 
-        assertEquals("Session not found", exception.getMessage());
-        verify(sessionRepository).findBySessionId(sessionId);
-        verify(sessionParticipantRepository, never()).existsBySessionIdAndUserId(anyLong(), anyLong());
-        verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
-    }
+    // When & Then
+    DomainException exception = assertThrows(DomainException.class, () -> {
+      joinSessionUseCase.execute(command);
+    });
 
-    @Test
-    void shouldThrowExceptionWhenSessionIsEnded() {
-        // Given
-        Session endedSession = Session.reconstruct(
-            sessionDbId,
-            sessionId,
-            2L, // initiatorId
-            SessionStatus.ENDED,
-            null, // createdAt
-            null, // updatedAt
-            null, // createdBy
-            null  // updatedBy
-        );
-        JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, userId);
-        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(endedSession));
+    assertEquals("Session not found", exception.getMessage());
+    verify(sessionRepository).findBySessionId(sessionId);
+    verify(sessionParticipantRepository, never()).findBySessionIdAndUserId(anyLong(), anyLong());
+    verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
+  }
 
-        // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
-            joinSessionUseCase.execute(command);
-        });
+  @Test
+  void shouldThrowExceptionWhenSessionIsEnded() {
+    // Given
+    Session endedSession = Session.reconstruct(
+        sessionDbId,
+        sessionId,
+        2L, // initiatorId
+        SessionStatus.ENDED,
+        null, // createdAt
+        null, // updatedAt
+        null, // createdBy
+        null  // updatedBy
+    );
+    JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, inviteCode, userId);
+    when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(endedSession));
 
-        assertEquals("Cannot join a session that has ended", exception.getMessage());
-        verify(sessionRepository).findBySessionId(sessionId);
-        verify(sessionParticipantRepository, never()).existsBySessionIdAndUserId(anyLong(), anyLong());
-        verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
-    }
+    // When & Then
+    DomainException exception = assertThrows(DomainException.class, () -> {
+      joinSessionUseCase.execute(command);
+    });
 
-    @Test
-    void shouldThrowExceptionWhenUserAlreadyJoined() {
-        // Given
-        JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, userId);
-        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
-        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionDbId, userId))
-            .thenReturn(true);
+    assertEquals("Cannot join a session that has ended", exception.getMessage());
+    verify(sessionRepository).findBySessionId(sessionId);
+    verify(sessionParticipantRepository, never()).findBySessionIdAndUserId(anyLong(), anyLong());
+    verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
+  }
 
-        // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
-            joinSessionUseCase.execute(command);
-        });
+  @Test
+  void shouldReturnExistingParticipantWhenUserAlreadyJoined() {
+    // Given
+    JoinSessionCommand command = JoinSessionCommand.of(sessionIdString, inviteCode, userId);
+    when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(activeSession));
 
-        assertEquals("User has already joined this session", exception.getMessage());
-        verify(sessionRepository).findBySessionId(sessionId);
-        verify(sessionParticipantRepository).existsBySessionIdAndUserId(sessionDbId, userId);
-        verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
-    }
+    SessionParticipant existingParticipant = SessionParticipant.reconstruct(
+        1L, // participantId
+        sessionDbId,
+        userId,
+        java.time.LocalDateTime.now(),
+        java.time.LocalDateTime.now(),
+        java.time.LocalDateTime.now(),
+        null, // createdBy
+        null  // updatedBy
+    );
+    when(sessionParticipantRepository.findBySessionIdAndUserId(sessionDbId, userId))
+        .thenReturn(Optional.of(existingParticipant));
+
+    // When
+    JoinSessionResult result = joinSessionUseCase.execute(command);
+
+    // Then
+    assertNotNull(result);
+    assertEquals(existingParticipant.getId(), result.getParticipantId());
+    assertEquals(sessionDbId, result.getSessionId());
+    assertEquals(sessionIdString, result.getSessionIdString());
+    assertEquals(userId, result.getUserId());
+    assertNotNull(result.getJoinedAt());
+    assertEquals("Already joined the session", result.getMessage());
+
+    verify(sessionRepository).findBySessionId(sessionId);
+    verify(sessionParticipantRepository).findBySessionIdAndUserId(sessionDbId, userId);
+    verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
+  }
 }
 

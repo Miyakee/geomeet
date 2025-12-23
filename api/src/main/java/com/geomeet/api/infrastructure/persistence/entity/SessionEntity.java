@@ -40,6 +40,9 @@ public class SessionEntity {
     @Column(nullable = false, unique = true, name = "session_id", length = 255)
     private String sessionId;
 
+    @Column(nullable = false, unique = true, name = "invite_code", length = 20)
+    private String inviteCode;
+
     @Column(nullable = false, name = "initiator_id")
     private Long initiatorId;
 

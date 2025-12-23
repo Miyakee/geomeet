@@ -38,9 +38,9 @@ public class GenerateInviteLinkUseCase {
             throw new DomainException("Only the session initiator can generate invite links");
         }
 
-        // Generate invite link (using sessionId as the code)
-        String inviteLink = "/join?sessionId=" + command.getSessionId();
-        String inviteCode = command.getSessionId();
+        // Generate invite link with both sessionId and inviteCode
+        String inviteCode = session.getInviteCode().getValue();
+        String inviteLink = "/join?sessionId=" + command.getSessionId() + "&inviteCode=" + inviteCode;
 
         // Return result
         return GenerateInviteLinkResult.builder()

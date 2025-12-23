@@ -20,6 +20,7 @@ const JoinSessionPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [sessionId, setSessionId] = useState(searchParams.get('sessionId') || '');
+  const [inviteCode, setInviteCode] = useState(searchParams.get('inviteCode') || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -83,6 +84,11 @@ const JoinSessionPage = () => {
       return;
     }
 
+    if (!inviteCode.trim()) {
+      setError('Please enter an invite code');
+      return;
+    }
+
     if (!isAuthenticated) {
       setError('Please login first');
       return;
@@ -102,7 +108,7 @@ const JoinSessionPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await sessionApi.joinSession(sessionId.trim());
+      const result = await sessionApi.joinSession(sessionId.trim(), inviteCode.trim());
       setSuccess(true);
       // Navigate to session page immediately (no delay for better UX)
       navigate(`/session/${result.sessionIdString}`, { replace: true });
@@ -115,12 +121,6 @@ const JoinSessionPage = () => {
         setError(err.response.data.error);
       } else if (err.message) {
         setError(err.message);
-      } else if (err.response?.status === 401) {
-        setError('Authentication failed. Please login again.');
-      } else if (err.response?.status === 403) {
-        setError('You do not have permission to join this session.');
-      } else {
-        setError('Failed to join session. Please check the session ID and try again.');
       }
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ const JoinSessionPage = () => {
       !loading &&
       !hasAttemptedJoin.current &&
       !error &&
-      searchParams.get('sessionId') // Only auto-join if sessionId is in URL
+      searchParams.get('sessionId') && searchParams.get('inviteCode') // Only auto-join if both are in URL
     ) {
       // Small delay to ensure component is fully mounted
       const timer = setTimeout(() => {
@@ -174,7 +174,7 @@ const JoinSessionPage = () => {
             Join Session
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-            Enter the session ID or invitation code to join a meeting session.
+            Enter the session ID and invite code to join a meeting session.
           </Typography>
 
           {error && (
@@ -203,13 +203,13 @@ const JoinSessionPage = () => {
             <>
               <TextField
                 fullWidth
-                label="Session ID / Invitation Code"
+                label="Session ID"
                 variant="outlined"
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Enter session ID or invitation code"
+                placeholder="Enter session ID"
                 disabled={loading || checkingSession}
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
                 helperText={
                   checkingSession
                     ? 'Checking session status...'
@@ -220,7 +220,24 @@ const JoinSessionPage = () => {
                         : ''
                 }
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && inviteCode.trim()) {
+                    handleJoinSession();
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Invite Code"
+                variant="outlined"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="Enter invite code"
+                disabled={loading || checkingSession}
+                sx={{ mb: 3 }}
+                inputProps={{ maxLength: 8, style: { textTransform: 'uppercase' } }}
+                helperText="8-character code provided by the session creator"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && sessionId.trim() && inviteCode.trim()) {
                     handleJoinSession();
                   }
                 }}
@@ -235,6 +252,7 @@ const JoinSessionPage = () => {
                   loading ||
                   checkingSession ||
                   !sessionId.trim() ||
+                  !inviteCode.trim() ||
                   (sessionDetails?.status === 'Ended')
                 }
                 sx={{ mb: 2 }}

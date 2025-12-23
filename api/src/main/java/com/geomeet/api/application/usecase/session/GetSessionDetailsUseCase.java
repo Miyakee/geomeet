@@ -12,6 +12,7 @@ import com.geomeet.api.domain.exception.DomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class GetSessionDetailsUseCase {
     /**
      * Executes the get session details use case.
      * Retrieves session information and all participants.
+     * 
+     * Security: Returns "Access denied" for both non-existent sessions and unauthorized access
+     * to prevent information disclosure through enumeration attacks.
      *
      * @param command the get session details command
      * @return session details result with participants
@@ -43,8 +47,15 @@ public class GetSessionDetailsUseCase {
     public GetSessionDetailsResult execute(GetSessionDetailsCommand command) {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
-        Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+        Optional<Session> sessionOpt = sessionRepository.findBySessionId(sessionIdVO);
+        
+        // Security: If session doesn't exist, return "Access denied" instead of "Session not found"
+        // to prevent information disclosure through enumeration attacks
+        if (sessionOpt.isEmpty()) {
+            throw new DomainException("Access denied: User is not a participant or initiator");
+        }
+        
+        Session session = sessionOpt.get();
 
         // Check if user is a participant or initiator
         boolean isParticipant = sessionParticipantRepository.existsBySessionIdAndUserId(

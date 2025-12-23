@@ -19,7 +19,6 @@ function buildUrl(path: string): string {
 }
 
 // Helper function to handle errors
-// This class mimics axios error structure for backward compatibility
 export class ApiError extends Error {
   public response?: {
     status: number;
@@ -251,8 +250,8 @@ export const sessionApi = {
   generateInviteLink: async (sessionId: string): Promise<InviteLinkResponse> => {
     return getRequest<InviteLinkResponse>(`/api/sessions/${sessionId}/invite`);
   },
-  joinSession: async (sessionId: string): Promise<JoinSessionResponse> => {
-    return postRequest<JoinSessionResponse>('/api/sessions/join', { sessionId });
+  joinSession: async (sessionId: string, inviteCode: string): Promise<JoinSessionResponse> => {
+    return postRequest<JoinSessionResponse>('/api/sessions/join', { sessionId, inviteCode });
   },
   getSessionDetails: async (sessionId: string): Promise<SessionDetailResponse> => {
     return getRequest<SessionDetailResponse>(`/api/sessions/${sessionId}`);

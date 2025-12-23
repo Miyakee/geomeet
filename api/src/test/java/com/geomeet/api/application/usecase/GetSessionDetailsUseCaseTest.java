@@ -186,8 +186,8 @@ class GetSessionDetailsUseCaseTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenSessionNotFound() {
-        // Given
+    void shouldThrowAccessDeniedWhenSessionNotFound() {
+        // Given - Security: Return "Access denied" for non-existent sessions to prevent enumeration attacks
         GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, userId);
         when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.empty());
 
@@ -196,7 +196,8 @@ class GetSessionDetailsUseCaseTest {
             getSessionDetailsUseCase.execute(command);
         });
 
-        assertEquals("Session not found", exception.getMessage());
+        // Security: Should return "Access denied" instead of "Session not found" to prevent information disclosure
+        assertEquals("Access denied: User is not a participant or initiator", exception.getMessage());
         verify(sessionRepository).findBySessionId(any(SessionId.class));
     }
 
