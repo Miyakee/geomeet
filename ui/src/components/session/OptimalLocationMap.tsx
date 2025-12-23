@@ -1,8 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Box, Typography, Paper, CircularProgress } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet.markercluster';
+import { calculateHaversineDistance } from '../../utils/distanceCalculator';
 
 // Fix for default marker icons in React-Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -94,6 +98,44 @@ const MeetingLocationIcon = L.divIcon({
   popupAnchor: [0, -30],
 });
 
+// Combined icon for when meeting location and optimal location overlap
+const CombinedLocationIcon = L.divIcon({
+  className: 'custom-marker-icon',
+  html: `<div style="
+    position: relative;
+    width: 40px;
+    height: 40px;
+  ">
+    <div style="
+      background-color: #d32f2f;
+      width: 30px;
+      height: 30px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      position: absolute;
+      top: 0;
+      left: 0;
+    "></div>
+    <div style="
+      background-color: #facd07;
+      width: 24px;
+      height: 24px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      position: absolute;
+      top: 8px;
+      left: 8px;
+    "></div>
+  </div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+});
+
 interface ParticipantLocationData {
   latitude: number;
   longitude: number;
@@ -157,6 +199,111 @@ function MapBoundsFitter({ locations }: { locations: Array<[number, number]> }) 
 
     return () => clearTimeout(timeoutId);
   }, [map, locationsKey, locations]);
+
+  return null;
+}
+
+// Component to handle marker clustering for participant locations
+function MarkerClusterComponent({
+  currentUserLocation,
+  participantLocations,
+  participantNames,
+  CurrentUserIcon,
+  ParticipantIcon,
+}: {
+  currentUserLocation?: {
+    latitude: number;
+    longitude: number;
+    userId?: number;
+  } | null;
+  participantLocations: Map<number, { latitude: number; longitude: number; userId: number }>;
+  participantNames: Map<number, string>;
+  CurrentUserIcon: L.DivIcon;
+  ParticipantIcon: L.DivIcon;
+}) {
+  const map = useMap();
+  const clusterGroupRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!map) return;
+
+    // Create marker cluster group with custom styling
+    // @ts-ignore - leaflet.markercluster extends L.LayerGroup but types may not be fully compatible
+    const clusterGroup = (L as any).markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 50,
+      iconCreateFunction: (cluster) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          html: `<div style="
+            background-color: #64b5f6;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+          ">${count}</div>`,
+          className: 'marker-cluster-custom',
+          iconSize: L.point(40, 40),
+        });
+      },
+    });
+
+    // Add current user location marker
+    if (currentUserLocation) {
+      const currentUserMarker = L.marker(
+        [currentUserLocation.latitude, currentUserLocation.longitude],
+        { icon: CurrentUserIcon }
+      );
+      
+      const popupContent = document.createElement('div');
+      popupContent.innerHTML = `
+        <div>
+          <div style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">Your Current Location</div>
+          <div style="font-size: 12px;">${currentUserLocation.latitude.toFixed(6)}, ${currentUserLocation.longitude.toFixed(6)}</div>
+        </div>
+      `;
+      currentUserMarker.bindPopup(popupContent);
+      clusterGroup.addLayer(currentUserMarker);
+    }
+
+    // Add participant location markers
+    participantLocations.forEach((location, userId) => {
+      if (userId !== currentUserLocation?.userId) {
+        const marker = L.marker(
+          [location.latitude, location.longitude],
+          { icon: ParticipantIcon }
+        );
+        
+        const popupContent = document.createElement('div');
+        const username = participantNames.get(userId) || `Participant ${userId}`;
+        popupContent.innerHTML = `
+          <div>
+            <div style="font-weight: bold; margin-bottom: 4px;">${username}</div>
+            <div style="font-size: 12px;">${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}</div>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+        clusterGroup.addLayer(marker);
+      }
+    });
+
+    clusterGroup.addTo(map);
+    clusterGroupRef.current = clusterGroup;
+
+    return () => {
+      if (clusterGroupRef.current) {
+        map.removeLayer(clusterGroupRef.current);
+        clusterGroupRef.current = null;
+      }
+    };
+  }, [map, currentUserLocation, participantLocations, participantNames, CurrentUserIcon, ParticipantIcon]);
 
   return null;
 }
@@ -252,104 +399,129 @@ export const OptimalLocationMap = ({
           {/* Auto-fit bounds to show all markers */}
           <MapBoundsFitter locations={allLocations} />
 
-          {/* Optimal location marker (yellow) - always show if calculated */}
-          {optimalLocation && (
-            <Marker
-              position={[optimalLocation.latitude, optimalLocation.longitude]}
-              icon={OptimalLocationIcon}
-            >
-              <Popup>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                      Optimal Meeting Location
-                  </Typography>
-                  <Typography variant="body2">
-                    {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
-                  </Typography>
-                  {optimalLocation.totalTravelDistance !== undefined && (
-                    <Typography variant="body2" color="text.secondary">
+          {/* Check if meeting location and optimal location overlap (within 10 meters) */}
+          {(() => {
+            const OVERLAP_THRESHOLD_KM = 0.01; // 10 meters in kilometers
+            const locationsOverlap = meetingLocation && optimalLocation && 
+              calculateHaversineDistance(
+                meetingLocation.latitude,
+                meetingLocation.longitude,
+                optimalLocation.latitude,
+                optimalLocation.longitude
+              ) < OVERLAP_THRESHOLD_KM;
+
+            if (locationsOverlap && meetingLocation && optimalLocation) {
+              // Show combined marker when locations overlap
+              return (
+                <Marker
+                  position={[meetingLocation.latitude, meetingLocation.longitude]}
+                  icon={CombinedLocationIcon}
+                >
+                  <Popup>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight="bold" color="error">
+                        Meeting Location & Optimal Location
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1 }}>
+                        Both locations are at the same point
+                      </Typography>
+                      {meetingLocationAddress ? (
+                        <Typography variant="body2" sx={{ mt: 0.5, mb: 0.5 }}>
+                          {meetingLocationAddress}
+                        </Typography>
+                      ) : null}
+                      <Typography variant="body2" color="text.secondary">
+                        {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
+                      </Typography>
+                      {optimalLocation.totalTravelDistance !== undefined && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                           Total distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
-                    </Typography>
-                  )}
-                  {optimalLocation.participantCount !== undefined && (
-                    <Typography variant="body2" color="text.secondary">
+                        </Typography>
+                      )}
+                      {optimalLocation.participantCount !== undefined && (
+                        <Typography variant="body2" color="text.secondary">
                           Based on {optimalLocation.participantCount} participant(s)
-                    </Typography>
-                  )}
-                </Box>
-              </Popup>
-            </Marker>
-          )}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Set by session initiator
+                      </Typography>
+                    </Box>
+                  </Popup>
+                </Marker>
+              );
+            }
 
+            // Show separate markers when they don't overlap
+            return (
+              <>
+                {/* Optimal location marker (yellow) - always show if calculated */}
+                {optimalLocation && (
+                  <Marker
+                    position={[optimalLocation.latitude, optimalLocation.longitude]}
+                    icon={OptimalLocationIcon}
+                  >
+                    <Popup>
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight="bold">
+                            Optimal Meeting Location
+                        </Typography>
+                        <Typography variant="body2">
+                          {optimalLocation.latitude.toFixed(6)}, {optimalLocation.longitude.toFixed(6)}
+                        </Typography>
+                        {optimalLocation.totalTravelDistance !== undefined && (
+                          <Typography variant="body2" color="text.secondary">
+                                Total distance: {optimalLocation.totalTravelDistance.toFixed(2)} km
+                          </Typography>
+                        )}
+                        {optimalLocation.participantCount !== undefined && (
+                          <Typography variant="body2" color="text.secondary">
+                                Based on {optimalLocation.participantCount} participant(s)
+                          </Typography>
+                        )}
+                      </Box>
+                    </Popup>
+                  </Marker>
+                )}
 
-          {/* Meeting location marker (set by initiator) */}
-          {meetingLocation && (
-            <Marker
-              position={[meetingLocation.latitude, meetingLocation.longitude]}
-              icon={MeetingLocationIcon}
-            >
-              <Popup>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold" color="error">
-                    Meeting Location
-                  </Typography>
-                  {meetingLocationAddress ? (
-                    <Typography variant="body2" sx={{ mt: 0.5, mb: 0.5 }}>
-                      {meetingLocationAddress}
-                    </Typography>
-                  ) : null}
-                  <Typography variant="body2" color="text.secondary">
-                    {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    Set by session initiator
-                  </Typography>
-                </Box>
-              </Popup>
-            </Marker>
-          )}
+                {/* Meeting location marker (set by initiator) */}
+                {meetingLocation && (
+                  <Marker
+                    position={[meetingLocation.latitude, meetingLocation.longitude]}
+                    icon={MeetingLocationIcon}
+                  >
+                    <Popup>
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight="bold" color="error">
+                          Meeting Location
+                        </Typography>
+                        {meetingLocationAddress ? (
+                          <Typography variant="body2" sx={{ mt: 0.5, mb: 0.5 }}>
+                            {meetingLocationAddress}
+                          </Typography>
+                        ) : null}
+                        <Typography variant="body2" color="text.secondary">
+                          {meetingLocation.latitude.toFixed(6)}, {meetingLocation.longitude.toFixed(6)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          Set by session initiator
+                        </Typography>
+                      </Box>
+                    </Popup>
+                  </Marker>
+                )}
+              </>
+            );
+          })()}
 
-          {/* Current user location marker (dark blue) */}
-          {currentUserLocation && (
-            <Marker
-              key={`current-user-${currentUserLocation.latitude}-${currentUserLocation.longitude}`}
-              position={[currentUserLocation.latitude, currentUserLocation.longitude]}
-              icon={CurrentUserIcon}
-            >
-              <Popup>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold" color="primary">
-                    Your Current Location
-                  </Typography>
-                  <Typography variant="body2">
-                    {currentUserLocation.latitude.toFixed(6)}, {currentUserLocation.longitude.toFixed(6)}
-                  </Typography>
-                </Box>
-              </Popup>
-            </Marker>
-          )}
-
-          {/* Participant location markers (light blue) - exclude current user */}
-          {Array.from(participantLocations.entries())
-            .filter(([userId]) => userId !== currentUserLocation?.userId)
-            .map(([userId, location]) => (
-              <Marker
-                key={userId}
-                position={[location.latitude, location.longitude]}
-                icon={ParticipantIcon}
-              >
-                <Popup>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {participantNames.get(userId) || `Participant ${userId}`}
-                    </Typography>
-                    <Typography variant="body2">
-                      {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                    </Typography>
-                  </Box>
-                </Popup>
-              </Marker>
-            ))}
+          {/* Marker Cluster Group for participant locations to handle overlapping markers */}
+          <MarkerClusterComponent
+            currentUserLocation={currentUserLocation}
+            participantLocations={participantLocations}
+            participantNames={participantNames}
+            CurrentUserIcon={CurrentUserIcon}
+            ParticipantIcon={ParticipantIcon}
+          />
         </MapContainer>
       </Paper>
     </Box>
