@@ -19,7 +19,7 @@ import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
@@ -185,7 +185,7 @@ class CalculateOptimalLocationUseCaseTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(DomainException.class, () -> {
+        assertThrows(GeomeetDomainException.class, () -> {
             calculateOptimalLocationUseCase.execute(command);
         });
 
@@ -214,7 +214,7 @@ class CalculateOptimalLocationUseCaseTest {
             .thenReturn(Optional.of(endedSession));
 
         // When & Then
-        assertThrows(DomainException.class, () -> {
+        assertThrows(GeomeetDomainException.class, () -> {
             calculateOptimalLocationUseCase.execute(command);
         });
 
@@ -246,7 +246,7 @@ class CalculateOptimalLocationUseCaseTest {
             .thenReturn(false);
 
         // When & Then
-        assertThrows(DomainException.class, () -> {
+        assertThrows(GeomeetDomainException.class, () -> {
             calculateOptimalLocationUseCase.execute(command);
         });
 
@@ -296,7 +296,7 @@ class CalculateOptimalLocationUseCaseTest {
             .thenReturn(Collections.emptyList());
 
         // When & Then
-        assertThrows(DomainException.class, () -> {
+        assertThrows(GeomeetDomainException.class, () -> {
             calculateOptimalLocationUseCase.execute(command);
         });
 

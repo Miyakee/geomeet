@@ -6,9 +6,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.geomeet.api.adapter.web.auth.dto.ErrorResponse;
-import com.geomeet.api.domain.exception.DomainException;
-import com.geomeet.api.domain.exception.InactiveUserException;
-import com.geomeet.api.domain.exception.InvalidCredentialsException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
+import com.geomeet.api.domain.exception.InactiveUserExceptionGeomeet;
+import com.geomeet.api.domain.exception.InvalidCredentialsExceptionGeomeet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -59,7 +59,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldHandleInvalidCredentialsException() {
         // Given
-        InvalidCredentialsException ex = new InvalidCredentialsException("Invalid credentials");
+        InvalidCredentialsExceptionGeomeet ex = new InvalidCredentialsExceptionGeomeet("Invalid credentials");
 
         // When
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainExceptions(ex, webRequest);
@@ -76,7 +76,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldHandleInactiveUserException() {
         // Given
-        InactiveUserException ex = new InactiveUserException("User is inactive");
+        InactiveUserExceptionGeomeet ex = new InactiveUserExceptionGeomeet("User is inactive");
 
         // When
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainExceptions(ex, webRequest);
@@ -93,7 +93,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldHandleDomainException() {
         // Given
-        DomainException ex = new DomainException("Domain error occurred");
+        GeomeetDomainException ex = new GeomeetDomainException("Domain error occurred");
 
         // When
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleDomainException(ex, webRequest);

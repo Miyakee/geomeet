@@ -14,7 +14,7 @@ import com.geomeet.api.application.usecase.location.UpdateMeetingLocationUseCase
 import com.geomeet.api.application.usecase.session.BroadcastMeetingLocationUseCase;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
@@ -120,7 +120,7 @@ class UpdateMeetingLocationUseCaseTest {
         when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateMeetingLocationUseCase.execute(command);
         });
 
@@ -151,7 +151,7 @@ class UpdateMeetingLocationUseCaseTest {
         when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(endedSession));
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateMeetingLocationUseCase.execute(command);
         });
 

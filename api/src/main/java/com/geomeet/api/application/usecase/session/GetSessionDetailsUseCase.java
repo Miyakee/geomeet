@@ -8,7 +8,7 @@ import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -42,7 +42,7 @@ public class GetSessionDetailsUseCase {
      *
      * @param command the get session details command
      * @return session details result with participants
-     * @throws DomainException if session not found, user not found, or access denied
+     * @throws GeomeetDomainException if session not found, user not found, or access denied
      */
     public GetSessionDetailsResult execute(GetSessionDetailsCommand command) {
         // Find session by sessionId
@@ -52,7 +52,7 @@ public class GetSessionDetailsUseCase {
         // Security: If session doesn't exist, return "Access denied" instead of "Session not found"
         // to prevent information disclosure through enumeration attacks
         if (sessionOpt.isEmpty()) {
-            throw new DomainException("Access denied: User is not a participant or initiator");
+            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
         }
         
         Session session = sessionOpt.get();
@@ -62,19 +62,19 @@ public class GetSessionDetailsUseCase {
             session.getId(), command.getUserId()
         );
         if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
-            throw new DomainException("Access denied: User is not a participant or initiator");
+            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
         }
 
         // Get initiator info
         User initiator = userRepository.findById(session.getInitiatorId())
-            .orElseThrow(() -> new DomainException("Initiator not found"));
+            .orElseThrow(() -> new GeomeetDomainException("Initiator not found"));
 
         // Get all participants
         List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
         List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
             .map(participant -> {
                 User user = userRepository.findById(participant.getUserId())
-                    .orElseThrow(() -> new DomainException("User not found for participant"));
+                    .orElseThrow(() -> new GeomeetDomainException("User not found for participant"));
                 return GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())

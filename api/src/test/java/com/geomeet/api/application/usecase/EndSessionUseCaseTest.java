@@ -14,7 +14,7 @@ import com.geomeet.api.application.usecase.session.BroadcastSessionEndUseCase;
 import com.geomeet.api.application.usecase.session.EndSessionUseCase;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.time.LocalDateTime;
@@ -99,7 +99,7 @@ class EndSessionUseCaseTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(DomainException.class, () -> {
+        assertThrows(GeomeetDomainException.class, () -> {
             endSessionUseCase.execute(command);
         });
 
@@ -116,7 +116,7 @@ class EndSessionUseCaseTest {
             .thenReturn(Optional.of(activeSession));
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             endSessionUseCase.execute(command);
         });
 

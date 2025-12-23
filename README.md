@@ -56,7 +56,6 @@ A real-time collaborative meeting platform built with Spring Boot and React, fol
 - **Material UI (MUI)** - Component library
 - **Vite** - Build tool
 - **React Router** - Routing
-- **Axios** - HTTP client
 - **STOMP.js** - WebSocket client
 
 ### DevOps & Tools
@@ -606,7 +605,7 @@ sh ./build-and-push-to-ecr.sh
 #### 2. Configure Environment Variables (EC2)
 ```bash
 cd geomeet
-mkdir .env
+vi .env
 set -a
 source .env
 set +a

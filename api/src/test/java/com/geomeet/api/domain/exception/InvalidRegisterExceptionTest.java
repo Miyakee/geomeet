@@ -10,7 +10,7 @@ class InvalidRegisterExceptionTest {
 
     @Test
     void shouldCreateExceptionWithDefaultMessage() {
-        InvalidRegisterException exception = new InvalidRegisterException();
+        InvalidRegisterExceptionGeomeet exception = new InvalidRegisterExceptionGeomeet();
         assertNotNull(exception);
         assertEquals("Invalid register info", exception.getMessage());
     }
@@ -18,15 +18,15 @@ class InvalidRegisterExceptionTest {
     @Test
     void shouldCreateExceptionWithCustomMessage() {
         String customMessage = "Custom error message";
-        InvalidRegisterException exception = new InvalidRegisterException(customMessage);
+        InvalidRegisterExceptionGeomeet exception = new InvalidRegisterExceptionGeomeet(customMessage);
         assertNotNull(exception);
         assertEquals(customMessage, exception.getMessage());
     }
 
     @Test
     void shouldBeInstanceOfDomainException() {
-        InvalidRegisterException exception = new InvalidRegisterException();
-        assertTrue(exception instanceof DomainException);
+        InvalidRegisterExceptionGeomeet exception = new InvalidRegisterExceptionGeomeet();
+        assertTrue(exception instanceof GeomeetDomainException);
     }
 }
 

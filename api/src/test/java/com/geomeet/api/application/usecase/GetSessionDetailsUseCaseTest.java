@@ -18,7 +18,7 @@ import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
 import com.geomeet.api.domain.valueobject.SessionId;
@@ -192,7 +192,7 @@ class GetSessionDetailsUseCaseTest {
         when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             getSessionDetailsUseCase.execute(command);
         });
 
@@ -211,7 +211,7 @@ class GetSessionDetailsUseCaseTest {
             .thenReturn(false);
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             getSessionDetailsUseCase.execute(command);
         });
 
@@ -230,7 +230,7 @@ class GetSessionDetailsUseCaseTest {
         when(userRepository.findById(initiatorId)).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             getSessionDetailsUseCase.execute(command);
         });
 
@@ -249,7 +249,7 @@ class GetSessionDetailsUseCaseTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             getSessionDetailsUseCase.execute(command);
         });
 

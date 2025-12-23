@@ -54,10 +54,8 @@ public class LocationController {
       @Valid @RequestBody UpdateLocationRequest request,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
     Long userId = (Long) authentication.getPrincipal();
 
-    // Execute use case
     UpdateLocationCommand command = UpdateLocationCommand.of(
         sessionId,
         userId,
@@ -67,9 +65,7 @@ public class LocationController {
     );
     UpdateLocationResult result = updateLocationUseCase.execute(command);
 
-    // Convert result to response DTO
     UpdateLocationResponse response = UpdateLocationResponse.create(result);
-
     return ResponseEntity.ok(response);
   }
 
@@ -86,14 +82,11 @@ public class LocationController {
       @PathVariable String sessionId,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
     Long userId = (Long) authentication.getPrincipal();
 
-    // Execute use case
     CalculateOptimalLocationCommand command = CalculateOptimalLocationCommand.of(sessionId, userId);
     CalculateOptimalLocationResult result = calculateOptimalLocationUseCase.execute(command);
 
-    // Convert result to response DTO
     CalculateOptimalLocationResponse response = CalculateOptimalLocationResponse.create(result);
 
     return ResponseEntity.ok(response);
@@ -114,10 +107,8 @@ public class LocationController {
       @Valid @RequestBody UpdateMeetingLocationRequest request,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
     Long userId = (Long) authentication.getPrincipal();
 
-    // Execute use case
     UpdateMeetingLocationCommand command = UpdateMeetingLocationCommand.of(
         sessionId,
         userId,
@@ -126,7 +117,6 @@ public class LocationController {
     );
     UpdateMeetingLocationResult result = updateMeetingLocationUseCase.execute(command);
 
-    // Convert result to response DTO
     UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.create(result);
 
     return ResponseEntity.ok(response);

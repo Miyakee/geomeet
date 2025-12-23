@@ -13,8 +13,8 @@ import com.geomeet.api.application.result.LoginResult;
 import com.geomeet.api.application.usecase.auth.LoginUseCase;
 import com.geomeet.api.application.usecase.auth.UserRepository;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.InactiveUserException;
-import com.geomeet.api.domain.exception.InvalidCredentialsException;
+import com.geomeet.api.domain.exception.InactiveUserExceptionGeomeet;
+import com.geomeet.api.domain.exception.InvalidCredentialsExceptionGeomeet;
 import com.geomeet.api.domain.service.PasswordEncoder;
 import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
@@ -91,7 +91,7 @@ class LoginUseCaseTest {
         when(userRepository.findByUsernameOrEmail("nonexistent")).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(InvalidCredentialsException.class, () -> loginUseCase.execute(command));
+        assertThrows(InvalidCredentialsExceptionGeomeet.class, () -> loginUseCase.execute(command));
         verify(userRepository).findByUsernameOrEmail("nonexistent");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
@@ -104,7 +104,7 @@ class LoginUseCaseTest {
         when(passwordEncoder.matches("wrongpassword", "$2a$12$hashedpassword")).thenReturn(false);
 
         // When & Then
-        assertThrows(InvalidCredentialsException.class, () -> loginUseCase.execute(command));
+        assertThrows(InvalidCredentialsExceptionGeomeet.class, () -> loginUseCase.execute(command));
         verify(userRepository).findByUsernameOrEmail("testuser");
         verify(passwordEncoder).matches("wrongpassword", "$2a$12$hashedpassword");
     }
@@ -123,7 +123,7 @@ class LoginUseCaseTest {
         when(userRepository.findByUsernameOrEmail("inactive")).thenReturn(Optional.of(inactiveUser));
 
         // When & Then
-        assertThrows(InactiveUserException.class, () -> loginUseCase.execute(command));
+        assertThrows(InactiveUserExceptionGeomeet.class, () -> loginUseCase.execute(command));
         verify(userRepository).findByUsernameOrEmail("inactive");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }

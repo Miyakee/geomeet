@@ -12,12 +12,11 @@ import static org.mockito.Mockito.when;
 import com.geomeet.api.application.command.RegisterCommand;
 import com.geomeet.api.application.result.LoginResult;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.InvalidRegisterException;
+import com.geomeet.api.domain.exception.InvalidRegisterExceptionGeomeet;
 import com.geomeet.api.domain.service.PasswordEncoder;
 import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
 import com.geomeet.api.domain.valueobject.Username;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,8 +100,8 @@ class RegisterUseCaseTest {
             .thenReturn(Optional.of(existingUser));
 
         // When & Then
-        InvalidRegisterException exception = assertThrows(
-            InvalidRegisterException.class,
+        InvalidRegisterExceptionGeomeet exception = assertThrows(
+            InvalidRegisterExceptionGeomeet.class,
             () -> registerUseCase.execute(command)
         );
         assertEquals("Invalid email: existing email", exception.getMessage());
@@ -124,8 +123,8 @@ class RegisterUseCaseTest {
             .thenReturn(Optional.of(existingUser));
 
         // When & Then
-        InvalidRegisterException exception = assertThrows(
-            InvalidRegisterException.class,
+        InvalidRegisterExceptionGeomeet exception = assertThrows(
+            InvalidRegisterExceptionGeomeet.class,
             () -> registerUseCase.execute(command)
         );
         assertEquals("Invalid email: existing email", exception.getMessage());

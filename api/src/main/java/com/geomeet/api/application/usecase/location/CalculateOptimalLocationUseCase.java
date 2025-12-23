@@ -7,7 +7,7 @@ import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.service.LocationCalculator;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
@@ -37,18 +37,18 @@ public class CalculateOptimalLocationUseCase {
      *
      * @param command the calculate optimal location command
      * @return calculate optimal location result with optimal coordinates
-     * @throws DomainException if session not found, insufficient participants, or access denied
+     * @throws GeomeetDomainException if session not found, insufficient participants, or access denied
      */
     @Transactional(readOnly = true)
     public CalculateOptimalLocationResult execute(CalculateOptimalLocationCommand command) {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+            .orElseThrow(() -> new GeomeetDomainException("Access denied: User is not a participant or initiator"));
 
         // Check if session is active
         if (!session.isActive()) {
-            throw new DomainException("Cannot calculate optimal location for an ended session");
+            throw new GeomeetDomainException("Cannot calculate optimal location for an ended session");
         }
 
         // Check if user is a participant or initiator
@@ -56,14 +56,14 @@ public class CalculateOptimalLocationUseCase {
             session.getId(), command.getUserId()
         );
         if (!isParticipant && !session.getInitiatorId().equals(command.getUserId())) {
-            throw new DomainException("Access denied: User is not a participant or initiator");
+            throw new GeomeetDomainException("Access denied: User is not a participant or initiator");
         }
 
         // Get all participant locations for this session
         List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
 
         if (participantLocations.isEmpty()) {
-            throw new DomainException(
+            throw new GeomeetDomainException(
                     "No participant locations available. At least one participant must share their location.");
         }
 

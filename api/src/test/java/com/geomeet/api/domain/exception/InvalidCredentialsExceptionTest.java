@@ -10,7 +10,7 @@ class InvalidCredentialsExceptionTest {
 
     @Test
     void shouldCreateExceptionWithDefaultMessage() {
-        InvalidCredentialsException exception = new InvalidCredentialsException();
+        InvalidCredentialsExceptionGeomeet exception = new InvalidCredentialsExceptionGeomeet();
         assertNotNull(exception);
         assertEquals("Invalid credentials", exception.getMessage());
     }
@@ -18,15 +18,15 @@ class InvalidCredentialsExceptionTest {
     @Test
     void shouldCreateExceptionWithCustomMessage() {
         String customMessage = "Custom error message";
-        InvalidCredentialsException exception = new InvalidCredentialsException(customMessage);
+        InvalidCredentialsExceptionGeomeet exception = new InvalidCredentialsExceptionGeomeet(customMessage);
         assertNotNull(exception);
         assertEquals(customMessage, exception.getMessage());
     }
 
     @Test
     void shouldBeInstanceOfDomainException() {
-        InvalidCredentialsException exception = new InvalidCredentialsException();
-        assertTrue(exception instanceof DomainException);
+        InvalidCredentialsExceptionGeomeet exception = new InvalidCredentialsExceptionGeomeet();
+        assertTrue(exception instanceof GeomeetDomainException);
     }
 }
 

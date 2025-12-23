@@ -19,7 +19,7 @@ import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
@@ -220,7 +220,7 @@ class UpdateLocationUseCaseTest {
         when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateLocationUseCase.execute(command);
         });
 
@@ -250,7 +250,7 @@ class UpdateLocationUseCaseTest {
         when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(endedSession));
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateLocationUseCase.execute(command);
         });
 
@@ -272,7 +272,7 @@ class UpdateLocationUseCaseTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateLocationUseCase.execute(command);
         });
 
@@ -333,7 +333,7 @@ class UpdateLocationUseCaseTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateLocationUseCase.execute(command);
         });
 
@@ -356,7 +356,7 @@ class UpdateLocationUseCaseTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             updateLocationUseCase.execute(command);
         });
 

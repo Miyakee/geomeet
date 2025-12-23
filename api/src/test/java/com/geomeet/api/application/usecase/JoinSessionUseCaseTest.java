@@ -17,7 +17,7 @@ import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.util.Optional;
@@ -112,7 +112,7 @@ class JoinSessionUseCaseTest {
     when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
 
     // When & Then
-    DomainException exception = assertThrows(DomainException.class, () -> {
+    GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
       joinSessionUseCase.execute(command);
     });
 
@@ -139,7 +139,7 @@ class JoinSessionUseCaseTest {
     when(sessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(endedSession));
 
     // When & Then
-    DomainException exception = assertThrows(DomainException.class, () -> {
+    GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
       joinSessionUseCase.execute(command);
     });
 

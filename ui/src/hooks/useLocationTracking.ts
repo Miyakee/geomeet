@@ -156,8 +156,6 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setCurrentLocation(position);
-        // 首次获取位置时强制更新（forceUpdate = true）
-        updateLocationToServer(position, true);
         setLocationEnabled(true);
         setShowManualInput(false);
 
@@ -167,7 +165,8 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
             latestPositionRef.current = position;
             setLocationError(null);
             if (!locationUpdateIntervalRef.current) {
-              updateLocationToServer(position);
+              // 首次获取位置时强制更新（forceUpdate = true），避免重复调用
+              updateLocationToServer(position, true);
               locationUpdateIntervalRef.current = setInterval(() => {
                 if (latestPositionRef.current) {
                   updateLocationToServer(latestPositionRef.current);

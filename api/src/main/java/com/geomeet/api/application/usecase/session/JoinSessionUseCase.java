@@ -4,7 +4,7 @@ import com.geomeet.api.application.command.JoinSessionCommand;
 import com.geomeet.api.application.result.JoinSessionResult;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.util.Optional;
@@ -31,24 +31,24 @@ public class JoinSessionUseCase {
      *
      * @param command the join session command containing session ID and user ID
      * @return join session result with participant details
-     * @throws DomainException if session not found or session is ended
+     * @throws GeomeetDomainException if session not found or session is ended
      */
     @Transactional
     public JoinSessionResult execute(JoinSessionCommand command) {
         // Find session by sessionId
         SessionId sessionId = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionId)
-            .orElseThrow(() -> new DomainException("Invalid Session code"));
+            .orElseThrow(() -> new GeomeetDomainException("Invalid Session code"));
 
         // Verify invite code matches (security: prevents joining by guessing session ID)
         InviteCode providedInviteCode = InviteCode.fromString(command.getInviteCode());
         if (!session.getInviteCode().equals(providedInviteCode)) {
-            throw new DomainException("Invalid invite code");
+            throw new GeomeetDomainException("Invalid invite code");
         }
 
         // Check if session is active (invitation link expires when session ends)
         if (!session.isActive()) {
-            throw new DomainException("Cannot join a session that has ended");
+            throw new GeomeetDomainException("Cannot join a session that has ended");
         }
 
         // Check if user is already a participant

@@ -3,13 +3,13 @@ package com.geomeet.api.domain.exception;
 /**
  * Exception thrown when authentication credentials are invalid.
  */
-public class InvalidCredentialsException extends DomainException {
+public class InvalidCredentialsExceptionGeomeet extends GeomeetDomainException {
 
-    public InvalidCredentialsException() {
+    public InvalidCredentialsExceptionGeomeet() {
         super("Invalid credentials");
     }
 
-    public InvalidCredentialsException(String message) {
+    public InvalidCredentialsExceptionGeomeet(String message) {
         super(message);
     }
 }

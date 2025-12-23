@@ -2,10 +2,8 @@ package com.geomeet.api.application.usecase.session;
 
 import com.geomeet.api.application.command.EndSessionCommand;
 import com.geomeet.api.application.result.EndSessionResult;
-import com.geomeet.api.application.usecase.session.BroadcastSessionEndUseCase;
-import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
 import lombok.AllArgsConstructor;
@@ -31,18 +29,18 @@ public class EndSessionUseCase {
      *
      * @param command the end session command
      * @return end session result
-     * @throws DomainException if session not found, user is not initiator, or session is already ended
+     * @throws GeomeetDomainException if session not found, user is not initiator, or session is already ended
      */
     @Transactional
     public EndSessionResult execute(EndSessionCommand command) {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
 
         // Check if user is the initiator
         if (!session.getInitiatorId().equals(command.getUserId())) {
-            throw new DomainException("Only the session initiator can end the session");
+            throw new GeomeetDomainException("Only the session initiator can end the session");
         }
 
         // End the session (this will validate that session is not already ended)

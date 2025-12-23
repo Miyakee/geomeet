@@ -69,11 +69,26 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
             
       if (sessionId) {
         try {
-          const joinResult = await sessionApi.joinSession(sessionId);
-          navigate(`/session/${joinResult.sessionIdString}`, { replace: true });
+          // Get inviteCode from URL search params
+          const urlParams = new URLSearchParams(window.location.search);
+          const inviteCode = urlParams.get('inviteCode');
+          if (inviteCode) {
+            const joinResult = await sessionApi.joinSession(sessionId, inviteCode);
+            navigate(`/session/${joinResult.sessionIdString}`, { replace: true });
+          } else {
+            // If no invite code, redirect to join page
+            navigate(`/join?sessionId=${sessionId}`, { replace: true });
+          }
         } catch (joinErr: any) {
           console.error('Join session error:', joinErr);
-          navigate(`/session/${sessionId}`, { replace: true });
+          // Redirect to join page on error
+          const urlParams = new URLSearchParams(window.location.search);
+          const inviteCode = urlParams.get('inviteCode');
+          if (inviteCode) {
+            navigate(`/join?sessionId=${sessionId}&inviteCode=${inviteCode}`, { replace: true });
+          } else {
+            navigate(`/join?sessionId=${sessionId}`, { replace: true });
+          }
         }
       } else {
         navigate('/dashboard', { replace: true });

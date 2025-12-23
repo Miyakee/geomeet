@@ -99,5 +99,4 @@ src/
 - **TypeScript** - Type safety
 - **Material UI (MUI)** - Component library
 - **React Router** - Routing
-- **Axios** - HTTP client
 - **Vite** - Build tool

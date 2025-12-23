@@ -1,13 +1,10 @@
 package com.geomeet.api.application.usecase.auth;
 
-import com.geomeet.api.application.command.LoginCommand;
 import com.geomeet.api.application.command.RegisterCommand;
 import com.geomeet.api.application.result.LoginResult;
 import com.geomeet.api.domain.entity.User;
-import com.geomeet.api.domain.exception.DomainException;
-import com.geomeet.api.domain.exception.InactiveUserException;
-import com.geomeet.api.domain.exception.InvalidCredentialsException;
-import com.geomeet.api.domain.exception.InvalidRegisterException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
+import com.geomeet.api.domain.exception.InvalidRegisterExceptionGeomeet;
 import com.geomeet.api.domain.service.PasswordEncoder;
 import com.geomeet.api.domain.valueobject.Email;
 import com.geomeet.api.domain.valueobject.PasswordHash;
@@ -33,14 +30,14 @@ public class RegisterUseCase {
    *
    * @param command the login command containing credentials
    * @return login result with user information
-   * @throws DomainException if authentication fails
+   * @throws GeomeetDomainException if authentication fails
    */
   public LoginResult execute(RegisterCommand command) {
 //     Find user by email
     Optional<User> emailAndUserName =
         userRepository.findByEmailAndUserName(command.getEmail(), command.getUsername());
     if (emailAndUserName.isPresent()) {
-      throw new InvalidRegisterException("Invalid email: existing email or username");
+      throw new InvalidRegisterExceptionGeomeet("Invalid email: existing email or username");
     }
 
     // create new User

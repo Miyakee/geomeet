@@ -20,13 +20,8 @@ export const useSessionData = (sessionId: string | undefined) => {
     } catch (err: any) {
       console.error('Failed to load session:', err);
       if (err instanceof ApiError || err.response) {
-        const status = err.status || err.response?.status;
-        if (status === 403) {
-          setError('You do not have permission to view this session.');
-        } else if (status === 404) {
-          setError('Session not found.');
-        } else {
-          setError('Failed to load session. Please try again.');
+        if(err.message){
+          setError(err.message);
         }
       } else {
         setError('Failed to load session. Please try again.');

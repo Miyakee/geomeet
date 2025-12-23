@@ -8,7 +8,7 @@ import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.ParticipantLocation;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import java.time.format.DateTimeFormatter;
@@ -38,24 +38,24 @@ public class UpdateLocationUseCase {
      *
      * @param command the update location command
      * @return update location result with location details
-     * @throws DomainException if session not found, participant not found, or access denied
+     * @throws GeomeetDomainException if session not found, participant not found, or access denied
      */
     @Transactional
     public UpdateLocationResult execute(UpdateLocationCommand command) {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
 
         // Check if session is active
         if (!session.isActive()) {
-            throw new DomainException("Cannot update location for an ended session");
+            throw new GeomeetDomainException("Cannot update location for an ended session");
         }
 
         // Find participant (initiator should also have a participant record)
         SessionParticipant participant = sessionParticipantRepository
             .findBySessionIdAndUserId(session.getId(), command.getUserId())
-            .orElseThrow(() -> new DomainException("User is not a participant in this session"));
+            .orElseThrow(() -> new GeomeetDomainException("User is not a participant in this session"));
 
         // Create location value object
         Location location = Location.of(

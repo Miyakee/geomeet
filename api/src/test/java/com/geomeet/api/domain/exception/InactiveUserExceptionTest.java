@@ -10,7 +10,7 @@ class InactiveUserExceptionTest {
 
     @Test
     void shouldCreateExceptionWithDefaultMessage() {
-        InactiveUserException exception = new InactiveUserException();
+        InactiveUserExceptionGeomeet exception = new InactiveUserExceptionGeomeet();
         assertNotNull(exception);
         assertEquals("User account is inactive", exception.getMessage());
     }
@@ -18,15 +18,15 @@ class InactiveUserExceptionTest {
     @Test
     void shouldCreateExceptionWithCustomMessage() {
         String customMessage = "Custom error message";
-        InactiveUserException exception = new InactiveUserException(customMessage);
+        InactiveUserExceptionGeomeet exception = new InactiveUserExceptionGeomeet(customMessage);
         assertNotNull(exception);
         assertEquals(customMessage, exception.getMessage());
     }
 
     @Test
     void shouldBeInstanceOfDomainException() {
-        InactiveUserException exception = new InactiveUserException();
-        assertTrue(exception instanceof DomainException);
+        InactiveUserExceptionGeomeet exception = new InactiveUserExceptionGeomeet();
+        assertTrue(exception instanceof GeomeetDomainException);
     }
 }
 

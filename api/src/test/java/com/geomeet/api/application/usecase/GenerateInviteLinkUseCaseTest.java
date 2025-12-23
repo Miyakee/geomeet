@@ -12,7 +12,7 @@ import com.geomeet.api.application.result.GenerateInviteLinkResult;
 import com.geomeet.api.application.usecase.session.GenerateInviteLinkUseCase;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.time.LocalDateTime;
@@ -84,7 +84,7 @@ class GenerateInviteLinkUseCaseTest {
         when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.empty());
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             generateInviteLinkUseCase.execute(command);
         });
 
@@ -99,7 +99,7 @@ class GenerateInviteLinkUseCaseTest {
         when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
 
         // When & Then
-        DomainException exception = assertThrows(DomainException.class, () -> {
+        GeomeetDomainException exception = assertThrows(GeomeetDomainException.class, () -> {
             generateInviteLinkUseCase.execute(command);
         });
 

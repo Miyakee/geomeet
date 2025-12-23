@@ -5,7 +5,7 @@ import com.geomeet.api.application.result.UpdateMeetingLocationResult;
 import com.geomeet.api.application.usecase.session.BroadcastMeetingLocationUseCase;
 import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
-import com.geomeet.api.domain.exception.DomainException;
+import com.geomeet.api.domain.exception.GeomeetDomainException;
 import com.geomeet.api.domain.valueobject.Location;
 import com.geomeet.api.domain.valueobject.SessionId;
 import lombok.AllArgsConstructor;
@@ -29,18 +29,18 @@ public class UpdateMeetingLocationUseCase {
      *
      * @param command the update meeting location command
      * @return update meeting location result
-     * @throws DomainException if session not found, user is not initiator, or session is ended
+     * @throws GeomeetDomainException if session not found, user is not initiator, or session is ended
      */
     @Transactional
     public UpdateMeetingLocationResult execute(UpdateMeetingLocationCommand command) {
         // Find session by sessionId
         SessionId sessionIdVO = SessionId.fromString(command.getSessionId());
         Session session = sessionRepository.findBySessionId(sessionIdVO)
-            .orElseThrow(() -> new DomainException("Session not found"));
+            .orElseThrow(() -> new GeomeetDomainException("Session not found"));
 
         // Check if session is active
         if (!session.isActive()) {
-            throw new DomainException("Cannot update meeting location for an ended session");
+            throw new GeomeetDomainException("Cannot update meeting location for an ended session");
         }
 
         // Create location value object
