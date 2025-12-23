@@ -82,6 +82,7 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
         'Geolocation requires HTTPS. Please access the site using HTTPS (https://) instead of HTTP. ' +
         'You can manually enter your location coordinates instead.';
       if (isInitialRequest) {
+
         setLocationEnabled(false);
         setShowManualInput(true);
       }
@@ -230,7 +231,7 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
         timestamp: Date.now(),
         toJSON: () => ({}),
       } as GeolocationPosition;
-      
+
       setCurrentLocation(manualPosition);
       // 手动设置位置时强制更新（forceUpdate = true）
       await updateLocationToServer(manualPosition, true);
@@ -287,6 +288,28 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
     }
   }, [sessionStatus, locationEnabled]);
 
+  // 从 session 数据恢复位置（用于页面刷新后恢复位置）
+  const restoreLocation = (latitude: number, longitude: number, accuracy?: number) => {
+    const restoredPosition = {
+      coords: {
+        latitude,
+        longitude,
+        accuracy: accuracy ?? 100,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+        toJSON: () => ({}),
+      } as GeolocationCoordinates,
+      timestamp: Date.now(),
+      toJSON: () => ({}),
+    } as GeolocationPosition;
+    
+    setCurrentLocation(restoredPosition);
+    // 更新 lastSavedLocationRef，以便距离检查正常工作
+    lastSavedLocationRef.current = { latitude, longitude };
+  };
+
   useEffect(() => {
     return () => {
       stopLocationTracking();
@@ -304,6 +327,7 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
     stopLocationTracking,
     setManualLocation,
     setShowManualInput,
+    restoreLocation,
   };
 };
 

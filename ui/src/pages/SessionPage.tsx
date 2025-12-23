@@ -60,6 +60,7 @@ const SessionPage = () => {
     startLocationTracking,
     setManualLocation,
     setShowManualInput,
+    restoreLocation,
   } = useLocationTracking(sessionId, session?.status);
 
   useEffect(() => {
@@ -238,6 +239,19 @@ const SessionPage = () => {
       generateParticipantsLocation();
     }
   }, [session, generateParticipantsNameMap, generateParticipantsLocation, updateMeetingLocationBySessionRes]);
+
+  useEffect(() => {
+    if (session && session.participantLocations && !currentLocation && user?.id) {
+      const currentUserLocInfo = session.participantLocations.find(loc => loc.userId === user.id);
+      if (currentUserLocInfo) {
+        restoreLocation(
+          currentUserLocInfo.latitude,
+          currentUserLocInfo.longitude,
+          currentUserLocInfo.accuracy ?? undefined
+        );
+      }
+    }
+  }, [session?.participantLocations, user?.id, currentLocation, restoreLocation]);
 
 
   useEffect(() => {

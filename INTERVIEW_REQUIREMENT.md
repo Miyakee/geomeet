@@ -95,10 +95,15 @@ Through this exercise, we are looking to observe your interpretation of good sof
 
 2. Track user location (auto get location)
    given participants in session page 
-   when toggle Location Tracking button
+   when toggle Location Tracking button on
    Then participants location will be display in all participants page with map and icon
+   
+3. Track user location (auto get location off)
+   given participants in session page 
+   when toggle Location Tracking button off
+   Then participants location will be keep last time position and not-update again in all participants page with map and icon
 
-3. Track user location (manual input location - cause first time https not work. so browser obtained location, then use this one)
+4. Track user location (manual input location - cause first time https not work. so browser obtained location, then use this one)
    given participants in session page but cannot auto get location
    when user input location name
    Then participants location will be display in all participants page with map and icon for input location 
