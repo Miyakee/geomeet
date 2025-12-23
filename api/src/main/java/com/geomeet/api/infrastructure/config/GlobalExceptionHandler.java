@@ -93,7 +93,7 @@ public class GlobalExceptionHandler {
 
         // Get error title based on HTTP status code
         HttpStatus httpStatus = HttpStatus.resolve(ex.getHttpStatus());
-        String errorTitle = httpStatus != null ? getErrorTitleForStatus(httpStatus) : "Error";
+        String errorTitle = getErrorTitleForStatus(httpStatus);
         
         ErrorResponse errorResponse = ErrorResponse.of(
                 ex.getHttpStatus(),

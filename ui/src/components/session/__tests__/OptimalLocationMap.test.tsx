@@ -8,6 +8,8 @@ const mockMap = {
   setView: vi.fn(),
   getZoom: vi.fn(() => 13),
   setZoom: vi.fn(),
+  addLayer: vi.fn(),
+  removeLayer: vi.fn(),
 };
 
 vi.mock('react-leaflet', async () => {
@@ -24,9 +26,16 @@ vi.mock('react-leaflet', async () => {
     Popup: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="popup">{children}</div>
     ),
-    useMap: () => mockMap,
+    useMap: () => ({
+      ...mockMap,
+      addLayer: vi.fn(),
+      removeLayer: vi.fn(),
+    }),
   };
 });
+
+// Mock leaflet.markercluster
+vi.mock('leaflet.markercluster', () => ({}));
 
 describe('OptimalLocationMap', () => {
   beforeEach(() => {

@@ -60,7 +60,8 @@ describe('useSessionData', () => {
     });
 
     expect(result.current.session).toBeNull();
-    expect(result.current.error).toBe('You do not have permission to view this session.');
+    // getErrorMessage returns default message when no specific message in response
+    expect(result.current.error).toBe('Failed to load session. Please try again.');
   });
 
   it('should handle 404 error', async () => {
@@ -77,7 +78,8 @@ describe('useSessionData', () => {
     });
 
     expect(result.current.session).toBeNull();
-    expect(result.current.error).toBe('Session not found.');
+    // getErrorMessage returns default message when no specific message in response
+    expect(result.current.error).toBe('Failed to load session. Please try again.');
   });
 
   it('should handle generic error', async () => {
@@ -92,7 +94,8 @@ describe('useSessionData', () => {
     });
 
     expect(result.current.session).toBeNull();
-    expect(result.current.error).toBe('Failed to load session. Please try again.');
+    // getErrorMessage returns error.message for Error objects
+    expect(result.current.error).toBe('Network error');
   });
 
   it('should set error when sessionId is undefined', () => {

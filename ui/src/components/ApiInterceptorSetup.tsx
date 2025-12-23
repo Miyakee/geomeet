@@ -13,11 +13,13 @@ export const ApiInterceptorSetup = () => {
     // Set up interceptors with logout callback
     setupApiInterceptors(() => {
       logout();
-      // Optionally redirect to login page
-      window.location.href = '/login';
+      // Only redirect to login page if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     });
   }, [logout]);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 

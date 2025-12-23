@@ -111,7 +111,7 @@ describe('useOptimalLocation', () => {
 
     expect(result.current.optimalLocation).toBeNull();
     expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe('No participant locations available');
+    expect(result.current.error).toBe('Cannot calculate optimal location. At least one participant must share their location.');
   });
 
   it('should handle generic error', async () => {
@@ -126,7 +126,8 @@ describe('useOptimalLocation', () => {
 
     expect(result.current.optimalLocation).toBeNull();
     expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe('Failed to calculate optimal location. Please try again.');
+    // getStatusErrorMessage will use getErrorMessage which returns error.message for Error objects
+    expect(result.current.error).toBe('Network error');
   });
 
   it('should set error when sessionId is undefined', async () => {

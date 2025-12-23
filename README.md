@@ -598,7 +598,8 @@ The project includes a complete Docker Compose setup for production deployment w
 
 ```bash
 # Build API image
-cd infrastracture/script/deployment
+aws sso login --profile your-aws-profile-name
+cd infrastructure/scripts/deployment
 sh ./build-and-push-to-ecr.sh
 ```
 
@@ -639,7 +640,7 @@ sh deploy-from-ecr.sh
 #### 4. Start Services
 
 ```bash
-cd geommet
+cd 
 sh deploy-from-ecr.sh
 ```
 

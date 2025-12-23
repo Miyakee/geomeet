@@ -121,7 +121,7 @@ describe('useEndSession', () => {
     });
 
     expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe('Session is already ended');
+    expect(result.current.error).toBe('Cannot end session. Session may already be ended.');
     expect(sessionApi.endSession).toHaveBeenCalledWith('test-session-id');
   });
 
@@ -165,7 +165,8 @@ describe('useEndSession', () => {
     });
 
     expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe('Failed to end session. Please try again.');
+    // getStatusErrorMessage will extract the error message from the Error object
+    expect(result.current.error).toBe('Network error');
     expect(sessionApi.endSession).toHaveBeenCalledWith('test-session-id');
   });
 

@@ -219,15 +219,6 @@ describe('DashboardPage', () => {
     };
 
     vi.mocked(sessionApi.createSession).mockResolvedValue(mockSession);
-    vi.mocked(sessionApi.generateInviteLink).mockResolvedValue({
-      sessionId: 'test-session-id',
-      inviteLink: '/join?sessionId=test-session-id',
-      inviteCode: 'test-session-id',
-      message: 'Invitation link generated successfully',
-    });
-
-    // Mock navigate to prevent navigation
-    mockNavigate.mockImplementation(() => {});
 
     render(
       <BrowserRouter>
@@ -238,17 +229,11 @@ describe('DashboardPage', () => {
     const createButton = screen.getByText('Create Session');
     await user.click(createButton);
 
+    // After creating session, should navigate to session page
     await waitFor(() => {
-      expect(screen.getByText('test-session-id')).toBeInTheDocument();
+      expect(sessionApi.createSession).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/session/test-session-id');
     });
-
-    // Find copy button - it should be visible after session is created
-    const copyButtons = screen.getAllByRole('button');
-    const copyButton = copyButtons.find((btn) => 
-      btn.textContent?.toLowerCase().includes('copy') && !(btn as HTMLButtonElement).disabled,
-    );
-    
-    expect(copyButton).toBeDefined();
   });
 
   it('should display session information after creation', async () => {
@@ -263,12 +248,6 @@ describe('DashboardPage', () => {
     };
 
     vi.mocked(sessionApi.createSession).mockResolvedValue(mockSession);
-    vi.mocked(sessionApi.generateInviteLink).mockResolvedValue({
-      sessionId: 'test-session-id',
-      inviteLink: '/join?sessionId=test-session-id',
-      inviteCode: 'test-session-id',
-      message: 'Invitation link generated successfully',
-    });
 
     render(
       <BrowserRouter>
@@ -279,9 +258,10 @@ describe('DashboardPage', () => {
     const createButton = screen.getByText('Create Session');
     await user.click(createButton);
 
+    // After creating session, should navigate to session page
     await waitFor(() => {
-      expect(screen.getByText('Session Created Successfully!')).toBeInTheDocument();
-      expect(screen.getByText(/Status: Active/)).toBeInTheDocument();
+      expect(sessionApi.createSession).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/session/test-session-id');
     });
   });
 });

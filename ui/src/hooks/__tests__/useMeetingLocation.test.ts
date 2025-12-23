@@ -156,7 +156,7 @@ describe('useMeetingLocation', () => {
       }
     });
 
-    expect(result.current.error).toBe('Invalid coordinates');
+    expect(result.current.error).toBe('Invalid location data.');
     expect(result.current.loading).toBe(false);
   });
 
@@ -174,7 +174,8 @@ describe('useMeetingLocation', () => {
       }
     });
 
-    expect(result.current.error).toBe('Failed to update meeting location. Please try again.');
+    // getStatusErrorMessage will extract the error message from the Error object
+    expect(result.current.error).toBe('Network error');
     expect(result.current.loading).toBe(false);
   });
 

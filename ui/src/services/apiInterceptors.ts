@@ -24,6 +24,9 @@ export function setupApiInterceptors(logoutCallback?: () => void) {
     // Handle 401 Unauthorized - token expired or invalid
     if (error.status === 401) {
       console.warn('Authentication failed. Logging out...');
+      if (logoutCallback) {
+        logoutCallback();
+      }
     }
 
     // Handle 403 Forbidden - access denied

@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
   Container,
   Paper,
-  Typography,
-  Button,
-  Box,
   TextField,
-  Alert,
-  CircularProgress,
+  Typography,
 } from '@mui/material';
-import { Login, GroupAdd } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sessionApi } from '../services/api';
-import { SessionDetailResponse } from '../types/session';
+import {GroupAdd, Login} from '@mui/icons-material';
+import {useAuth} from '../contexts/AuthContext';
+import {useNavigate, useSearchParams} from 'react-router-dom';
+import {sessionApi} from '../services/api';
+import {SessionDetailResponse} from '../types/session';
 import {getErrorMessage} from "../utils/errorHandler.ts";
 
 const JoinSessionPage = () => {
@@ -25,7 +25,7 @@ const JoinSessionPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(false);
+  const [checkingSession] = useState(false);
   const [sessionDetails, setSessionDetails] = useState<SessionDetailResponse | null>(null);
   const hasAttemptedJoin = useRef(false);
 

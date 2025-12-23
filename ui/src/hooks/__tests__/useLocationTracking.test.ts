@@ -108,11 +108,22 @@ describe('useLocationTracking', () => {
     // Call success callback synchronously for testing
     mockGeolocation.getCurrentPosition.mockImplementation((success) => {
       if (success) {
-        success(mockPosition);
+        // Use setTimeout to simulate async behavior
+        setTimeout(() => {
+          success(mockPosition);
+        }, 0);
       }
     });
 
-    mockGeolocation.watchPosition.mockReturnValue(1);
+    // Mock watchPosition to call callback immediately
+    mockGeolocation.watchPosition.mockImplementation((success) => {
+      if (success) {
+        setTimeout(() => {
+          success(mockPosition);
+        }, 0);
+      }
+      return 1;
+    });
 
     const { result } = renderHook(() => useLocationTracking('test-session-id'));
 
@@ -127,7 +138,10 @@ describe('useLocationTracking', () => {
       expect(result.current.locationEnabled).toBe(true);
     }, { timeout: 2000 });
 
-    expect(sessionApi.updateLocation).toHaveBeenCalled();
+    // Wait for updateLocationToServer to be called (it's called in watchPosition callback)
+    await waitFor(() => {
+      expect(sessionApi.updateLocation).toHaveBeenCalled();
+    }, { timeout: 3000 });
   });
 
   it('should handle permission denied error', async () => {

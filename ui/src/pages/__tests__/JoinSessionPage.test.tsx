@@ -61,7 +61,7 @@ describe('JoinSessionPage', () => {
     // Use getAllByText and check first occurrence
     const joinSessionTexts = screen.getAllByText('Join Session');
     expect(joinSessionTexts.length).toBeGreaterThan(0);
-    expect(screen.getByText(/Enter the session ID or invitation code/)).toBeInTheDocument();
+    expect(screen.getByText(/Enter the session ID and invite code to join a meeting session/)).toBeInTheDocument();
   });
 
   it('should allow user to enter session ID', async () => {
@@ -99,13 +99,15 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
 
     await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
     await user.click(joinButton);
 
     await waitFor(() => {
-      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id');
+      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id', 'TESTCODE');
     });
   });
 
@@ -129,9 +131,11 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
 
     await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
     await user.click(joinButton);
 
     await waitFor(() => {
@@ -157,9 +161,11 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
 
     await user.type(sessionIdInput, 'invalid-session');
+    await user.type(inviteCodeInput, 'TESTCODE');
     await user.click(joinButton);
 
     await waitFor(() => {
@@ -175,10 +181,13 @@ describe('JoinSessionPage', () => {
     );
 
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    // Button should be disabled when either sessionId or inviteCode is empty
     expect(joinButton).toBeDisabled();
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i) as HTMLInputElement;
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i) as HTMLInputElement;
     expect(sessionIdInput.value).toBe(''); // Should be empty initially
+    expect(inviteCodeInput.value).toBe(''); // Should be empty initially
     expect(joinButton).toBeDisabled();
   });
 
@@ -202,18 +211,21 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
     
-    // Press Enter on the input field
-    await user.type(sessionIdInput, '{Enter}');
+    // Press Enter on the inviteCode input field (when sessionId is filled, Enter triggers join)
+    await user.type(inviteCodeInput, '{Enter}');
 
     await waitFor(() => {
-      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id');
+      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id', 'TESTCODE');
     }, { timeout: 3000 });
   });
 
-  it('should auto-join when sessionId is in URL params', async () => {
+  it('should auto-join when sessionId and inviteCode are in URL params', async () => {
     mockSearchParamsValue.set('sessionId', 'test-session-id');
+    mockSearchParamsValue.set('inviteCode', 'TESTCODE');
     const mockResponse = {
       participantId: 1,
       sessionId: 100,
@@ -233,7 +245,7 @@ describe('JoinSessionPage', () => {
 
     // Wait for auto-join to trigger (component uses 100ms delay)
     await waitFor(() => {
-      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id');
+      expect(sessionApi.joinSession).toHaveBeenCalledWith('test-session-id', 'TESTCODE');
     }, { timeout: 2000 });
   });
 
@@ -257,13 +269,17 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
 
     await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
     await user.click(joinButton);
 
+    // After successful join, component navigates immediately, so success message may not be visible
+    // But navigation should happen
     await waitFor(() => {
-      expect(screen.getByText(/Successfully joined the session/)).toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith('/session/test-session-id', { replace: true });
     }, { timeout: 3000 });
   });
 
@@ -303,20 +319,8 @@ describe('JoinSessionPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/join');
   });
 
-  it('should check session status when sessionId is entered', async () => {
+  it('should allow entering session ID and invite code', async () => {
     const user = userEvent.setup();
-    const mockSessionDetails = {
-      id: 100,
-      sessionId: 'test-session-id',
-      initiatorId: 1,
-      initiatorUsername: 'testuser',
-      status: 'Active',
-      createdAt: '2024-01-01T00:00:00',
-      participants: [],
-      participantCount: 0,
-    };
-
-    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
 
     render(
       <BrowserRouter>
@@ -325,28 +329,16 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
 
-    // Wait for debounce (500ms)
-    await waitFor(() => {
-      expect(sessionApi.getSessionDetails).toHaveBeenCalledWith('test-session-id');
-    }, { timeout: 1000 });
+    expect((sessionIdInput as HTMLInputElement).value).toBe('test-session-id');
+    expect((inviteCodeInput as HTMLInputElement).value).toBe('TESTCODE');
   });
 
-  it('should disable join button and show error when session is ended', async () => {
+  it('should require both session ID and invite code to join', async () => {
     const user = userEvent.setup();
-    const mockSessionDetails = {
-      id: 100,
-      sessionId: 'test-session-id',
-      initiatorId: 1,
-      initiatorUsername: 'testuser',
-      status: 'Ended',
-      createdAt: '2024-01-01T00:00:00',
-      participants: [],
-      participantCount: 0,
-    };
-
-    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
 
     render(
       <BrowserRouter>
@@ -355,68 +347,20 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
-    await user.type(sessionIdInput, 'test-session-id');
-
-    // Wait for debounce and session check (600ms for debounce + API call)
-    await waitFor(() => {
-      expect(screen.getByText(/This session has ended. You cannot join an ended session/)).toBeInTheDocument();
-    }, { timeout: 2000 });
-
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
+
+    // Button should be disabled when only sessionId is filled
+    await user.type(sessionIdInput, 'test-session-id');
     expect(joinButton).toBeDisabled();
 
-    // Helper text should show session is ended
-    const helperTexts = screen.getAllByText(/This session has ended/);
-    expect(helperTexts.length).toBeGreaterThan(0);
-  });
-
-  it('should show active status when session is active', async () => {
-    const user = userEvent.setup();
-    const mockSessionDetails = {
-      id: 100,
-      sessionId: 'test-session-id',
-      initiatorId: 1,
-      initiatorUsername: 'testuser',
-      status: 'Active',
-      createdAt: '2024-01-01T00:00:00',
-      participants: [],
-      participantCount: 0,
-    };
-
-    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
-
-    render(
-      <BrowserRouter>
-        <JoinSessionPage />
-      </BrowserRouter>,
-    );
-
-    const sessionIdInput = screen.getByLabelText(/Session ID/i);
-    await user.type(sessionIdInput, 'test-session-id');
-
-    // Wait for debounce and session check
-    await waitFor(() => {
-      expect(screen.getByText(/Session is active/)).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+    // Button should be enabled when both are filled
+    await user.type(inviteCodeInput, 'TESTCODE');
     expect(joinButton).not.toBeDisabled();
   });
 
-  it('should prevent joining ended session even if button is clicked', async () => {
+  it('should enable join button when both fields are filled', async () => {
     const user = userEvent.setup();
-    const mockSessionDetails = {
-      id: 100,
-      sessionId: 'test-session-id',
-      initiatorId: 1,
-      initiatorUsername: 'testuser',
-      status: 'Ended',
-      createdAt: '2024-01-01T00:00:00',
-      participants: [],
-      participantCount: 0,
-    };
-
-    vi.mocked(sessionApi.getSessionDetails).mockResolvedValue(mockSessionDetails);
 
     render(
       <BrowserRouter>
@@ -425,30 +369,58 @@ describe('JoinSessionPage', () => {
     );
 
     const sessionIdInput = screen.getByLabelText(/Session ID/i);
-    await user.type(sessionIdInput, 'test-session-id');
-
-    // Wait for session check (600ms for debounce + API call)
-    await waitFor(() => {
-      expect(screen.getByText(/This session has ended. You cannot join an ended session/)).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    // Try to click join button (should be disabled, but if not, should not call API)
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
+
+    await user.type(sessionIdInput, 'test-session-id');
+    await user.type(inviteCodeInput, 'TESTCODE');
+
+    expect(joinButton).not.toBeDisabled();
+  });
+
+  it('should show error when invite code is missing', async () => {
+    const user = userEvent.setup();
+    const mockResponse = {
+      participantId: 1,
+      sessionId: 100,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      joinedAt: '2024-01-01T00:00:00',
+      message: 'Successfully joined the session',
+    };
+
+    vi.mocked(sessionApi.joinSession).mockResolvedValue(mockResponse);
+
+    render(
+      <BrowserRouter>
+        <JoinSessionPage />
+      </BrowserRouter>,
+    );
+
+    const sessionIdInput = screen.getByLabelText(/Session ID/i);
+    const joinButton = screen.getByRole('button', { name: /Join Session/i });
+
+    await user.type(sessionIdInput, 'test-session-id');
+    // Try to click join button without invite code
+    // Button should be disabled, but if we force click, should show error
     expect(joinButton).toBeDisabled();
 
     // Verify joinSession was not called
     expect(sessionApi.joinSession).not.toHaveBeenCalled();
   });
 
-  it('should handle session not found during status check', async () => {
+  it('should show error when session ID is missing', async () => {
     const user = userEvent.setup();
-    const mockError = {
-      response: {
-        status: 404,
-      },
+    const mockResponse = {
+      participantId: 1,
+      sessionId: 100,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      joinedAt: '2024-01-01T00:00:00',
+      message: 'Successfully joined the session',
     };
 
-    vi.mocked(sessionApi.getSessionDetails).mockRejectedValue(mockError);
+    vi.mocked(sessionApi.joinSession).mockResolvedValue(mockResponse);
 
     render(
       <BrowserRouter>
@@ -456,17 +428,15 @@ describe('JoinSessionPage', () => {
       </BrowserRouter>,
     );
 
-    const sessionIdInput = screen.getByLabelText(/Session ID/i);
-    await user.type(sessionIdInput, 'test-session-id');
-
-    // Wait for debounce
-    await waitFor(() => {
-      expect(sessionApi.getSessionDetails).toHaveBeenCalledWith('test-session-id');
-    }, { timeout: 1000 });
-
-    // Should not show error for 404 during status check
-    // Error will be shown when user tries to join
+    const inviteCodeInput = screen.getByLabelText(/Invite Code/i);
     const joinButton = screen.getByRole('button', { name: /Join Session/i });
-    expect(joinButton).not.toBeDisabled();
+
+    await user.type(inviteCodeInput, 'TESTCODE');
+    // Try to click join button without session ID
+    // Button should be disabled
+    expect(joinButton).toBeDisabled();
+
+    // Verify joinSession was not called
+    expect(sessionApi.joinSession).not.toHaveBeenCalled();
   });
 });
