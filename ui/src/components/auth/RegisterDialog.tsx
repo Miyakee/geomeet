@@ -1,21 +1,23 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import {
   Alert,
-  CircularProgress,
   DialogContent,
   IconButton,
   InputAdornment,
   TextField,
 } from '@mui/material';
-import {authApi, RegisterRequest, sessionApi} from '../../services/api.ts';
-import {useAuth} from '../../contexts/AuthContext';
-import {useNavigate} from 'react-router-dom';
-import {Visibility, VisibilityOff} from '@mui/icons-material';
-import {getErrorMessage} from '../../utils/errorHandler';
+import { authApi, RegisterRequest, sessionApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { getErrorMessage } from '../../utils/errorHandler';
+import { LoadingButton } from '../common/LoadingButton';
+import { ROUTES } from '../../constants/routes';
+import { buildJoinUrl, getInviteCodeFromUrl } from '../../utils/navigation';
 
 interface RegisterDialogProps {
     open: boolean;
@@ -69,33 +71,22 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
       onClose();
             
       if (sessionId) {
+        const inviteCode = getInviteCodeFromUrl();
         try {
-          // Get inviteCode from URL search params
-          const urlParams = new URLSearchParams(window.location.search);
-          const inviteCode = urlParams.get('inviteCode');
           if (inviteCode) {
             const joinResult = await sessionApi.joinSession(sessionId, inviteCode);
-            navigate(`/session/${joinResult.sessionIdString}`, { replace: true });
+            navigate(ROUTES.SESSION(joinResult.sessionIdString), { replace: true });
           } else {
-            // If no invite code, redirect to join page
-            navigate(`/join?sessionId=${sessionId}`, { replace: true });
+            navigate(buildJoinUrl(sessionId), { replace: true });
           }
-        } catch (joinErr: any) {
-          console.error('Join session error:', joinErr);
+        } catch {
           // Redirect to join page on error
-          const urlParams = new URLSearchParams(window.location.search);
-          const inviteCode = urlParams.get('inviteCode');
-          if (inviteCode) {
-            navigate(`/join?sessionId=${sessionId}&inviteCode=${inviteCode}`, { replace: true });
-          } else {
-            navigate(`/join?sessionId=${sessionId}`, { replace: true });
-          }
+          navigate(buildJoinUrl(sessionId, inviteCode), { replace: true });
         }
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate(ROUTES.DASHBOARD, { replace: true });
       }
-    } catch (err: any) {
-      console.error('Registration error:', err);
+    } catch (err: unknown) {
       setError(getErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
@@ -179,13 +170,14 @@ export const RegisterDialog = ({ open, onClose, sessionId }: RegisterDialogProps
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={loading}>Cancel</Button>
-        <Button 
-          onClick={handleSignUp} 
+        <LoadingButton
+          onClick={handleSignUp}
           variant="contained"
-          disabled={loading}
+          loading={loading}
+          loadingText="Registering..."
         >
-          {loading ? <CircularProgress size={20} /> : 'Register'}
-        </Button>
+          Register
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );

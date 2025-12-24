@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { setupApiInterceptors } from '../services/apiInterceptors';
+import { ROUTES } from '../constants/routes';
 
 /**
  * Component to set up API interceptors with auth context
@@ -14,8 +15,8 @@ export const ApiInterceptorSetup = () => {
     setupApiInterceptors(() => {
       logout();
       // Only redirect to login page if not already on login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (window.location.pathname !== ROUTES.LOGIN) {
+        window.location.href = ROUTES.LOGIN;
       }
     });
   }, [logout]);

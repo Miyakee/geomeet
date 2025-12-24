@@ -1,22 +1,22 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import {
-    Container,
-    Paper,
-    TextField,
-    Button,
-    Typography,
-    Box,
-    Alert,
-    InputAdornment,
-    IconButton,
-    CircularProgress,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
-import {Visibility, VisibilityOff, Lock, Email} from '@mui/icons-material';
-import {useAuth} from '../contexts/AuthContext';
-import {useNavigate, useSearchParams} from 'react-router-dom';
-import {LoginRequest} from '../services/api';
-import {RegisterDialog} from '../components/auth/RegisterDialog.tsx';
-import {getErrorMessage} from '../utils/errorHandler';
+import { Visibility, VisibilityOff, Lock, Email } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { LoginRequest } from '../services/api';
+import { RegisterDialog } from '../components/auth/RegisterDialog';
+import { getErrorMessage } from '../utils/errorHandler';
+import { PageContainer } from '../components/layout/PageContainer';
+import { ErrorAlert } from '../components/common/ErrorAlert';
+import { LoadingButton } from '../components/common/LoadingButton';
+import { ROUTES, QUERY_PARAMS } from '../constants/routes';
 
 const LoginPage = () => {
     const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -26,10 +26,11 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
 
-    const {login} = useAuth();
+    const { login } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const sessionId = searchParams.get('sessionId');
+    const sessionId = searchParams.get(QUERY_PARAMS.SESSION_ID);
+    
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -43,25 +44,25 @@ const LoginPage = () => {
             await login(credentials);
 
             // Check if this is an invite link (has sessionId parameter)
-            const sessionId = searchParams.get('sessionId');
-            const inviteCode = searchParams.get('inviteCode');
-            const redirect = searchParams.get('redirect');
+            const sessionIdParam = searchParams.get(QUERY_PARAMS.SESSION_ID);
+            const inviteCode = searchParams.get(QUERY_PARAMS.INVITE_CODE);
+            const redirect = searchParams.get(QUERY_PARAMS.REDIRECT);
+            
             // If sessionId exists, this is an invite link
-            if (sessionId) {
+            if (sessionIdParam) {
                 // Navigate to join page, which will auto-join and redirect to session
-                if (inviteCode) {
-                    navigate(`/join?sessionId=${sessionId}&inviteCode=${inviteCode}`, {replace: true});
-                } else {
-                    navigate(`/join?sessionId=${sessionId}`, {replace: true});
-                }
+                const joinUrl = inviteCode
+                    ? `${ROUTES.JOIN}?${QUERY_PARAMS.SESSION_ID}=${sessionIdParam}&${QUERY_PARAMS.INVITE_CODE}=${inviteCode}`
+                    : `${ROUTES.JOIN}?${QUERY_PARAMS.SESSION_ID}=${sessionIdParam}`;
+                navigate(joinUrl, { replace: true });
             } else if (redirect) {
                 // Handle other redirect cases
-                navigate(redirect, {replace: true});
+                navigate(redirect, { replace: true });
             } else {
                 // Default: go to dashboard
-                navigate('/dashboard', {replace: true});
+                navigate(ROUTES.DASHBOARD, { replace: true });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err, 'Login failed. Please try again.'));
         } finally {
             setLoading(false);
@@ -69,129 +70,106 @@ const LoginPage = () => {
     };
 
     return (
-        <Container component="main" maxWidth="xs">
-            <Box
-                sx={{
-                    marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
-                <Paper
-                    elevation={3}
-                    sx={{
-                        padding: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        width: '100%',
+        <PageContainer maxWidth="xs">
+            <Lock sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
+            <Typography component="h1" variant="h4" gutterBottom>
+                Sign In
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Welcome to GeoMeet
+            </Typography>
+
+            <ErrorAlert message={error} />
+
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 1 }}>
+                <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="usernameOrEmail"
+                    label="Username or Email"
+                    name="usernameOrEmail"
+                    autoComplete="username"
+                    autoFocus
+                    value={usernameOrEmail}
+                    onChange={(e) => setUsernameOrEmail(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Email />
+                            </InputAdornment>
+                        ),
                     }}
+                />
+                <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Lock />
+                            </InputAdornment>
+                        ),
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    edge="end"
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+                <LoadingButton
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    loading={loading}
+                    loadingText="Signing in..."
+                    sx={{ mt: 3, mb: 2, py: 1.5 }}
                 >
-                    <Lock sx={{fontSize: 40, color: 'primary.main', mb: 2}}/>
-                    <Typography component="h1" variant="h4" gutterBottom>
-                        Sign In
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{mb: 3}}>
-                        Welcome to GeoMeet
-                    </Typography>
-
-                    {error && (
-                        <Alert severity="error" sx={{width: '100%', mb: 2}}>
-                            {error}
-                        </Alert>
-                    )}
-
-                    <Box component="form" onSubmit={handleSubmit} sx={{width: '100%', mt: 1}}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="usernameOrEmail"
-                            label="Username or Email"
-                            name="usernameOrEmail"
-                            autoComplete="username"
-                            autoFocus
-                            value={usernameOrEmail}
-                            onChange={(e) => setUsernameOrEmail(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Email/>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type={showPassword ? 'text' : 'password'}
-                            id="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Lock/>
-                                    </InputAdornment>
-                                ),
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label="toggle password visibility"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                        >
-                                            {showPassword ? <VisibilityOff/> : <Visibility/>}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            sx={{mt: 3, mb: 2, py: 1.5}}
-                            disabled={loading}
-                        >
-                            {loading ? <CircularProgress size={24}/> : 'Sign In'}
-                        </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            disabled={loading}
-                            onClick={() => setRegisterDialogOpen(true)}
-                            sx={{mb: 2}}
-                        >
-                            Create Account Now !
-                        </Button>
-                    </Box>
-
-                    <RegisterDialog
-                        open={registerDialogOpen}
-                        onClose={() => setRegisterDialogOpen(false)}
-                        sessionId={sessionId}
-                    />
-
-                    <Box sx={{mt: 2, textAlign: 'center'}}>
-                        <Typography variant="body2" color="text.secondary">
-                            Demo credentials:
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                            admin / admin123
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                            testuser / test123
-                        </Typography>
-                    </Box>
-                </Paper>
+                    Sign In
+                </LoadingButton>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    disabled={loading}
+                    onClick={() => setRegisterDialogOpen(true)}
+                    sx={{ mb: 2 }}
+                >
+                    Create Account Now !
+                </Button>
             </Box>
-        </Container>
+
+            <RegisterDialog
+                open={registerDialogOpen}
+                onClose={() => setRegisterDialogOpen(false)}
+                sessionId={sessionId || undefined}
+            />
+
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                    Demo credentials:
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                    admin / admin123
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                    testuser / test123
+                </Typography>
+            </Box>
+        </PageContainer>
     );
 };
 

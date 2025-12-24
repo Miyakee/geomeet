@@ -1,27 +1,27 @@
-import {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Box,
   Button,
-  CircularProgress,
-  Container,
-  Paper,
   TextField,
   Typography,
 } from '@mui/material';
-import {GroupAdd, Login} from '@mui/icons-material';
-import {useAuth} from '../contexts/AuthContext';
-import {useNavigate, useSearchParams} from 'react-router-dom';
-import {sessionApi} from '../services/api';
-import {SessionDetailResponse} from '../types/session';
-import {getErrorMessage} from "../utils/errorHandler.ts";
+import { GroupAdd, Login } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sessionApi } from '../services/api';
+import { SessionDetailResponse } from '../types/session';
+import { getErrorMessage } from '../utils/errorHandler';
+import { PageContainer } from '../components/layout/PageContainer';
+import { ErrorAlert } from '../components/common/ErrorAlert';
+import { LoadingButton } from '../components/common/LoadingButton';
+import { ROUTES, QUERY_PARAMS } from '../constants/routes';
 
 const JoinSessionPage = () => {
   const { isAuthenticated, isInitialized } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [sessionId, setSessionId] = useState(searchParams.get('sessionId') || '');
-  const [inviteCode, setInviteCode] = useState(searchParams.get('inviteCode') || '');
+  const [sessionId, setSessionId] = useState(searchParams.get(QUERY_PARAMS.SESSION_ID) || '');
+  const [inviteCode, setInviteCode] = useState(searchParams.get(QUERY_PARAMS.INVITE_CODE) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -33,10 +33,12 @@ const JoinSessionPage = () => {
   // Only redirect after auth state is initialized to avoid false redirects
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
-      const redirectPath = sessionId ? `/login?redirect=/join&sessionId=${sessionId}&inviteCode=${inviteCode}` : '/login?redirect=/join';
+      const redirectPath = sessionId
+        ? `${ROUTES.LOGIN}?${QUERY_PARAMS.REDIRECT}=${ROUTES.JOIN}&${QUERY_PARAMS.SESSION_ID}=${sessionId}&${QUERY_PARAMS.INVITE_CODE}=${inviteCode}`
+        : `${ROUTES.LOGIN}?${QUERY_PARAMS.REDIRECT}=${ROUTES.JOIN}`;
       navigate(redirectPath);
     }
-  }, [isAuthenticated, isInitialized, navigate, sessionId]);
+  }, [isAuthenticated, isInitialized, navigate, sessionId, inviteCode]);
 
   // Check session status when sessionId changes (with debounce)
   useEffect(() => {
@@ -80,10 +82,9 @@ const JoinSessionPage = () => {
       const result = await sessionApi.joinSession(sessionId.trim(), inviteCode.trim());
       setSuccess(true);
       // Navigate to session page immediately (no delay for better UX)
-      navigate(`/session/${result.sessionIdString}`, { replace: true });
-    } catch (err: any) {
+      navigate(ROUTES.SESSION(result.sessionIdString), { replace: true });
+    } catch (err: unknown) {
       hasAttemptedJoin.current = false; // Allow retry on error
-      console.error('Join session error:', err);
       setError(getErrorMessage(err, 'Failed to join session. Please check the session ID and invite code.'));
     } finally {
       setLoading(false);
@@ -101,7 +102,7 @@ const JoinSessionPage = () => {
       !loading &&
       !hasAttemptedJoin.current &&
       !error &&
-      searchParams.get('sessionId') && searchParams.get('inviteCode') // Only auto-join if both are in URL
+      searchParams.get(QUERY_PARAMS.SESSION_ID) && searchParams.get(QUERY_PARAMS.INVITE_CODE) // Only auto-join if both are in URL
     ) {
       // Small delay to ensure component is fully mounted
       const timer = setTimeout(() => {
@@ -113,129 +114,106 @@ const JoinSessionPage = () => {
   }, [isInitialized, isAuthenticated, sessionId]);
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <GroupAdd sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography component="h1" variant="h4" gutterBottom>
-            Join Session
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-            Enter the session ID and invite code to join a meeting session.
-          </Typography>
+    <PageContainer maxWidth="sm">
+      <GroupAdd sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+      <Typography component="h1" variant="h4" gutterBottom>
+        Join Session
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+        Enter the session ID and invite code to join a meeting session.
+      </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      <ErrorAlert message={error} />
 
-          {success && (
-            <>
-              <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
-                Successfully joined the session! Redirecting to dashboard...
-              </Alert>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => navigate('/dashboard', { replace: true })}
-                sx={{ mt: 2 }}
-              >
-                Go to Dashboard
-              </Button>
-            </>
-          )}
-
-          {!success && (
-            <>
-              <TextField
-                fullWidth
-                label="Session ID"
-                variant="outlined"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Enter session ID"
-                disabled={loading || checkingSession}
-                sx={{ mb: 2 }}
-                helperText={
-                  checkingSession
-                    ? 'Checking session status...'
-                    : sessionDetails && sessionDetails.status === 'Ended'
-                      ? 'This session has ended'
-                      : sessionDetails && sessionDetails.status === 'Active'
-                        ? 'Session is active'
-                        : ''
-                }
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && inviteCode.trim()) {
-                    handleJoinSession();
-                  }
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Invite Code"
-                variant="outlined"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                placeholder="Enter invite code"
-                disabled={loading || checkingSession}
-                sx={{ mb: 3 }}
-                inputProps={{ maxLength: 8, style: { textTransform: 'uppercase' } }}
-                helperText="8-character code provided by the session creator"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && sessionId.trim() && inviteCode.trim()) {
-                    handleJoinSession();
-                  }
-                }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                startIcon={loading ? <CircularProgress size={20} /> : <GroupAdd />}
-                onClick={handleJoinSession}
-                disabled={
-                  loading ||
-                  checkingSession ||
-                  !sessionId.trim() ||
-                  !inviteCode.trim() ||
-                  (sessionDetails?.status === 'Ended')
-                }
-                sx={{ mb: 2 }}
-              >
-                {loading ? 'Joining...' : 'Join Session'}
-              </Button>
-            </>
-          )}
-
+      {success && (
+        <>
+          <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
+            Successfully joined the session! Redirecting to dashboard...
+          </Alert>
           <Button
-            variant="outlined"
-            startIcon={<Login />}
-            onClick={() => navigate('/dashboard')}
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(ROUTES.DASHBOARD, { replace: true })}
             sx={{ mt: 2 }}
           >
-            Back to Dashboard
+            Go to Dashboard
           </Button>
-        </Paper>
-      </Box>
-    </Container>
+        </>
+      )}
+
+      {!success && (
+        <>
+          <TextField
+            fullWidth
+            label="Session ID"
+            variant="outlined"
+            value={sessionId}
+            onChange={(e) => setSessionId(e.target.value)}
+            placeholder="Enter session ID"
+            disabled={loading || checkingSession}
+            sx={{ mb: 2 }}
+            helperText={
+              checkingSession
+                ? 'Checking session status...'
+                : sessionDetails && sessionDetails.status === 'Ended'
+                  ? 'This session has ended'
+                  : sessionDetails && sessionDetails.status === 'Active'
+                    ? 'Session is active'
+                    : ''
+            }
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && inviteCode.trim()) {
+                handleJoinSession();
+              }
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Invite Code"
+            variant="outlined"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+            placeholder="Enter invite code"
+            disabled={loading || checkingSession}
+            sx={{ mb: 3 }}
+            inputProps={{ maxLength: 8, style: { textTransform: 'uppercase' } }}
+            helperText="8-character code provided by the session creator"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && sessionId.trim() && inviteCode.trim()) {
+                handleJoinSession();
+              }
+            }}
+          />
+          <LoadingButton
+            variant="contained"
+            color="primary"
+            fullWidth
+            startIcon={<GroupAdd />}
+            onClick={handleJoinSession}
+            loading={loading}
+            loadingText="Joining..."
+            disabled={
+              checkingSession ||
+              !sessionId.trim() ||
+              !inviteCode.trim() ||
+              (sessionDetails?.status === 'Ended')
+            }
+            sx={{ mb: 2 }}
+          >
+            Join Session
+          </LoadingButton>
+        </>
+      )}
+
+      <Button
+        variant="outlined"
+        startIcon={<Login />}
+        onClick={() => navigate(ROUTES.DASHBOARD)}
+        sx={{ mt: 2 }}
+      >
+        Back to Dashboard
+      </Button>
+    </PageContainer>
   );
 };
 
