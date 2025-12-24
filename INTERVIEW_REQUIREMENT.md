@@ -108,7 +108,7 @@ Through this exercise, we are looking to observe your interpretation of good sof
 4. Track user location (manual input location - cause first time https not work. so browser obtained location, then use this one)
    given participants in session page but cannot auto get location
    when user input location name
-   Then participants location will be display in all participants page with map and icon for input location 
+   Then participants location will be display in all participants page with map and icon for input location and auto untracking current location
 ```
 ### Optimal Position(requirement 3)
 ```
@@ -173,6 +173,3 @@ Deploy:
 - **Docker Deployment**: Full containerization with Docker Compose for easy deployment
 
 
-# Improve
-1. audit log. (had add audit fields in table. but better to put audit log to trace data change in DB)
-2. websocket -> websocket + sqs (decoupling, scalability, and reliability) depends on requirements. if no so much user. maybe do it later.

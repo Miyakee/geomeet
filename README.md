@@ -2,42 +2,414 @@
 
 A real-time collaborative meeting platform built with Spring Boot and React, following DDD (Domain-Driven Design) and Clean Architecture principles.
 
-## 🚀 Features
-
-### Core Features
-- **User Authentication**: JWT-based authentication with secure password hashing
-- **Session Management**: Create and join collaborative sessions with real-time participant tracking
-- **Real-time Updates**: WebSocket-based real-time synchronization for session participants, locations, and status
-- **Invite System**: Generate invite links and codes for session sharing with automatic session join on registration
-
-### Location Features
-- **GPS Location Tracking**: Real-time GPS location tracking with automatic updates (10-meter threshold to reduce server load)
-- **Manual Location Input**: Search and set location manually using geocoding services
-- **Optimal Location Calculation**: Automatically calculate the optimal meeting point based on all participants' locations using geographic center
-- **Meeting Location Setting**: Set and update meeting location (initiator only)
-- **Interactive Map**: Real-time map visualization showing all participants, optimal location, and meeting location
-- **Distance Calculation**: Display distance from user's location to meeting location
-- **Location Persistence**: Location data persists across page refreshes
-
-### Technical Features
-- **Clean Architecture**: DDD + Clean Architecture for maintainable and testable code
-- **Code Quality**: Automated code quality checks with pre-push hooks (Checkstyle, PMD, SpotBugs)
-- **High Test Coverage**: 90%+ code coverage requirement with comprehensive unit and integration tests
-- **HTTPS/SSL Support**: Automatic SSL certificate management with Let's Encrypt and Nginx
-- **Docker Deployment**: Full containerization with Docker Compose for easy deployment
-
 ## 📋 Table of Contents
 
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
+- [Key Design Decisions & Trade off](#-key-design-decisions--trade-off)
 - [Quick Start](#-quick-start)
+- [Development](#-development)
+- [Improvement](#-improvement)
+- [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [WebSocket](#-websocket)
-- [Development](#-development)
+- [Project Structure](#-project-structure)
 - [Testing](#-testing)
 - [Infrastructure](#-infrastructure)
 - [Security](#-security)
+- [Additional Documentation](#-additional-documentation)
 
+## 🚀 Key Design Decisions & Trade off
+
+### WebSocket without Message Queue (SQS)
+The system uses WebSocket only to establish a real-time, full-duplex communication channel.
+
+Reasoning:
+
+WebSocket provides low-latency and efficient real-time communication
+
+Current user volume is relatively small
+
+Occasional message loss is acceptable
+
+No requirement for historical message tracing or persistence
+
+By not introducing SQS, we reduce system complexity and minimize latency.
+
+Trade-off:
+Lower latency and simpler architecture at the cost of message durability and guaranteed delivery.
+
+###  User Location Is Not Requested on Page Load
+
+The application does not automatically request location permission when the page loads.
+
+Reasoning:
+
+Gives users more autonomy and transparency
+
+Improves perceived security and trust
+
+Ensures explicit user consent before location tracking
+
+Trade-off:
+Better privacy and user control, with a slight delay in obtaining location data.
+
+###  Manual Location Input as a Fallback
+
+In some scenarios:
+
+Location permission is denied
+Location retrieval fails
+Location accuracy is insufficient
+Location is privacy  
+ 
+These cases may lead to incorrect meeting point calculations.
+To address this, the system supports manual location input. After user input. we should stop tracking user's current position
+
+Trade-off:
+Improved reliability and correctness at the cost of additional user interaction.
+
+### Optimal Position vs. Meeting Position
+
+The system calculates two different positions:
+
+Optimal Position and Meeting Position
+
+This design comes from a clarified requirement:
+the initiator is allowed to modify the meeting address, which means the meeting position is not necessarily the optimal position calculated by the system.
+
+To clearly distinguish these two concepts:
+
+Different map icons are used for the optimal position and the meeting position
+
+Users can visually understand whether the meeting point is system-recommended or manually adjusted
+
+To prevent unreasonable meeting point selections:
+
+Any participant can trigger the recalculation of the optimal position
+
+The optimal position can be used as a reference for comparison when adjusting or reviewing the meeting position
+
+Trade-off:
+This approach increases UI and logic complexity, but improves flexibility, transparency, and decision quality for all participants.
+
+### Authentication, Verification, and API Cost Control
+
+Since the map APIs are charged based on usage, and to prevent malicious access or abuse, the system includes a login and user registration flow.
+
+User Authentication
+
+Users must log in to access core functionality
+
+This limits unnecessary or automated API calls and helps control cost
+
+User Registration and Verification
+
+New users are required to register an account
+
+A verification code is required during registration
+
+Currently, a fixed code (2025) is used for verification
+
+This can be considered a placeholder for an email verification code
+
+It is designed to be replaced with a real email-based verification mechanism in the future
+
+Uniqueness Constraints
+
+Username must be unique
+
+Email must be unique
+
+Duplicate usernames or emails are not allowed
+
+Trade-off:
+Using a fixed verification code simplifies development and testing, but provides limited security.
+This approach reduces implementation complexity in the early stage while leaving room for future enhancement.
+
+### Invite Code for Secure Session Joining
+
+An invite code mechanism was added to the session invitation flow to prevent brute-force guessing of session IDs.
+
+Design Details:
+
+Each session is associated with a 6-digit invite code
+
+Users can join a session only by:
+
+1. Using a valid invite link
+
+2. Providing both session ID + invite code
+
+This ensures that knowing a session ID alone is not sufficient to join a session.
+
+Trade-off:
+The invite code adds an extra step for users, but significantly improves security by limiting unauthorized or malicious session access.
+
+###  Multiple Map API Switching
+
+The project uses free map APIs to control cost.
+
+To improve availability:
+
+Multiple map providers are supported
+
+APIs can be switched dynamically
+
+Service downtime from a single provider can be mitigated quickly
+
+Trade-off:
+Increased implementation complexity in exchange for better availability and cost control.
+
+###  HTTPS Requirement
+
+The application uses HTTPS instead of HTTP.
+
+Reasoning:
+
+Browsers do not allow geolocation access over HTTP
+
+HTTPS is required for secure browser APIs
+
+Trade-off:
+Slightly more setup effort for full browser feature support and security.
+
+###  EC2-Based Deployment
+
+The application is deployed on AWS EC2.
+
+Reasoning:
+
+Simple and flexible deployment
+
+Lower infrastructure cost
+
+Suitable for early-stage development and iteration
+
+Trade-off:
+Less managed infrastructure compared to serverless solutions, but greater control and lower cost.
+
+###  Learning-Oriented Technology Choices
+
+React and parts of AWS were not my strongest areas initially.
+They were chosen intentionally to align the project more closely with real-world production environments.
+
+Trade-off:
+Slower development at the beginning, but significant long-term skill growth and practical experience.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Java 17+**
+- **Node.js 18+**
+- **PostgreSQL 12+** (or use Docker Compose)
+- **Docker & Docker Compose** (optional, for database)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Miyakee/geomeet.git
+cd geomeet
+```
+
+### 2. Configure Environment Variables
+
+#### Backend Configuration
+
+Create or update `api/src/main/resources/application-local.properties`:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/geomeet_local
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+```
+
+#### Frontend Configuration (Optional)
+
+Create `ui/.env` for geocoding API keys (optional, will use free Nominatim if not provided):
+
+```env
+# Geocoding Service Configuration
+VITE_GEOCODING_PROVIDER=auto
+VITE_OPENCAGE_API_KEY=your-opencage-api-key  # Optional: Get at https://opencagedata.com/api
+VITE_POSITIONSTACK_API_KEY=your-positionstack-api-key  # Optional: Get at https://positionstack.com/
+```
+
+**Note**: Geocoding API keys are optional. The app will use free Nominatim service if no keys are provided, but it has CORS limitations in production.
+
+### 3. Start Database
+
+Using Docker Compose (recommended):
+
+```bash
+docker-compose up -d
+```
+after container created:
+````
+url=jdbc:postgresql://localhost:5432/geomeet_local
+username=postgres
+password=postgres
+````
+
+
+### 4. Install Git Hooks
+
+Husky will automatically install Git hooks when you install dependencies:
+
+```bash
+cd ui
+npm install
+```
+
+Or manually install hooks:
+
+```bash
+cd ui
+npm run prepare
+```
+
+### 5. Start Backend
+
+```bash
+cd api
+./gradlew bootRun
+```
+
+Backend will start on `http://localhost:8080`
+
+### 6. Start Frontend
+
+In a new terminal:
+
+```bash
+cd ui
+npm install
+npm run dev
+```
+
+Frontend will start on `http://localhost:3000`
+
+**Note**: The Vite dev server automatically proxies `/api/*` requests to `http://localhost:8080`, eliminating CORS issues during development.
+
+
+### 7. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **Health Check**: http://localhost:8080/health
+
+## 👥 Default Users (can register new one )
+
+When running in `local` profile, the following test users are automatically created:
+
+| Username | Email | Password |
+|---|-------|----------|
+| admin | admin@geomeet.com | admin123 |
+| testuser | test@geomeet.com | test123 |
+
+Note : Also can register user in create account now button
+
+## 💻 Development
+
+### Backend Development
+
+```bash
+cd api
+
+# Run tests
+./gradlew test
+
+# Run code quality checks
+./gradlew check
+
+# Generate test coverage report
+./gradlew jacocoTestReport
+
+# View coverage report
+open build/reports/jacoco/test/html/index.html
+```
+#### 📡 API Documentation
+
+For complete API documentation including all endpoints and request/response examples, see [api/README.md](api/README.md).
+
+### Frontend Development
+
+```bash
+cd ui
+
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+
+# Run linting
+npm run lint
+
+# Run tests
+npm test
+```
+
+### Docker
+
+```shell
+### 1. Start Database
+
+docker-compose up -d
+
+### 2. View Logs
+
+docker-compose logs -f postgres
+
+### 3. Stop Database
+
+docker-compose down
+
+### 4. Stop and Remove Volumes (Clean Data)
+docker-compose down -v
+
+
+### Access Database Container
+
+docker-compose exec postgres psql -U postgres -d geomeet_local
+
+### Execute SQL Commands
+
+docker-compose exec postgres psql -U postgres -d geomeet_local -c "SELECT * FROM users;"
+
+### Backup Database
+
+docker-compose exec postgres pg_dump -U postgres geomeet_local > backup.sql
+
+### Restore Database
+
+docker-compose exec -T postgres psql -U postgres -d geomeet_local < backup.sql
+
+```
+
+### Code Quality
+
+The project includes automated code quality checks:
+
+- **Backend**: Checkstyle, PMD, SpotBugs, Tests (90% coverage required)
+- **Frontend**: ESLint, Tests
+
+Pre-push hooks automatically run these checks before pushing code. The hooks are smart and only check directories that have changes:
+
+- **Backend checks** (when `api/` files change):
+    - Checkstyle (code style - main code only)
+    - PMD (static analysis - main code only)
+    - SpotBugs (bug detection - main code only)
+    - All tests
+
+- **Frontend checks** (when `ui/` files change):
+    - ESLint (linting)
+    - Unit tests
+
+If no relevant changes are detected, checks are skipped. Hooks are managed by Husky and located in `.husky/` directory.
+
+## 💻 Improvement
+1. audit log. (had add audit fields in table. but better to put audit log to trace data change in DB)
+2. websocket -> websocket + sqs (decoupling, scalability, and reliability) depends on requirements. if no so much user. maybe do it later.mentm
 
 ## 🛠 Tech Stack
 
@@ -121,128 +493,6 @@ geomeet/
 ├── DOCKER.md                 # Docker documentation
 └── README.md                 # This file
 ```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Java 17+**
-- **Node.js 18+**
-- **PostgreSQL 12+** (or use Docker Compose)
-- **Docker & Docker Compose** (optional, for database)
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Miyakee/geomeet.git
-cd geomeet
-```
-
-### 2. Configure Environment Variables
-
-#### Backend Configuration
-
-Create or update `api/src/main/resources/application-local.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/geomeet_local
-spring.datasource.username=postgres
-spring.datasource.password=postgres
-```
-
-#### Frontend Configuration (Optional)
-
-Create `ui/.env` for geocoding API keys (optional, will use free Nominatim if not provided):
-
-```env
-# Geocoding Service Configuration
-VITE_GEOCODING_PROVIDER=auto
-VITE_OPENCAGE_API_KEY=your-opencage-api-key  # Optional: Get at https://opencagedata.com/api
-VITE_POSITIONSTACK_API_KEY=your-positionstack-api-key  # Optional: Get at https://positionstack.com/
-```
-
-**Note**: Geocoding API keys are optional. The app will use free Nominatim service if no keys are provided, but it has CORS limitations in production.
-
-### 3. Start Database
-
-Using Docker Compose (recommended):
-
-```bash
-docker-compose up -d
-```
-after container created:
-````
-url=jdbc:postgresql://localhost:5432/geomeet_local
-username=postgres
-password=postgres
-````
-
-
-### 4. Install Git Hooks
-
-Husky will automatically install Git hooks when you install dependencies:
-
-```bash
-cd ui
-npm install
-```
-
-Or manually install hooks:
-
-```bash
-cd ui
-npm run prepare
-```
-
-This installs Git hooks for code quality checks:
-
-- **Pre-commit Hook**: Automatically fixes linting issues before committing
-  - Frontend: Runs ESLint with `--fix` to auto-fix TypeScript/JavaScript issues
-  - Automatically stages fixed files
-- **Pre-push Hook**: Runs code quality checks before pushing
-  - Backend: Checkstyle, PMD, SpotBugs, Tests
-  - Frontend: ESLint, Tests
-
-The hooks will automatically run when you commit or push code.
-
-### 5. Start Backend
-
-```bash
-cd api
-./gradlew bootRun
-```
-
-Backend will start on `http://localhost:8080`
-
-### 6. Start Frontend
-
-In a new terminal:
-
-```bash
-cd ui
-npm install
-npm run dev
-```
-
-Frontend will start on `http://localhost:5173`
-
-**Note**: The Vite dev server automatically proxies `/api/*` requests to `http://localhost:8080`, eliminating CORS issues during development.
-
-### 7. Access the Application
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8080
-- **Health Check**: http://localhost:8080/health
-
-## 👥 Default Users
-
-When running in `local` profile, the following test users are automatically created:
-
-| Username | Email | Password |
-|----------|-------|----------|
-| admin | admin@geomeet.com | admin123 |
-| testuser | test@geomeet.com | test123 |
-| tty | tty@geomeet.com | tty123 |
 
 ## 🏗 Architecture
 
@@ -442,104 +692,29 @@ Broadcasts when the session is ended by the initiator.
 - **No Client-to-Server Messages**: Currently, clients only receive messages from the server. No client-to-server WebSocket messaging is implemented.
 - **Security**: WebSocket connections are currently permitted without authentication. For production, implement WebSocket authentication using JWT tokens or session-based authentication.
 
-## 💻 Development
+## 🚀 Features
 
-### Backend Development
+### Core Features
+- **User Authentication**: JWT-based authentication with secure password hashing
+- **Session Management**: Create and join collaborative sessions with real-time participant tracking
+- **Real-time Updates**: WebSocket-based real-time synchronization for session participants, locations, and status
+- **Invite System**: Generate invite links and codes for session sharing with automatic session join on registration
 
-```bash
-cd api
+### Location Features
+- **GPS Location Tracking**: Real-time GPS location tracking with automatic updates (10-meter threshold to reduce server load)
+- **Manual Location Input**: Search and set location manually using geocoding services
+- **Optimal Location Calculation**: Automatically calculate the optimal meeting point based on all participants' locations using geographic center
+- **Meeting Location Setting**: Set and update meeting location (initiator only)
+- **Interactive Map**: Real-time map visualization showing all participants, optimal location, and meeting location
+- **Distance Calculation**: Display distance from user's location to meeting location
+- **Location Persistence**: Location data persists across page refreshes
 
-# Run tests
-./gradlew test
-
-# Run code quality checks
-./gradlew check
-
-# Generate test coverage report
-./gradlew jacocoTestReport
-
-# View coverage report
-open build/reports/jacoco/test/html/index.html
-```
-#### 📡 API Documentation
-
-For complete API documentation including all endpoints and request/response examples, see [api/README.md](api/README.md).
-
-### Frontend Development
-
-```bash
-cd ui
-
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-
-# Run linting
-npm run lint
-
-# Run tests
-npm test
-```
-
-### Docker
-
-```shell
-### 1. Start Database
-
-docker-compose up -d
-
-### 2. View Logs
-
-docker-compose logs -f postgres
-
-### 3. Stop Database
-
-docker-compose down
-
-### 4. Stop and Remove Volumes (Clean Data)
-docker-compose down -v
-
-
-### Access Database Container
-
-docker-compose exec postgres psql -U postgres -d geomeet_local
-
-### Execute SQL Commands
-
-docker-compose exec postgres psql -U postgres -d geomeet_local -c "SELECT * FROM users;"
-
-### Backup Database
-
-docker-compose exec postgres pg_dump -U postgres geomeet_local > backup.sql
-
-### Restore Database
-
-docker-compose exec -T postgres psql -U postgres -d geomeet_local < backup.sql
-
-```
-
-### Code Quality
-
-The project includes automated code quality checks:
-
-- **Backend**: Checkstyle, PMD, SpotBugs, Tests (90% coverage required)
-- **Frontend**: ESLint, Tests
-
-Pre-push hooks automatically run these checks before pushing code. The hooks are smart and only check directories that have changes:
-
-- **Backend checks** (when `api/` files change):
-    - Checkstyle (code style - main code only)
-    - PMD (static analysis - main code only)
-    - SpotBugs (bug detection - main code only)
-    - All tests
-
-- **Frontend checks** (when `ui/` files change):
-    - ESLint (linting)
-    - Unit tests
-
-If no relevant changes are detected, checks are skipped. Hooks are managed by Husky and located in `.husky/` directory.
+### Technical Features
+- **Clean Architecture**: DDD + Clean Architecture for maintainable and testable code
+- **Code Quality**: Automated code quality checks with pre-push hooks (Checkstyle, PMD, SpotBugs)
+- **High Test Coverage**: 90%+ code coverage requirement with comprehensive unit and integration tests
+- **HTTPS/SSL Support**: Automatic SSL certificate management with Let's Encrypt and Nginx
+- **Docker Deployment**: Full containerization with Docker Compose for easy deployment
 
 ## 🧪 Testing
 
@@ -648,9 +823,6 @@ sh deploy-from-ecr.sh
 #### 6. Verify Deployment
 
 - **HTTPS**: https://ttyuuuuuuuuuuuu.us.ci
-- **Health Check**: https://ttyuuuuuuuuuuuu.us.ci/health
-- **API**: https://ttyuuuuuuuuuuuu.us.ci/api/actuator/health
-
 
 ### AWS Cloud Deployment
 
@@ -689,7 +861,6 @@ For detailed AWS deployment instructions, architecture diagrams, and troubleshoo
 - **Input Validation**: Jakarta Validation on all endpoints
 - **Location Privacy**: Location data is only shared within active sessions
 - **Session Authorization**: Only session initiator can end session or update meeting location
-
 
 ## 📚 Additional Documentation
 

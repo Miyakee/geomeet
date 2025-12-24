@@ -69,7 +69,6 @@ When running in `local` profile, the following test users are automatically crea
 |----------|-------|----------|
 | admin | admin@geomeet.com | admin123 |
 | testuser | test@geomeet.com | test123 |
-| tty | tty@geomeet.com | tty123 |
 
 
 ## Security
