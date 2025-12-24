@@ -104,9 +104,94 @@ const SessionPage = () => {
 
   const [endSessionDialogOpen, setEndSessionDialogOpen] = useState(false);
 
+  // Unified session update handler - merge location info to preserve existing locations
+  // This ensures that even when participants disconnect, their location information is preserved
   const handleSessionUpdate = useCallback((updatedSession: SessionDetailResponse) => {
-    updateSession(updatedSession);
-  }, [updateSession]);
+    if (!session) {
+      // If no existing session, just update directly
+      updateSession(updatedSession);
+      return;
+    }
+
+    // Create a map of existing participants with their location info for quick lookup
+    const existingParticipantsMap = new Map(
+      session.participants.map(p => [p.userId, p])
+    );
+
+    // Merge participants: prioritize updated info, but preserve existing location info
+    const mergedParticipants = updatedSession.participants.map(updatedParticipant => {
+      const existingParticipant = existingParticipantsMap.get(updatedParticipant.userId);
+
+      // If updated participant has location info, use it (newer data)
+      if (updatedParticipant.latitude != null && updatedParticipant.longitude != null) {
+        return updatedParticipant;
+      }
+      
+      // If updated participant doesn't have location but existing one does, preserve it
+      // This ensures location info persists even after disconnection
+      if (existingParticipant?.latitude != null && existingParticipant.longitude != null) {
+        return {
+          ...updatedParticipant,
+          latitude: existingParticipant.latitude,
+          longitude: existingParticipant.longitude,
+          accuracy: existingParticipant.accuracy,
+          locationUpdatedAt: existingParticipant.locationUpdatedAt,
+        };
+      }
+
+      // Return updated participant as-is (no location info in either)
+      return updatedParticipant;
+    });
+
+    // Preserve ALL participants from existing session that are not in updated session
+    // This is critical for maintaining participant info after disconnection
+    const updatedParticipantIds = new Set(updatedSession.participants.map(p => p.userId));
+    
+    session.participants.forEach(existingParticipant => {
+      if (!updatedParticipantIds.has(existingParticipant.userId)) {
+        // Keep this participant with their last known location info
+        mergedParticipants.push(existingParticipant);
+      }
+    });
+
+    // Update session with merged participants, preserving all location information
+    updateSession({
+      ...updatedSession,
+      participants: mergedParticipants,
+    });
+  }, [session, updateSession]);
+
+  // Update participant location in session object (defined early for use in other callbacks)
+  const updateParticipantLocation = useCallback((userId: number, location: ParticipantLocation) => {
+    if (!session) return;
+    
+    // Check if participant exists in the list
+    const existingParticipant = session.participants.find(p => p.userId === userId);
+    
+    if (existingParticipant) {
+      // Update existing participant's location
+      updateSession({
+        ...session,
+        participants: session.participants.map(p =>
+          p.userId === userId
+            ? {
+                ...p,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy ?? null,
+                locationUpdatedAt: location.updatedAt,
+              }
+            : p
+        ),
+      });
+    } else {
+      // Participant not in list - this shouldn't happen normally, but handle it gracefully
+      // We'll add them with minimal info (location will be preserved by handleSessionUpdate)
+      console.warn(`Participant ${userId} not found in session participants, location update may be lost`);
+      // Still update the participantLocations state so it shows immediately
+      // The location will be preserved when handleSessionUpdate merges data
+    }
+  }, [session, updateSession]);
 
   const handleLocationUpdate = useCallback((location: ParticipantLocation, userId: number) => {
     // Exclude current user's location from participantLocations
@@ -114,12 +199,15 @@ const SessionPage = () => {
     if (userId === user?.id) {
       return;
     }
+    // Update session.participants to persist location info
+    updateParticipantLocation(userId, location);
+    // Also update participantLocations state for immediate UI update
     setParticipantLocations((prev) => {
       const newMap = new Map(prev);
       newMap.set(userId, location);
       return newMap;
     });
-  }, [user?.id]);
+  }, [user?.id, updateParticipantLocation]);
 
   const handleAddressUpdate = useCallback((address: string, userId: number) => {
     setParticipantAddresses((prev) => {
