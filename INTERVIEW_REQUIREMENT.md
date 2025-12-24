@@ -36,6 +36,8 @@ Through this exercise, we are looking to observe your interpretation of good sof
 2. Your repository should contain a document explaining how your application is expected to be deployed and run, including any necessary preparations required of the environment.
 
 --------------------
+# Deploy to: https://ttyuuuuuuuuuuuu.us.ci/login
+
 # Implement Requirements:
 
 ## Login: 

@@ -578,6 +578,7 @@ npm run test:ui
 ## 🚢 Infrastructure
 
 ### Infrastructure Overview
+0. **Production env**: https://ttyuuuuuuuuuuuu.us.ci/login
 
 1. **AWS Cloud** 
     - Terraform-based infrastructure as code
