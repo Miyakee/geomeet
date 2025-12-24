@@ -14,6 +14,7 @@ import com.geomeet.api.application.result.UpdateMeetingLocationResult;
 import com.geomeet.api.application.usecase.location.CalculateOptimalLocationUseCase;
 import com.geomeet.api.application.usecase.location.UpdateLocationUseCase;
 import com.geomeet.api.application.usecase.location.UpdateMeetingLocationUseCase;
+import com.geomeet.api.adapter.web.util.AuthenticationUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 
 /**
  * Web adapter (controller) for location management.
@@ -54,7 +57,7 @@ public class LocationController {
       @Valid @RequestBody UpdateLocationRequest request,
       Authentication authentication
   ) {
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
     UpdateLocationCommand command = UpdateLocationCommand.of(
         sessionId,
@@ -66,7 +69,7 @@ public class LocationController {
     UpdateLocationResult result = updateLocationUseCase.execute(command);
 
     UpdateLocationResponse response = UpdateLocationResponse.create(result);
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 
   /**
@@ -82,14 +85,14 @@ public class LocationController {
       @PathVariable String sessionId,
       Authentication authentication
   ) {
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
     CalculateOptimalLocationCommand command = CalculateOptimalLocationCommand.of(sessionId, userId);
     CalculateOptimalLocationResult result = calculateOptimalLocationUseCase.execute(command);
 
     CalculateOptimalLocationResponse response = CalculateOptimalLocationResponse.create(result);
 
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 
   /**
@@ -107,7 +110,7 @@ public class LocationController {
       @Valid @RequestBody UpdateMeetingLocationRequest request,
       Authentication authentication
   ) {
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
     UpdateMeetingLocationCommand command = UpdateMeetingLocationCommand.of(
         sessionId,
@@ -119,7 +122,7 @@ public class LocationController {
 
     UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.create(result);
 
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 }
 

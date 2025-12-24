@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import static com.geomeet.api.infrastructure.config.WebRequestUtil.getPath;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -33,7 +35,7 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        String path = request.getDescription(false).replace("uri=", "");
+        String path = getPath(request);
         String message = "Validation failed: " + errors.toString();
         logger.warn("Validation error: {} - Path: {}", message, path);
 
@@ -52,7 +54,7 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
+        String path = getPath(request);
         logger.warn("IllegalArgumentException: {} - Path: {}", ex.getMessage(), path, ex);
 
         ErrorResponse errorResponse = ErrorResponse.of(
@@ -70,7 +72,7 @@ public class GlobalExceptionHandler {
             GeomeetDomainException ex,
             WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
+        String path = getPath(request);
         logger.warn("Authentication failed: {} - Path: {}", ex.getMessage(), path);
 
         ErrorResponse errorResponse = ErrorResponse.of(
@@ -88,7 +90,7 @@ public class GlobalExceptionHandler {
             GeomeetDomainException ex,
             WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
+        String path = getPath(request);
         logger.warn("Geomeet DomainException exception: {} - Path: {}", ex.getMessage(), path, ex);
 
         // Get error title based on HTTP status code
@@ -136,7 +138,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
+        String path = getPath(request);
         logger.error("Unexpected error occurred - Path: {}", path, ex);
 
         ErrorResponse errorResponse = ErrorResponse.of(

@@ -24,9 +24,9 @@ import com.geomeet.api.application.usecase.session.EndSessionUseCase;
 import com.geomeet.api.application.usecase.session.GenerateInviteLinkUseCase;
 import com.geomeet.api.application.usecase.session.GetSessionDetailsUseCase;
 import com.geomeet.api.application.usecase.session.JoinSessionUseCase;
+import com.geomeet.api.adapter.web.util.AuthenticationUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,6 +36,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static com.geomeet.api.adapter.web.util.ResponseUtil.created;
+import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 
 /**
  * Web adapter (controller) for session management.
@@ -58,15 +61,14 @@ public class SessionController {
       @RequestBody CreateSessionRequest request,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token (set by JwtAuthenticationFilter)
-    Long initiatorId = (Long) authentication.getPrincipal();
+    Long initiatorId = AuthenticationUtil.getUserId(authentication);
 
     CreateSessionCommand command = CreateSessionCommand.of(initiatorId);
     CreateSessionResult result = createSessionUseCase.execute(command);
 
     CreateSessionResponse response = CreateSessionResponse.create(result);
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return created(response);
   }
 
   /**
@@ -78,14 +80,11 @@ public class SessionController {
       @PathVariable String sessionId,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
-    // Execute use case
     GenerateInviteLinkCommand command = GenerateInviteLinkCommand.of(sessionId, userId);
     GenerateInviteLinkResult result = generateInviteLinkUseCase.execute(command);
 
-    // Convert result to response DTO
     InviteLinkResponse response = InviteLinkResponse.builder()
         .sessionId(result.getSessionId())
         .inviteLink(result.getInviteLink())
@@ -93,7 +92,7 @@ public class SessionController {
         .message("Invitation link generated successfully")
         .build();
 
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 
   /**
@@ -104,14 +103,11 @@ public class SessionController {
       @Valid @RequestBody JoinSessionRequest request,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
-    // Execute use case
     JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), request.getInviteCode(), userId);
     JoinSessionResult result = joinSessionUseCase.execute(command);
 
-    // Convert result to response DTO
     JoinSessionResponse response = JoinSessionResponse.builder()
         .participantId(result.getParticipantId())
         .sessionId(result.getSessionId())
@@ -121,10 +117,9 @@ public class SessionController {
         .message(result.getMessage())
         .build();
 
-    // Broadcast session update to all participants
     broadcastSessionUpdateUseCase.execute(result.getSessionIdString());
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return created(response);
   }
 
   /**
@@ -135,14 +130,11 @@ public class SessionController {
       @PathVariable String sessionId,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
-    // Execute use case
     GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionId, userId);
     GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
 
-    // Convert result to response DTO
     SessionDetailResponse response = SessionDetailResponse.builder()
         .id(result.getId())
         .sessionId(result.getSessionId())
@@ -176,7 +168,7 @@ public class SessionController {
             : null)
         .build();
 
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 
   /**
@@ -188,14 +180,11 @@ public class SessionController {
       @PathVariable String sessionId,
       Authentication authentication
   ) {
-    // Extract user ID from JWT token
-    Long userId = (Long) authentication.getPrincipal();
+    Long userId = AuthenticationUtil.getUserId(authentication);
 
-    // Execute use case
     EndSessionCommand command = EndSessionCommand.of(sessionId, userId);
     EndSessionResult result = endSessionUseCase.execute(command);
 
-    // Convert result to response DTO
     EndSessionResponse response = EndSessionResponse.builder()
         .sessionId(result.getSessionId())
         .sessionIdString(result.getSessionIdString())
@@ -204,7 +193,7 @@ public class SessionController {
         .message(result.getMessage())
         .build();
 
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 }
 

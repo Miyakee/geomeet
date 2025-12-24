@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,7 +41,7 @@ public class AuthController {
     String token = jwtTokenService.generateToken(result.getUserId(), result.getUsername());
 
     LoginResponse response = LoginResponse.toResponse(token, result);
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 
   @PostMapping("/register")
@@ -52,7 +54,7 @@ public class AuthController {
     String token = jwtTokenService.generateToken(result.getUserId(), result.getUsername());
 
     LoginResponse response = LoginResponse.toResponse(token, result);
-    return ResponseEntity.ok(response);
+    return ok(response);
   }
 }
 

@@ -1,10 +1,9 @@
-package com.geomeet.api.adapter.web.auth.dto.health;
+package com.geomeet.api.adapter.web.health;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Web adapter (controller) for health check endpoints.
@@ -15,17 +14,15 @@ public class HealthController {
 
     @GetMapping("/health")
     public Map<String, String> health() {
-        Map<String, String> response = new ConcurrentHashMap<>();
-        response.put("status", "UP");
-        response.put("message", "Spring Boot application is running");
-        return response;
+        return Map.of(
+            "status", "UP",
+            "message", "Spring Boot application is running"
+        );
     }
 
     @GetMapping("/")
     public Map<String, String> root() {
-        Map<String, String> response = new ConcurrentHashMap<>();
-        response.put("message", "Welcome to GeoMeet API");
-        return response;
+        return Map.of("message", "Welcome to GeoMeet API");
     }
 }
 
