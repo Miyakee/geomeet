@@ -66,9 +66,7 @@ public class SessionController {
     CreateSessionCommand command = CreateSessionCommand.of(initiatorId);
     CreateSessionResult result = createSessionUseCase.execute(command);
 
-    CreateSessionResponse response = CreateSessionResponse.create(result);
-
-    return created(response);
+    return created(CreateSessionResponse.create(result));
   }
 
   /**
@@ -85,14 +83,7 @@ public class SessionController {
     GenerateInviteLinkCommand command = GenerateInviteLinkCommand.of(sessionId, userId);
     GenerateInviteLinkResult result = generateInviteLinkUseCase.execute(command);
 
-    InviteLinkResponse response = InviteLinkResponse.builder()
-        .sessionId(result.getSessionId())
-        .inviteLink(result.getInviteLink())
-        .inviteCode(result.getInviteCode())
-        .message("Invitation link generated successfully")
-        .build();
-
-    return ok(response);
+    return ok(InviteLinkResponse.from(result));
   }
 
   /**
@@ -108,18 +99,9 @@ public class SessionController {
     JoinSessionCommand command = JoinSessionCommand.of(request.getSessionId(), request.getInviteCode(), userId);
     JoinSessionResult result = joinSessionUseCase.execute(command);
 
-    JoinSessionResponse response = JoinSessionResponse.builder()
-        .participantId(result.getParticipantId())
-        .sessionId(result.getSessionId())
-        .sessionIdString(result.getSessionIdString())
-        .userId(result.getUserId())
-        .joinedAt(result.getJoinedAt())
-        .message(result.getMessage())
-        .build();
-
     broadcastSessionUpdateUseCase.execute(result.getSessionIdString());
 
-    return created(response);
+    return created(JoinSessionResponse.from(result));
   }
 
   /**
@@ -135,40 +117,7 @@ public class SessionController {
     GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionId, userId);
     GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
 
-    SessionDetailResponse response = SessionDetailResponse.builder()
-        .id(result.getId())
-        .sessionId(result.getSessionId())
-        .initiatorId(result.getInitiatorId())
-        .initiatorUsername(result.getInitiatorUsername())
-        .status(result.getStatus())
-        .createdAt(result.getCreatedAt())
-        .participants(result.getParticipants().stream()
-            .map(participant -> ParticipantInfo.builder()
-                .participantId(participant.getParticipantId())
-                .userId(participant.getUserId())
-                .username(participant.getUsername())
-                .email(participant.getEmail())
-                .joinedAt(participant.getJoinedAt())
-                .build())
-            .collect(java.util.stream.Collectors.toList()))
-        .participantCount(result.getParticipantCount())
-        .meetingLocationLatitude(result.getMeetingLocationLatitude())
-        .meetingLocationLongitude(result.getMeetingLocationLongitude())
-        .participantLocations(result.getParticipantLocations() != null
-            ? result.getParticipantLocations().stream()
-                .map(location -> com.geomeet.api.adapter.web.session.dto.ParticipantLocationInfo.builder()
-                    .participantId(location.getParticipantId())
-                    .userId(location.getUserId())
-                    .latitude(location.getLatitude())
-                    .longitude(location.getLongitude())
-                    .accuracy(location.getAccuracy())
-                    .updatedAt(location.getUpdatedAt())
-                    .build())
-                .collect(java.util.stream.Collectors.toList())
-            : null)
-        .build();
-
-    return ok(response);
+    return ok(SessionDetailResponse.from(result));
   }
 
   /**
@@ -185,15 +134,7 @@ public class SessionController {
     EndSessionCommand command = EndSessionCommand.of(sessionId, userId);
     EndSessionResult result = endSessionUseCase.execute(command);
 
-    EndSessionResponse response = EndSessionResponse.builder()
-        .sessionId(result.getSessionId())
-        .sessionIdString(result.getSessionIdString())
-        .status(result.getStatus())
-        .endedAt(result.getEndedAt())
-        .message(result.getMessage())
-        .build();
-
-    return ok(response);
+    return ok(EndSessionResponse.from(result));
   }
 }
 

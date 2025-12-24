@@ -22,10 +22,10 @@ public class GetSessionDetailsResult {
     private final Long participantCount;
     private final Double meetingLocationLatitude;
     private final Double meetingLocationLongitude;
-    private final List<ParticipantLocationInfo> participantLocations;
 
     /**
      * Participant information within the result.
+     * Contains both participant details and location information.
      */
     @Getter
     @Builder
@@ -35,20 +35,11 @@ public class GetSessionDetailsResult {
         private final String username;
         private final String email;
         private final String joinedAt;
-    }
-
-    /**
-     * Participant location information within the result.
-     */
-    @Getter
-    @Builder
-    public static class ParticipantLocationInfo {
-        private final Long participantId;
-        private final Long userId;
+        // Location information (nullable - participant may not have shared location)
         private final Double latitude;
         private final Double longitude;
         private final Double accuracy;
-        private final String updatedAt;
+        private final String locationUpdatedAt;
     }
 }
 

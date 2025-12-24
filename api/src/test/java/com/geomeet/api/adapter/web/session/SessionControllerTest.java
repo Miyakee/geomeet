@@ -2,6 +2,7 @@ package com.geomeet.api.adapter.web.session;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -289,16 +290,10 @@ class SessionControllerTest {
             .username("testuser")
             .email("test@example.com")
             .joinedAt("2024-01-01T00:00:00")
-            .build();
-
-        GetSessionDetailsResult.ParticipantLocationInfo locationInfo =
-            GetSessionDetailsResult.ParticipantLocationInfo.builder()
-            .participantId(200L)
-            .userId(userId)
             .latitude(1.3521)
             .longitude(103.8198)
             .accuracy(10.5)
-            .updatedAt("2024-01-01T10:00:00")
+            .locationUpdatedAt("2024-01-01T10:00:00")
             .build();
 
         GetSessionDetailsResult result = GetSessionDetailsResult.builder()
@@ -312,7 +307,6 @@ class SessionControllerTest {
             .participantCount(1L)
             .meetingLocationLatitude(1.3521)
             .meetingLocationLongitude(103.8198)
-            .participantLocations(java.util.List.of(locationInfo))
             .build();
 
         when(authentication.getPrincipal()).thenReturn(userId);
@@ -330,12 +324,13 @@ class SessionControllerTest {
         assertNotNull(response.getBody());
 
         SessionDetailResponse responseBody = response.getBody();
-        assertNotNull(responseBody.getParticipantLocations());
-        assertEquals(1, responseBody.getParticipantLocations().size());
-        assertEquals(1.3521, responseBody.getParticipantLocations().get(0).getLatitude());
-        assertEquals(103.8198, responseBody.getParticipantLocations().get(0).getLongitude());
-        assertEquals(10.5, responseBody.getParticipantLocations().get(0).getAccuracy());
-        assertEquals("2024-01-01T10:00:00", responseBody.getParticipantLocations().get(0).getUpdatedAt());
+        assertNotNull(responseBody.getParticipants());
+        assertEquals(1, responseBody.getParticipants().size());
+        com.geomeet.api.adapter.web.session.dto.ParticipantInfo participant = responseBody.getParticipants().get(0);
+        assertEquals(1.3521, participant.getLatitude());
+        assertEquals(103.8198, participant.getLongitude());
+        assertEquals(10.5, participant.getAccuracy());
+        assertEquals("2024-01-01T10:00:00", participant.getLocationUpdatedAt());
 
         verify(authentication).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
@@ -351,6 +346,10 @@ class SessionControllerTest {
             .username("testuser")
             .email("test@example.com")
             .joinedAt("2024-01-01T00:00:00")
+            .latitude(null)  // no location information
+            .longitude(null)
+            .accuracy(null)
+            .locationUpdatedAt(null)
             .build();
 
         GetSessionDetailsResult result = GetSessionDetailsResult.builder()
@@ -364,7 +363,6 @@ class SessionControllerTest {
             .participantCount(1L)
             .meetingLocationLatitude(1.3521)
             .meetingLocationLongitude(103.8198)
-            .participantLocations(null)  // null participant locations
             .build();
 
         when(authentication.getPrincipal()).thenReturn(userId);
@@ -385,8 +383,11 @@ class SessionControllerTest {
         assertNotNull(responseBody);
         assertEquals(1.3521, responseBody.getMeetingLocationLatitude());
         assertEquals(103.8198, responseBody.getMeetingLocationLongitude());
-        // participantLocations should be null when result has null
-        // This tests the ternary operator branch in SessionController line 165-176
+        // participants should have null location fields when no location is shared
+        assertNotNull(responseBody.getParticipants());
+        assertEquals(1, responseBody.getParticipants().size());
+        assertNull(responseBody.getParticipants().get(0).getLatitude());
+        assertNull(responseBody.getParticipants().get(0).getLongitude());
 
         verify(authentication).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));

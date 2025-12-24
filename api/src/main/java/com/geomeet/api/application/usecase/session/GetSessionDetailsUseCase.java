@@ -70,19 +70,43 @@ public class GetSessionDetailsUseCase {
         User initiator = userRepository.findById(session.getInitiatorId())
             .orElseThrow(() -> ErrorCode.INITIATOR_NOT_FOUND.toException());
 
+        // Get all participant locations for this session (create a map for quick lookup)
+        List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
+        java.util.Map<Long, ParticipantLocation> locationMap = participantLocations.stream()
+            .collect(Collectors.toMap(
+                ParticipantLocation::getUserId,
+                location -> location,
+                (existing, replacement) -> existing // Keep first if duplicate
+            ));
+
         // Get all participants
         List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
         List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
             .map(participant -> {
                 User user = userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> ErrorCode.USER_NOT_FOUND_FOR_PARTICIPANT.toException());
-                return GetSessionDetailsResult.ParticipantInfo.builder()
+                
+                // Get location for this participant if available
+                ParticipantLocation location = locationMap.get(participant.getUserId());
+                
+                GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())
                     .username(user.getUsername().getValue())
                     .email(user.getEmail().getValue())
-                    .joinedAt(participant.getJoinedAt().format(DATE_TIME_FORMATTER))
-                    .build();
+                    .joinedAt(participant.getJoinedAt().format(DATE_TIME_FORMATTER));
+                
+                // Add location information if available
+                if (location != null) {
+                    builder.latitude(location.getLocation().getLatitude().getValue())
+                        .longitude(location.getLocation().getLongitude().getValue())
+                        .accuracy(location.getLocation().getAccuracy() != null 
+                            ? location.getLocation().getAccuracy() : null)
+                        .locationUpdatedAt(location.getUpdatedAt() != null 
+                            ? location.getUpdatedAt().format(DATE_TIME_FORMATTER) : null);
+                }
+                
+                return builder.build();
             })
             .collect(Collectors.toList());
 
@@ -91,31 +115,28 @@ public class GetSessionDetailsUseCase {
             .anyMatch(p -> p.getUserId().equals(session.getInitiatorId()));
         
         if (!initiatorInParticipants) {
-            // Add initiator as a participant
-            GetSessionDetailsResult.ParticipantInfo initiatorInfo = GetSessionDetailsResult.ParticipantInfo.builder()
+            // Get location for initiator if available
+            ParticipantLocation initiatorLocation = locationMap.get(session.getInitiatorId());
+            
+            GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
                 .participantId(null) // Initiator doesn't have a participant ID
                 .userId(session.getInitiatorId())
                 .username(initiator.getUsername().getValue())
                 .email(initiator.getEmail().getValue())
-                .joinedAt(session.getCreatedAt().format(DATE_TIME_FORMATTER))
-                .build();
-            participantInfos.add(0, initiatorInfo); // Add at the beginning
+                .joinedAt(session.getCreatedAt().format(DATE_TIME_FORMATTER));
+            
+            // Add location information if available
+            if (initiatorLocation != null) {
+                builder.latitude(initiatorLocation.getLocation().getLatitude().getValue())
+                    .longitude(initiatorLocation.getLocation().getLongitude().getValue())
+                    .accuracy(initiatorLocation.getLocation().getAccuracy() != null 
+                        ? initiatorLocation.getLocation().getAccuracy() : null)
+                    .locationUpdatedAt(initiatorLocation.getUpdatedAt() != null 
+                        ? initiatorLocation.getUpdatedAt().format(DATE_TIME_FORMATTER) : null);
+            }
+            
+            participantInfos.add(0, builder.build()); // Add at the beginning
         }
-
-        // Get all participant locations for this session
-        List<ParticipantLocation> participantLocations = participantLocationRepository.findBySessionId(session.getId());
-        List<GetSessionDetailsResult.ParticipantLocationInfo> participantLocationInfos = participantLocations.stream()
-            .map(location -> GetSessionDetailsResult.ParticipantLocationInfo.builder()
-                .participantId(location.getParticipantId())
-                .userId(location.getUserId())
-                .latitude(location.getLocation().getLatitude().getValue())
-                .longitude(location.getLocation().getLongitude().getValue())
-                .accuracy(location.getLocation().getAccuracy() != null 
-                    ? location.getLocation().getAccuracy() : null)
-                .updatedAt(location.getUpdatedAt() != null 
-                    ? location.getUpdatedAt().format(DATE_TIME_FORMATTER) : null)
-                .build())
-            .collect(Collectors.toList());
 
         // Return result
         return GetSessionDetailsResult.builder()
@@ -131,7 +152,6 @@ public class GetSessionDetailsUseCase {
                     ? session.getMeetingLocation().getLatitude().getValue() : null)
             .meetingLocationLongitude(session.getMeetingLocation() != null
                     ? session.getMeetingLocation().getLongitude().getValue() : null)
-            .participantLocations(participantLocationInfos)
             .build();
     }
 }

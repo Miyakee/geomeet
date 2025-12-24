@@ -192,24 +192,24 @@ const SessionPage = () => {
   }, [session?.participants, setParticipantNames]);
 
   const generateParticipantsLocation = useCallback(() => {
-    if(!session?.participantLocations){
+    if (!session?.participants) {
       return;
     }
     const locationsMap = new Map<number, ParticipantLocation>();
 
-    for (const locationInfo of session.participantLocations) {
-      if (locationInfo.userId !== user?.id) {
-        // Add locations for other participants
-        locationsMap.set(locationInfo.userId, {
-          latitude: locationInfo.latitude,
-          longitude: locationInfo.longitude,
-          accuracy: locationInfo.accuracy ?? undefined,
-          updatedAt: locationInfo.updatedAt,
+    for (const participant of session.participants) {
+      // Only add location if participant has shared location and it's not the current user
+      if (participant.latitude != null && participant.longitude != null && participant.userId !== user?.id) {
+        locationsMap.set(participant.userId, {
+          latitude: participant.latitude,
+          longitude: participant.longitude,
+          accuracy: participant.accuracy ?? undefined,
+          updatedAt: participant.locationUpdatedAt || participant.joinedAt,
         });
       }
     }
     setParticipantLocations(locationsMap);
-  }, [session?.participantLocations, setParticipantLocations]);
+  }, [session?.participants, user?.id, setParticipantLocations]);
 
   const updateMeetingLocationBySessionRes = useCallback(() => {
     if (session?.meetingLocationLatitude && session.meetingLocationLongitude) {
@@ -235,23 +235,21 @@ const SessionPage = () => {
     }
     generateParticipantsNameMap();
     updateMeetingLocationBySessionRes();
-    if (session.participantLocations) {
-      generateParticipantsLocation();
-    }
+    generateParticipantsLocation();
   }, [session, generateParticipantsNameMap, generateParticipantsLocation, updateMeetingLocationBySessionRes]);
 
   useEffect(() => {
-    if (session && session.participantLocations && !currentLocation && user?.id) {
-      const currentUserLocInfo = session.participantLocations.find(loc => loc.userId === user.id);
-      if (currentUserLocInfo) {
+    if (session && session.participants && !currentLocation && user?.id) {
+      const currentUserParticipant = session.participants.find(p => p.userId === user.id);
+      if (currentUserParticipant && currentUserParticipant.latitude != null && currentUserParticipant.longitude != null) {
         restoreLocation(
-          currentUserLocInfo.latitude,
-          currentUserLocInfo.longitude,
-          currentUserLocInfo.accuracy ?? undefined
+          currentUserParticipant.latitude,
+          currentUserParticipant.longitude,
+          currentUserParticipant.accuracy ?? undefined
         );
       }
     }
-  }, [session?.participantLocations, user?.id, currentLocation, restoreLocation]);
+  }, [session?.participants, user?.id, currentLocation, restoreLocation]);
 
 
   useEffect(() => {
@@ -398,7 +396,6 @@ const SessionPage = () => {
           <ParticipantList
             session={session}
             currentUserId={user?.id}
-            participantLocations={participantLocations}
             participantAddresses={participantAddresses}
           />
 

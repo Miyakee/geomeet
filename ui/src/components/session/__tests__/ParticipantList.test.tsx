@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ParticipantList } from '../ParticipantList';
-import { SessionDetailResponse, ParticipantLocation } from '../../../types/session';
+import { SessionDetailResponse } from '../../../types/session';
 
 const mockSession: SessionDetailResponse = {
   id: 1,
@@ -34,7 +34,6 @@ describe('ParticipantList', () => {
     render(
       <ParticipantList
         session={mockSession}
-        participantLocations={new Map()}
         participantAddresses={new Map()}
       />,
     );
@@ -46,7 +45,6 @@ describe('ParticipantList', () => {
     render(
       <ParticipantList
         session={mockSession}
-        participantLocations={new Map()}
         participantAddresses={new Map()}
       />,
     );
@@ -65,7 +63,6 @@ describe('ParticipantList', () => {
     render(
       <ParticipantList
         session={emptySession}
-        participantLocations={new Map()}
         participantAddresses={new Map()}
       />,
     );
@@ -73,19 +70,24 @@ describe('ParticipantList', () => {
     expect(screen.getByText(/No participants yet/)).toBeInTheDocument();
   });
 
-  it('should pass location data to participant items', () => {
-    const locations = new Map<number, ParticipantLocation>();
-    locations.set(1, {
-      latitude: 37.7749,
-      longitude: -122.4194,
-      accuracy: 10.0,
-      updatedAt: new Date().toISOString(),
-    });
+  it('should display location data from participant', () => {
+    const sessionWithLocation = {
+      ...mockSession,
+      participants: [
+        {
+          ...mockSession.participants[0],
+          latitude: 37.7749,
+          longitude: -122.4194,
+          accuracy: 10.0,
+          locationUpdatedAt: new Date().toISOString(),
+        },
+        mockSession.participants[1],
+      ],
+    };
 
     render(
       <ParticipantList
-        session={mockSession}
-        participantLocations={locations}
+        session={sessionWithLocation}
         participantAddresses={new Map()}
       />,
     );
@@ -94,20 +96,25 @@ describe('ParticipantList', () => {
   });
 
   it('should pass address data to participant items', () => {
-    const locations = new Map<number, ParticipantLocation>();
-    locations.set(1, {
-      latitude: 37.7749,
-      longitude: -122.4194,
-      accuracy: 10.0,
-      updatedAt: new Date().toISOString(),
-    });
+    const sessionWithLocation = {
+      ...mockSession,
+      participants: [
+        {
+          ...mockSession.participants[0],
+          latitude: 37.7749,
+          longitude: -122.4194,
+          accuracy: 10.0,
+          locationUpdatedAt: new Date().toISOString(),
+        },
+        mockSession.participants[1],
+      ],
+    };
     const addresses = new Map<number, string>();
     addresses.set(1, 'Market Street, San Francisco');
 
     render(
       <ParticipantList
-        session={mockSession}
-        participantLocations={locations}
+        session={sessionWithLocation}
         participantAddresses={addresses}
       />,
     );

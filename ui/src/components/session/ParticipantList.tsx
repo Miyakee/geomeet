@@ -1,18 +1,16 @@
 import { Typography, List, Alert } from '@mui/material';
 import { ParticipantItem } from './ParticipantItem';
-import { SessionDetailResponse, ParticipantLocation } from '../../types/session';
+import { SessionDetailResponse } from '../../types/session';
 
 interface ParticipantListProps {
   session: SessionDetailResponse;
   currentUserId?: number;
-  participantLocations: Map<number, ParticipantLocation>;
   participantAddresses: Map<number, string>;
 }
 
 export const ParticipantList = ({
   session,
   currentUserId,
-  participantLocations,
   participantAddresses,
 }: ParticipantListProps) => {
   return (
@@ -33,7 +31,6 @@ export const ParticipantList = ({
               participant={participant}
               isInitiator={participant.userId === session.initiatorId}
               isCurrentUser={participant.userId === currentUserId}
-              location={participantLocations.get(participant.userId)}
               address={participantAddresses.get(participant.userId)}
             />
           ))}

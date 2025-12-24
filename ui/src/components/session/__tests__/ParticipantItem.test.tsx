@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ParticipantItem } from '../ParticipantItem';
-import { ParticipantInfo, ParticipantLocation } from '../../../types/session';
+import { ParticipantInfo } from '../../../types/session';
 
 const mockParticipant: ParticipantInfo = {
   participantId: 1,
@@ -9,13 +9,6 @@ const mockParticipant: ParticipantInfo = {
   username: 'testuser',
   email: 'test@example.com',
   joinedAt: '2024-01-01T00:00:00',
-};
-
-const mockLocation: ParticipantLocation = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-  accuracy: 10.0,
-  updatedAt: new Date().toISOString(),
 };
 
 describe('ParticipantItem', () => {
@@ -57,13 +50,20 @@ describe('ParticipantItem', () => {
     expect(screen.getByText('You')).toBeInTheDocument();
   });
 
-  it('should display location when provided', () => {
+  it('should display location when provided in participant', () => {
+    const participantWithLocation: ParticipantInfo = {
+      ...mockParticipant,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10.0,
+      locationUpdatedAt: new Date().toISOString(),
+    };
+
     render(
       <ParticipantItem
-        participant={mockParticipant}
+        participant={participantWithLocation}
         isInitiator={false}
         isCurrentUser={false}
-        location={mockLocation}
       />,
     );
 
@@ -72,12 +72,19 @@ describe('ParticipantItem', () => {
   });
 
   it('should display address when provided', () => {
+    const participantWithLocation: ParticipantInfo = {
+      ...mockParticipant,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10.0,
+      locationUpdatedAt: new Date().toISOString(),
+    };
+
     render(
       <ParticipantItem
-        participant={mockParticipant}
+        participant={participantWithLocation}
         isInitiator={false}
         isCurrentUser={false}
-        location={mockLocation}
         address="Market Street, San Francisco"
       />,
     );
@@ -86,12 +93,19 @@ describe('ParticipantItem', () => {
   });
 
   it('should display accuracy when provided', () => {
+    const participantWithLocation: ParticipantInfo = {
+      ...mockParticipant,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10.0,
+      locationUpdatedAt: new Date().toISOString(),
+    };
+
     render(
       <ParticipantItem
-        participant={mockParticipant}
+        participant={participantWithLocation}
         isInitiator={false}
         isCurrentUser={false}
-        location={mockLocation}
       />,
     );
 
@@ -124,19 +138,19 @@ describe('ParticipantItem', () => {
   });
 
   it('should display location age for old locations', () => {
-    const oldLocation: ParticipantLocation = {
+    const participantWithOldLocation: ParticipantInfo = {
+      ...mockParticipant,
       latitude: 37.7749,
       longitude: -122.4194,
       accuracy: 10.0,
-      updatedAt: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
+      locationUpdatedAt: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
     };
 
     render(
       <ParticipantItem
-        participant={mockParticipant}
+        participant={participantWithOldLocation}
         isInitiator={false}
         isCurrentUser={false}
-        location={oldLocation}
       />,
     );
 

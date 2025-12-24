@@ -1,12 +1,11 @@
 import { ListItem, ListItemAvatar, ListItemText, Avatar, Chip, Box, Typography } from '@mui/material';
 import { Person, LocationOn } from '@mui/icons-material';
-import { ParticipantInfo, ParticipantLocation } from '../../types/session';
+import { ParticipantInfo } from '../../types/session';
 
 interface ParticipantItemProps {
   participant: ParticipantInfo;
   isInitiator: boolean;
   isCurrentUser: boolean;
-  location?: ParticipantLocation;
   address?: string;
 }
 
@@ -14,10 +13,12 @@ export const ParticipantItem = ({
   participant,
   isInitiator,
   isCurrentUser,
-  location,
   address,
 }: ParticipantItemProps) => {
-  const locationAge = location ? Date.now() - new Date(location.updatedAt).getTime() : null;
+  // Extract location from participant object
+  const hasLocation = participant.latitude != null && participant.longitude != null;
+  const locationUpdatedAt = participant.locationUpdatedAt || participant.joinedAt;
+  const locationAge = hasLocation && locationUpdatedAt ? Date.now() - new Date(locationUpdatedAt).getTime() : null;
   const isRecent = locationAge !== null && locationAge < 60000;
   const locationAgeSeconds = locationAge !== null ? Math.round(locationAge / 1000) : null;
 
@@ -55,7 +56,7 @@ export const ParticipantItem = ({
             <Typography variant="body2" color="text.secondary">
               {participant.email} • Joined: {new Date(participant.joinedAt).toLocaleString()}
             </Typography>
-            {location && (
+            {hasLocation && participant.latitude != null && participant.longitude != null && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                 <LocationOn sx={{ fontSize: 14, color: isRecent ? 'success.main' : 'text.secondary' }} />
                 <Typography 
@@ -63,9 +64,9 @@ export const ParticipantItem = ({
                   color={isRecent ? 'success.main' : 'text.secondary'} 
                   sx={{ fontSize: '0.75rem' }}
                 >
-                  {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                  {participant.latitude.toFixed(6)}, {participant.longitude.toFixed(6)}
                   {address && <> • {address}</>}
-                  {location.accuracy && <> • ±{Math.round(location.accuracy)}m</>}
+                  {participant.accuracy && <> • ±{Math.round(participant.accuracy)}m</>}
                   {!isRecent && locationAgeSeconds !== null && <> • {locationAgeSeconds}s ago</>}
                 </Typography>
               </Box>
