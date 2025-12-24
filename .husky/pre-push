@@ -75,6 +75,30 @@ else
     changed_files=$(echo "$all_changed_files" | grep -v '^$' | sort -u)
 fi
 
+# Also check for staged and unstaged changes (work in progress)
+# This ensures we catch changes that haven't been committed yet
+staged_files=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || echo "")
+unstaged_files=$(git diff --name-only --diff-filter=ACM 2>/dev/null || echo "")
+
+# Combine all changed files (commits being pushed + staged + unstaged)
+if [ -n "$staged_files" ]; then
+    if [ -n "$changed_files" ]; then
+        changed_files="$changed_files"$'\n'"$staged_files"
+    else
+        changed_files="$staged_files"
+    fi
+fi
+if [ -n "$unstaged_files" ]; then
+    if [ -n "$changed_files" ]; then
+        changed_files="$changed_files"$'\n'"$unstaged_files"
+    else
+        changed_files="$unstaged_files"
+    fi
+fi
+
+# Remove duplicates and empty lines
+changed_files=$(echo "$changed_files" | grep -v '^$' | sort -u)
+
 # Check if api or ui directories have changes
 api_changed=false
 ui_changed=false
