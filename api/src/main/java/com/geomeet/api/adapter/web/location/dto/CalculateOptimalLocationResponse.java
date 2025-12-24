@@ -1,13 +1,17 @@
 package com.geomeet.api.adapter.web.location.dto;
 
 import com.geomeet.api.application.result.CalculateOptimalLocationResult;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO for optimal location calculation response.
  */
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class CalculateOptimalLocationResponse {
     private Long sessionId;

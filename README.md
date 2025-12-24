@@ -195,6 +195,24 @@ They were chosen intentionally to align the project more closely with real-world
 Trade-off:
 Slower development at the beginning, but significant long-term skill growth and practical experience.
 
+### Swagger for API Documentation
+
+Swagger (OpenAPI) is integrated into the project to provide interactive and self-documented APIs.
+
+Reasoning:
+
+Makes API behavior clear and discoverable
+
+Allows frontend and backend to align on API contracts quickly
+
+Enables easy testing and validation of APIs through the UI
+
+Reduces communication and onboarding cost
+
+Trade-off:
+Introducing Swagger adds additional configuration and maintenance overhead, but significantly improves API transparency, development efficiency, and long-term maintainability.
+
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -296,7 +314,8 @@ Frontend will start on `http://localhost:3000`
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8080
 - **Health Check**: http://localhost:8080/health
-
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- 
 ## 👥 Default Users (can register new one )
 
 When running in `local` profile, the following test users are automatically created:

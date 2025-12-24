@@ -26,6 +26,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 
 /**
@@ -35,6 +42,8 @@ import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 @RestController
 @RequestMapping("/api/sessions")
 @AllArgsConstructor
+@Tag(name = "Locations", description = "Location management APIs for updating and calculating meeting locations")
+@SecurityRequirement(name = "Bearer Authentication")
 public class LocationController {
 
   private final UpdateLocationUseCase updateLocationUseCase;
@@ -42,20 +51,21 @@ public class LocationController {
   private final UpdateMeetingLocationUseCase updateMeetingLocationUseCase;
 
 
-  /**
-   * Update the current user's location in a session.
-   * This endpoint allows participants to update their location.
-   *
-   * @param sessionId      the session ID
-   * @param request        the location update request
-   * @param authentication the authenticated user
-   * @return location update response
-   */
+  @Operation(
+      summary = "Update participant location",
+      description = "Update the current user's location in a session. This endpoint allows participants to share their location."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Location updated successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid location data"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @PutMapping("/{sessionId}/location")
   public ResponseEntity<UpdateLocationResponse> updateLocation(
-      @PathVariable String sessionId,
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
       @Valid @RequestBody UpdateLocationRequest request,
-      Authentication authentication
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
@@ -71,18 +81,20 @@ public class LocationController {
     return ok(UpdateLocationResponse.create(result));
   }
 
-  /**
-   * Calculate the optimal meeting location for a session.
-   * This endpoint calculates the geometric center of all participant locations.
-   *
-   * @param sessionId      the session ID
-   * @param authentication the authenticated user
-   * @return optimal location response
-   */
+  @Operation(
+      summary = "Calculate optimal meeting location",
+      description = "Calculate the optimal meeting location (geometric center) based on all participant locations."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Optimal location calculated successfully"),
+      @ApiResponse(responseCode = "400", description = "Cannot calculate - at least one participant must share location"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @PostMapping("/{sessionId}/optimal-location")
   public ResponseEntity<CalculateOptimalLocationResponse> calculateOptimalLocation(
-      @PathVariable String sessionId,
-      Authentication authentication
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
@@ -92,20 +104,22 @@ public class LocationController {
     return ok(CalculateOptimalLocationResponse.create(result));
   }
 
-  /**
-   * Update the meeting location for a session.
-   * Only the session initiator can update the meeting location.
-   *
-   * @param sessionId      the session ID
-   * @param request        the meeting location update request
-   * @param authentication the authenticated user
-   * @return meeting location update response
-   */
+  @Operation(
+      summary = "Update meeting location",
+      description = "Update the meeting location for a session. Only the session initiator can update the meeting location."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Meeting location updated successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid location data"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Only the session initiator can update meeting location"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @PutMapping("/{sessionId}/meeting-location")
   public ResponseEntity<UpdateMeetingLocationResponse> updateMeetingLocation(
-      @PathVariable String sessionId,
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
       @Valid @RequestBody UpdateMeetingLocationRequest request,
-      Authentication authentication
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 

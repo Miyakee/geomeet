@@ -36,6 +36,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import static com.geomeet.api.adapter.web.util.ResponseUtil.created;
 import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 
@@ -46,6 +53,8 @@ import static com.geomeet.api.adapter.web.util.ResponseUtil.ok;
 @RestController
 @RequestMapping("/api/sessions")
 @AllArgsConstructor
+@Tag(name = "Sessions", description = "Session management APIs for creating, joining, and managing meeting sessions")
+@SecurityRequirement(name = "Bearer Authentication")
 public class SessionController {
 
   private final CreateSessionUseCase createSessionUseCase;
@@ -55,10 +64,18 @@ public class SessionController {
   private final BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
   private final EndSessionUseCase endSessionUseCase;
 
+  @Operation(
+      summary = "Create a new session",
+      description = "Create a new meeting session. The authenticated user becomes the session initiator."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Session created successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
   @PostMapping
   public ResponseEntity<CreateSessionResponse> createSession(
       @RequestBody CreateSessionRequest request,
-      Authentication authentication
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long initiatorId = AuthenticationUtil.getUserId(authentication);
 
@@ -68,14 +85,20 @@ public class SessionController {
     return created(CreateSessionResponse.create(result));
   }
 
-  /**
-   * Generate an invitation link/code for a session.
-   * Only the session initiator can generate the invite link.
-   */
+  @Operation(
+      summary = "Generate invitation link",
+      description = "Generate an invitation link and code for a session. Only the session initiator can generate the invite link."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Invitation link generated successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Only the session initiator can generate invite links"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @GetMapping("/{sessionId}/invite")
   public ResponseEntity<InviteLinkResponse> generateInviteLink(
-      @PathVariable String sessionId,
-      Authentication authentication
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
@@ -85,13 +108,20 @@ public class SessionController {
     return ok(InviteLinkResponse.from(result));
   }
 
-  /**
-   * Join a session using invitation code (sessionId).
-   */
+  @Operation(
+      summary = "Join a session",
+      description = "Join a session using session ID and invitation code."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Successfully joined the session"),
+      @ApiResponse(responseCode = "400", description = "Invalid request data or invalid invite code"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @PostMapping("/join")
   public ResponseEntity<JoinSessionResponse> joinSession(
       @Valid @RequestBody JoinSessionRequest request,
-      Authentication authentication
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
@@ -103,13 +133,20 @@ public class SessionController {
     return created(JoinSessionResponse.from(result));
   }
 
-  /**
-   * Get session details including participants.
-   */
+  @Operation(
+      summary = "Get session details",
+      description = "Get detailed information about a session including participants and their locations."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Session details retrieved successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied - user is not a participant or initiator"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @GetMapping("/{sessionId}")
   public ResponseEntity<SessionDetailResponse> getSessionDetails(
-      @PathVariable String sessionId,
-      Authentication authentication
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
@@ -119,14 +156,20 @@ public class SessionController {
     return ok(SessionDetailResponse.from(result));
   }
 
-  /**
-   * End a session.
-   * Only the session initiator can end the session.
-   */
+  @Operation(
+      summary = "End a session",
+      description = "End a session. Only the session initiator can end the session."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Session ended successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Only the session initiator can end the session"),
+      @ApiResponse(responseCode = "404", description = "Session not found")
+  })
   @DeleteMapping("/{sessionId}")
   public ResponseEntity<EndSessionResponse> endSession(
-      @PathVariable String sessionId,
-      Authentication authentication
+      @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
+      @Parameter(hidden = true) Authentication authentication
   ) {
     Long userId = AuthenticationUtil.getUserId(authentication);
 
