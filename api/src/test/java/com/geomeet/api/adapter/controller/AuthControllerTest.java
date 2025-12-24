@@ -137,8 +137,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registerRequest))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("register staff Failed"))
-            .andExpect(jsonPath("$.message").value("Invalid email: existing email"));
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Invalid email: existing email or username"));
     }
 
     @Test
@@ -151,8 +151,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registerRequest))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("register staff Failed"))
-            .andExpect(jsonPath("$.message").value("Invalid email: existing email"));
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Invalid email: existing email or username"));
     }
 }
 

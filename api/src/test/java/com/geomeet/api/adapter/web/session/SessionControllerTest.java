@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -119,7 +120,7 @@ class SessionControllerTest {
         assertEquals(SessionStatus.ACTIVE.getValue(), responseBody.getStatus());
         assertEquals("Session created successfully", responseBody.getMessage());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(createSessionUseCase).execute(any(CreateSessionCommand.class));
     }
 
@@ -127,10 +128,11 @@ class SessionControllerTest {
     void shouldGenerateInviteLinkSuccessfully() {
         // Given
         Long userId = 1L;
+        String inviteCode = "ABCDEFGH";
         GenerateInviteLinkResult result = GenerateInviteLinkResult.builder()
             .sessionId(sessionIdString)
-            .inviteLink("/join?sessionId=" + sessionIdString)
-            .inviteCode(sessionIdString)
+            .inviteLink("/join?sessionId=" + sessionIdString + "&inviteCode=" + inviteCode)
+            .inviteCode(inviteCode)
             .build();
 
         when(authentication.getPrincipal()).thenReturn(userId);
@@ -149,11 +151,11 @@ class SessionControllerTest {
 
         InviteLinkResponse responseBody = response.getBody();
         assertEquals(sessionIdString, responseBody.getSessionId());
-        assertEquals("/join?sessionId=" + sessionIdString, responseBody.getInviteLink());
-        assertEquals(sessionIdString, responseBody.getInviteCode());
+        assertEquals("/join?sessionId=" + sessionIdString + "&inviteCode=" + inviteCode, responseBody.getInviteLink());
+        assertEquals(inviteCode, responseBody.getInviteCode());
         assertEquals("Invitation link generated successfully", responseBody.getMessage());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(generateInviteLinkUseCase).execute(any(GenerateInviteLinkCommand.class));
     }
 
@@ -162,8 +164,10 @@ class SessionControllerTest {
         // Given
         Long userId = 2L;
         Long participantId = 200L;
+        String inviteCode = "ABC123";
         JoinSessionRequest request = new JoinSessionRequest();
         request.setSessionId(sessionIdString);
+        request.setInviteCode(inviteCode);
 
         JoinSessionResult result = JoinSessionResult.builder()
             .participantId(participantId)
@@ -192,7 +196,7 @@ class SessionControllerTest {
         assertEquals(userId, responseBody.getUserId());
         assertEquals("Successfully joined session", responseBody.getMessage());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(joinSessionUseCase).execute(any(JoinSessionCommand.class));
         verify(broadcastSessionUpdateUseCase).execute(sessionIdString);
     }
@@ -243,7 +247,7 @@ class SessionControllerTest {
         assertEquals(1, responseBody.getParticipants().size());
         assertEquals(1L, responseBody.getParticipantCount());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
     }
 
@@ -276,7 +280,7 @@ class SessionControllerTest {
         assertEquals("Session ended successfully", response.getBody().getMessage());
         assertEquals("2024-01-01T12:00:00", response.getBody().getEndedAt());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(endSessionUseCase).execute(any(EndSessionCommand.class));
     }
 
@@ -332,7 +336,7 @@ class SessionControllerTest {
         assertEquals(10.5, participant.getAccuracy());
         assertEquals("2024-01-01T10:00:00", participant.getLocationUpdatedAt());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
     }
 
@@ -389,7 +393,7 @@ class SessionControllerTest {
         assertNull(responseBody.getParticipants().get(0).getLatitude());
         assertNull(responseBody.getParticipants().get(0).getLongitude());
 
-        verify(authentication).getPrincipal();
+        verify(authentication, atLeastOnce()).getPrincipal();
         verify(getSessionDetailsUseCase).execute(any(GetSessionDetailsCommand.class));
     }
 }

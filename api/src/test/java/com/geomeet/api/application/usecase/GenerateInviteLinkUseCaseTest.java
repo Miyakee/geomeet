@@ -71,8 +71,8 @@ class GenerateInviteLinkUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(sessionIdString, result.getSessionId());
-        assertEquals("/join?sessionId=" + sessionIdString, result.getInviteLink());
-        assertEquals(sessionIdString, result.getInviteCode());
+        assertEquals("/join?sessionId=" + sessionIdString + "&inviteCode=" + session.getInviteCode().getValue(), result.getInviteLink());
+        assertEquals(session.getInviteCode().getValue(), result.getInviteCode());
 
         verify(sessionRepository).findBySessionId(any(SessionId.class));
     }

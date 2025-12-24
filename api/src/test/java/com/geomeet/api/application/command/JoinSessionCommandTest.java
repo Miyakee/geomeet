@@ -12,14 +12,16 @@ class JoinSessionCommandTest {
     void shouldCreateJoinSessionCommandSuccessfully() {
         // Given
         String sessionId = "test-session-id";
+        String inviteCode = "ABC123";
         Long userId = 1L;
 
         // When
-        JoinSessionCommand command = JoinSessionCommand.of(sessionId, userId);
+        JoinSessionCommand command = JoinSessionCommand.of(sessionId, inviteCode, userId);
 
         // Then
         assertNotNull(command);
         assertEquals(sessionId, command.getSessionId());
+        assertEquals(inviteCode, command.getInviteCode());
         assertEquals(userId, command.getUserId());
     }
 
@@ -27,17 +29,20 @@ class JoinSessionCommandTest {
     void shouldCreateJoinSessionCommandUsingBuilder() {
         // Given
         String sessionId = "test-session-id";
+        String inviteCode = "ABC123";
         Long userId = 1L;
 
         // When
         JoinSessionCommand command = JoinSessionCommand.builder()
             .sessionId(sessionId)
+            .inviteCode(inviteCode)
             .userId(userId)
             .build();
 
         // Then
         assertNotNull(command);
         assertEquals(sessionId, command.getSessionId());
+        assertEquals(inviteCode, command.getInviteCode());
         assertEquals(userId, command.getUserId());
     }
 
@@ -46,7 +51,7 @@ class JoinSessionCommandTest {
         // When & Then
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
-            () -> new JoinSessionCommand(null, 1L)
+            () -> new JoinSessionCommand(null, "ABC123", 1L)
         );
 
         assertEquals("Session ID cannot be null or empty", exception.getMessage());
@@ -57,7 +62,7 @@ class JoinSessionCommandTest {
         // When & Then
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
-            () -> new JoinSessionCommand("   ", 1L)
+            () -> new JoinSessionCommand("   ", "ABC123", 1L)
         );
 
         assertEquals("Session ID cannot be null or empty", exception.getMessage());
@@ -68,10 +73,32 @@ class JoinSessionCommandTest {
         // When & Then
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
-            () -> new JoinSessionCommand("test-session-id", null)
+            () -> new JoinSessionCommand("test-session-id", "ABC123", null)
         );
 
         assertEquals("User ID cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenInviteCodeIsNull() {
+        // When & Then
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> new JoinSessionCommand("test-session-id", null, 1L)
+        );
+
+        assertEquals("Invite code cannot be null or empty", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenInviteCodeIsBlank() {
+        // When & Then
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> new JoinSessionCommand("test-session-id", "   ", 1L)
+        );
+
+        assertEquals("Invite code cannot be null or empty", exception.getMessage());
     }
 }
 

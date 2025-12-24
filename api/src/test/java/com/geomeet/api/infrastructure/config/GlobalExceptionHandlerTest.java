@@ -103,7 +103,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getBody().getStatus());
-        assertEquals("Domain Error", response.getBody().getError());
+        assertEquals("Bad Request", response.getBody().getError());
         assertEquals("Domain error occurred", response.getBody().getMessage());
     }
 
@@ -143,6 +143,23 @@ class GlobalExceptionHandlerTest {
 
 
     @Test
+    void shouldHandleIllegalArgumentException() {
+        // Given
+        IllegalArgumentException ex = new IllegalArgumentException("Invalid argument provided");
+
+        // When
+        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleIllegalArgumentException(ex, webRequest);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getBody().getStatus());
+        assertEquals("Invalid Argument", response.getBody().getError());
+        assertEquals("Invalid argument provided", response.getBody().getMessage());
+    }
+
+    @Test
     void shouldHandleGenericException() {
         // Given
         Exception ex = new Exception("Internal server error");
@@ -156,7 +173,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getBody().getStatus());
         assertEquals("Internal Server Error", response.getBody().getError());
-        assertEquals("Internal server error", response.getBody().getMessage());
+        assertEquals("Ops...Please try later", response.getBody().getMessage());
     }
 }
 

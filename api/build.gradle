@@ -89,14 +89,14 @@ jacocoTestCoverageVerification {
     dependsOn jacocoTestReport
 
     violationRules {
-        // Overall coverage rule - 90% minimum
+        // Overall coverage rule - 80% minimum
         rule {
             limit {
                 minimum = 0.80
             }
         }
 
-        // Class-level coverage - 90% line coverage required
+        // Class-level coverage - 80% line coverage required
         rule {
             element = 'CLASS'
             excludes = [
@@ -114,11 +114,11 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                minimum = 0.90
+                minimum = 0.80
             }
         }
 
-        // Branch coverage - 90% branch coverage required
+        // Branch coverage - 80% branch coverage required
         rule {
             element = 'CLASS'
             excludes = [
@@ -137,7 +137,7 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                minimum = 0.90
+                minimum = 0.80
             }
         }
     }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.geomeet.api.application.usecase.auth.UserRepository;
+import com.geomeet.api.application.usecase.location.ParticipantLocationRepository;
 import com.geomeet.api.application.usecase.session.BroadcastSessionUpdateUseCase;
 import com.geomeet.api.application.usecase.session.SessionParticipantRepository;
 import com.geomeet.api.application.usecase.session.SessionRepository;
@@ -42,6 +43,9 @@ class BroadcastSessionUpdateUseCaseTest {
     private UserRepository userRepository;
 
     @Mock
+    private ParticipantLocationRepository participantLocationRepository;
+
+    @Mock
     private SimpMessagingTemplate messagingTemplate;
 
     private BroadcastSessionUpdateUseCase broadcastSessionUpdateUseCase;
@@ -61,6 +65,7 @@ class BroadcastSessionUpdateUseCaseTest {
             sessionRepository,
             sessionParticipantRepository,
             userRepository,
+            participantLocationRepository,
             messagingTemplate
         );
 
@@ -124,6 +129,7 @@ class BroadcastSessionUpdateUseCaseTest {
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
         when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
         when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
         // When
         broadcastSessionUpdateUseCase.execute(sessionIdString);
@@ -133,6 +139,7 @@ class BroadcastSessionUpdateUseCaseTest {
         verify(userRepository).findById(initiatorId);
         verify(sessionParticipantRepository).findBySessionId(sessionId);
         verify(userRepository).findById(userId);
+        verify(participantLocationRepository).findBySessionId(sessionId);
         verify(messagingTemplate).convertAndSend(
             eq("/topic/session/" + sessionIdString),
             any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
@@ -182,6 +189,7 @@ class BroadcastSessionUpdateUseCaseTest {
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
         when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
         // When
         broadcastSessionUpdateUseCase.execute(sessionIdString);
@@ -191,6 +199,7 @@ class BroadcastSessionUpdateUseCaseTest {
         verify(userRepository).findById(initiatorId);
         verify(sessionParticipantRepository).findBySessionId(sessionId);
         verify(userRepository).findById(userId);
+        verify(participantLocationRepository).findBySessionId(sessionId);
         // Should still broadcast even if some participant users are not found (filtered out)
         verify(messagingTemplate).convertAndSend(
             eq("/topic/session/" + sessionIdString),
@@ -217,6 +226,7 @@ class BroadcastSessionUpdateUseCaseTest {
         when(sessionParticipantRepository.findBySessionId(sessionId))
             .thenReturn(List.of(initiatorParticipant, participant));
         when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
         // When
         broadcastSessionUpdateUseCase.execute(sessionIdString);
@@ -226,6 +236,7 @@ class BroadcastSessionUpdateUseCaseTest {
         verify(userRepository, times(2)).findById(initiatorId); // Called once for initiator, once in participant stream
         verify(sessionParticipantRepository).findBySessionId(sessionId);
         verify(userRepository).findById(userId);
+        verify(participantLocationRepository).findBySessionId(sessionId);
         verify(messagingTemplate).convertAndSend(
             eq("/topic/session/" + sessionIdString),
             any(com.geomeet.api.application.result.GetSessionDetailsResult.class)

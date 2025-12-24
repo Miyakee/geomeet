@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import com.geomeet.api.infrastructure.persistence.entity.SessionEntity;
@@ -42,9 +43,11 @@ class SessionRepositoryImplTest {
     void setUp() {
         sessionDbId = 100L;
         sessionId = SessionId.generate();
+        InviteCode inviteCode = InviteCode.generate();
         sessionEntity = SessionEntity.builder()
             .id(sessionDbId)
             .sessionId(sessionId.getValue())
+            .inviteCode(inviteCode.getValue())
             .initiatorId(1L)
             .status(SessionStatus.ACTIVE.getValue())
             .build();

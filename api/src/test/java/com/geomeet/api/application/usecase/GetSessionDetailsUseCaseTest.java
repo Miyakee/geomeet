@@ -372,7 +372,8 @@ class GetSessionDetailsUseCaseTest {
         when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
             .thenReturn(false);
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
-        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
         when(participantLocationRepository.findBySessionId(sessionId))
             .thenReturn(List.of(participantLocation));
 
@@ -381,12 +382,20 @@ class GetSessionDetailsUseCaseTest {
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getParticipantLocations());
-        assertEquals(1, result.getParticipantLocations().size());
-        assertEquals(1.3521, result.getParticipantLocations().get(0).getLatitude());
-        assertEquals(103.8198, result.getParticipantLocations().get(0).getLongitude());
-        assertEquals(10.5, result.getParticipantLocations().get(0).getAccuracy());
-        assertNotNull(result.getParticipantLocations().get(0).getUpdatedAt());
+        assertNotNull(result.getParticipants());
+        assertEquals(2, result.getParticipants().size()); // initiator + participant
+        
+        // Find the participant with location
+        GetSessionDetailsResult.ParticipantInfo participantWithLocation = result.getParticipants().stream()
+            .filter(p -> p.getUserId().equals(userId))
+            .findFirst()
+            .orElse(null);
+        
+        assertNotNull(participantWithLocation);
+        assertEquals(1.3521, participantWithLocation.getLatitude());
+        assertEquals(103.8198, participantWithLocation.getLongitude());
+        assertEquals(10.5, participantWithLocation.getAccuracy());
+        assertNotNull(participantWithLocation.getLocationUpdatedAt());
     }
 
     @Test
@@ -415,7 +424,8 @@ class GetSessionDetailsUseCaseTest {
         when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
             .thenReturn(false);
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
-        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
         when(participantLocationRepository.findBySessionId(sessionId))
             .thenReturn(List.of(participantLocation));
 
@@ -424,9 +434,16 @@ class GetSessionDetailsUseCaseTest {
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getParticipantLocations());
-        assertEquals(1, result.getParticipantLocations().size());
-        assertNull(result.getParticipantLocations().get(0).getAccuracy());
+        assertNotNull(result.getParticipants());
+        
+        // Find the participant with location
+        GetSessionDetailsResult.ParticipantInfo participantWithLocation = result.getParticipants().stream()
+            .filter(p -> p.getUserId().equals(userId))
+            .findFirst()
+            .orElse(null);
+        
+        assertNotNull(participantWithLocation);
+        assertNull(participantWithLocation.getAccuracy());
     }
 
     @Test
@@ -455,7 +472,8 @@ class GetSessionDetailsUseCaseTest {
         when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
             .thenReturn(false);
         when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
-        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
         when(participantLocationRepository.findBySessionId(sessionId))
             .thenReturn(List.of(participantLocation));
 
@@ -464,13 +482,20 @@ class GetSessionDetailsUseCaseTest {
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getParticipantLocations());
-        assertEquals(1, result.getParticipantLocations().size());
-        assertNull(result.getParticipantLocations().get(0).getUpdatedAt());
+        assertNotNull(result.getParticipants());
+        
+        // Find the participant with location
+        GetSessionDetailsResult.ParticipantInfo participantWithLocation = result.getParticipants().stream()
+            .filter(p -> p.getUserId().equals(userId))
+            .findFirst()
+            .orElse(null);
+        
+        assertNotNull(participantWithLocation);
+        assertNull(participantWithLocation.getLocationUpdatedAt());
     }
 
     @Test
-    void shouldReturnEmptyParticipantLocationsWhenNoneExist() {
+    void shouldReturnParticipantsWithoutLocationsWhenNoneExist() {
         // Given
         GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
         when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
@@ -485,8 +510,15 @@ class GetSessionDetailsUseCaseTest {
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getParticipantLocations());
-        assertEquals(0, result.getParticipantLocations().size());
+        assertNotNull(result.getParticipants());
+        assertEquals(1, result.getParticipants().size()); // Only initiator
+        
+        // Initiator should not have location information
+        GetSessionDetailsResult.ParticipantInfo initiatorInfo = result.getParticipants().get(0);
+        assertNull(initiatorInfo.getLatitude());
+        assertNull(initiatorInfo.getLongitude());
+        assertNull(initiatorInfo.getAccuracy());
+        assertNull(initiatorInfo.getLocationUpdatedAt());
     }
 }
 

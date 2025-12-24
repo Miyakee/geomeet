@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.geomeet.api.domain.entity.Session;
+import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import com.geomeet.api.infrastructure.persistence.entity.SessionEntity;
@@ -23,10 +24,12 @@ class SessionMapperTest {
     void setUp() {
         sessionDbId = 100L;
         sessionId = SessionId.generate();
+        InviteCode inviteCode = InviteCode.generate();
 
         sessionEntity = SessionEntity.builder()
             .id(sessionDbId)
             .sessionId(sessionId.getValue())
+            .inviteCode(inviteCode.getValue())
             .initiatorId(1L)
             .status(SessionStatus.ACTIVE.getValue())
             .createdAt(LocalDateTime.now())

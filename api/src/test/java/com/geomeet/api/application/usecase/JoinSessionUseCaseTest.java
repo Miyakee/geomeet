@@ -18,6 +18,7 @@ import com.geomeet.api.application.usecase.session.SessionRepository;
 import com.geomeet.api.domain.entity.Session;
 import com.geomeet.api.domain.entity.SessionParticipant;
 import com.geomeet.api.domain.exception.GeomeetDomainException;
+import com.geomeet.api.domain.valueobject.InviteCode;
 import com.geomeet.api.domain.valueobject.SessionId;
 import com.geomeet.api.domain.valueobject.SessionStatus;
 import java.util.Optional;
@@ -45,22 +46,25 @@ class JoinSessionUseCaseTest {
   private Long sessionDbId;
 
   private String inviteCode;
+  private InviteCode inviteCodeVO;
 
   @BeforeEach
   void setUp() {
     joinSessionUseCase = new JoinSessionUseCase(sessionRepository, sessionParticipantRepository);
     userId = 1L;
     sessionIdString = "test-session-id-123";
-    inviteCode = "test";
+    inviteCodeVO = InviteCode.generate(); // Generate a valid invite code
+    inviteCode = inviteCodeVO.getValue(); // Use the generated code value
     sessionId = SessionId.fromString(sessionIdString);
     sessionDbId = 100L;
     activeSession = Session.reconstruct(
         sessionDbId,
         sessionId,
+        inviteCodeVO,
         2L, // initiatorId
         SessionStatus.ACTIVE,
-        null, // createdAt
-        null, // updatedAt
+        java.time.LocalDateTime.now(), // createdAt
+        java.time.LocalDateTime.now(), // updatedAt
         null, // createdBy
         null  // updatedBy
     );
@@ -116,7 +120,7 @@ class JoinSessionUseCaseTest {
       joinSessionUseCase.execute(command);
     });
 
-    assertEquals("Session not found", exception.getMessage());
+    assertEquals("Invalid Session code", exception.getMessage());
     verify(sessionRepository).findBySessionId(sessionId);
     verify(sessionParticipantRepository, never()).findBySessionIdAndUserId(anyLong(), anyLong());
     verify(sessionParticipantRepository, never()).save(any(SessionParticipant.class));
@@ -128,6 +132,7 @@ class JoinSessionUseCaseTest {
     Session endedSession = Session.reconstruct(
         sessionDbId,
         sessionId,
+        inviteCodeVO,
         2L, // initiatorId
         SessionStatus.ENDED,
         null, // createdAt
