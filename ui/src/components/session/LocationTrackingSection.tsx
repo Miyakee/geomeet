@@ -158,7 +158,7 @@ export const LocationTrackingSection = ({
               <Switch
                 checked={locationEnabled}
                 onChange={onToggle}
-                disabled={updatingLocation || isSessionEnded}
+                disabled={updatingLocation || isSessionEnded || manualDialogOpen || searching}
               />
             }
             label={locationEnabled ? 'Enabled' : 'Disabled'}

@@ -68,8 +68,7 @@ public class LocationController {
     );
     UpdateLocationResult result = updateLocationUseCase.execute(command);
 
-    UpdateLocationResponse response = UpdateLocationResponse.create(result);
-    return ok(response);
+    return ok(UpdateLocationResponse.create(result));
   }
 
   /**
@@ -90,9 +89,7 @@ public class LocationController {
     CalculateOptimalLocationCommand command = CalculateOptimalLocationCommand.of(sessionId, userId);
     CalculateOptimalLocationResult result = calculateOptimalLocationUseCase.execute(command);
 
-    CalculateOptimalLocationResponse response = CalculateOptimalLocationResponse.create(result);
-
-    return ok(response);
+    return ok(CalculateOptimalLocationResponse.create(result));
   }
 
   /**
@@ -120,9 +117,7 @@ public class LocationController {
     );
     UpdateMeetingLocationResult result = updateMeetingLocationUseCase.execute(command);
 
-    UpdateMeetingLocationResponse response = UpdateMeetingLocationResponse.create(result);
-
-    return ok(response);
+    return ok(UpdateMeetingLocationResponse.create(result));
   }
 }
 

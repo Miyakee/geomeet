@@ -37,11 +37,9 @@ public class AuthController {
     );
 
     LoginResult result = loginUseCase.execute(command);
-
     String token = jwtTokenService.generateToken(result.getUserId(), result.getUsername());
 
-    LoginResponse response = LoginResponse.toResponse(token, result);
-    return ok(response);
+    return ok(LoginResponse.toResponse(token, result));
   }
 
   @PostMapping("/register")
@@ -53,8 +51,7 @@ public class AuthController {
     LoginResult result = registerUseCase.execute(command);
     String token = jwtTokenService.generateToken(result.getUserId(), result.getUsername());
 
-    LoginResponse response = LoginResponse.toResponse(token, result);
-    return ok(response);
+    return ok(LoginResponse.toResponse(token, result));
   }
 }
 

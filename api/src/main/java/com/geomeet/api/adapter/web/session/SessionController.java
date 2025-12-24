@@ -6,7 +6,6 @@ import com.geomeet.api.adapter.web.session.dto.EndSessionResponse;
 import com.geomeet.api.adapter.web.session.dto.InviteLinkResponse;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionRequest;
 import com.geomeet.api.adapter.web.session.dto.JoinSessionResponse;
-import com.geomeet.api.adapter.web.session.dto.ParticipantInfo;
 import com.geomeet.api.adapter.web.session.dto.SessionDetailResponse;
 import com.geomeet.api.application.command.CreateSessionCommand;
 import com.geomeet.api.application.command.EndSessionCommand;

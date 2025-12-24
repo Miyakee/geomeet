@@ -1,5 +1,6 @@
 package com.geomeet.api.adapter.web.session.dto;
 
+import com.geomeet.api.application.result.EndSessionResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,18 @@ public class EndSessionResponse {
     private String status;
     private String endedAt;
     private String message;
+
+    /**
+     * Creates an EndSessionResponse from an EndSessionResult.
+     */
+    public static EndSessionResponse from(EndSessionResult result) {
+        return EndSessionResponse.builder()
+            .sessionId(result.getSessionId())
+            .sessionIdString(result.getSessionIdString())
+            .status(result.getStatus())
+            .endedAt(result.getEndedAt())
+            .message(result.getMessage())
+            .build();
+    }
 }
 
