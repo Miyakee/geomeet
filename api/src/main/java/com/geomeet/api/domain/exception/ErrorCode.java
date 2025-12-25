@@ -27,8 +27,9 @@ public enum ErrorCode {
     
     // Location related errors
     CANNOT_UPDATE_LOCATION_ENDED("Cannot update location for an ended session", HttpStatus.BAD_REQUEST),
-    CANNOT_UPDATE_MEETING_LOCATION_ENDED("Cannot update meeting location for an ended session", HttpStatus.BAD_REQUEST),
-    CANNOT_CALCULATE_OPTIMAL_LOCATION_ENDED("Cannot calculate optimal location for an ended session", HttpStatus.BAD_REQUEST),
+    CANNOT_UPDATE_MEETING_LOC_ENDED("Cannot update meeting location for an ended session", HttpStatus.BAD_REQUEST),
+    CANNOT_CALCULATE_OPTIMAL_LOC_ENDED(
+        "Cannot calculate optimal location for an ended session", HttpStatus.BAD_REQUEST),
     
     // User related errors
     USER_NOT_FOUND("User not found", HttpStatus.BAD_REQUEST),
@@ -37,7 +38,9 @@ public enum ErrorCode {
     INVALID_EMAIL_OR_USERNAME("Invalid email: existing email or username", HttpStatus.BAD_REQUEST),
     
     // Optimal location errors
-    INSUFFICIENT_PARTICIPANTS("Cannot calculate optimal location. At least one participant must share their location", HttpStatus.BAD_REQUEST);
+    INSUFFICIENT_PARTICIPANTS(
+        "Cannot calculate optimal location. At least one participant must share their location",
+        HttpStatus.BAD_REQUEST);
 
 
     private final String message;

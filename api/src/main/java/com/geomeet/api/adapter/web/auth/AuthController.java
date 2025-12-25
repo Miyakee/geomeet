@@ -41,7 +41,7 @@ public class AuthController {
       summary = "User login",
       description = "Authenticate user with username/email and password. Returns JWT token for subsequent API calls."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Login successful"),
       @ApiResponse(responseCode = "401", description = "Invalid credentials"),
       @ApiResponse(responseCode = "400", description = "Invalid request data")
@@ -63,7 +63,7 @@ public class AuthController {
       summary = "User registration",
       description = "Register a new user account. Returns JWT token for immediate authentication."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Registration successful"),
       @ApiResponse(responseCode = "400", description = "Invalid request data or user already exists"),
       @ApiResponse(responseCode = "422", description = "Validation failed")

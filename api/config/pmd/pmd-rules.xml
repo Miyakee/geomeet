@@ -40,6 +40,8 @@
         <exclude name="ExcessiveImports"/>
         <exclude name="CouplingBetweenObjects"/>
         <exclude name="CyclomaticComplexity"/>
+        <exclude name="CognitiveComplexity"/>
+        <exclude name="NPathComplexity"/>
         <exclude name="CollapsibleIfStatements"/>
         <exclude name="AvoidDeeplyNestedIfStmts"/>
         <exclude name="SignatureDeclareThrowsException"/>

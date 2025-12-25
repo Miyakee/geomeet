@@ -49,7 +49,7 @@ public class CalculateOptimalLocationUseCase {
 
         // Check if session is active
         if (!session.isActive()) {
-            throw ErrorCode.CANNOT_CALCULATE_OPTIMAL_LOCATION_ENDED.toException();
+            throw ErrorCode.CANNOT_CALCULATE_OPTIMAL_LOC_ENDED.toException();
         }
 
         // Check if user is a participant or initiator

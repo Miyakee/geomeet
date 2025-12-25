@@ -17,7 +17,8 @@ import lombok.ToString;
 @ToString
 public class InviteCode {
 
-    private static final String CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluding confusing characters (0, O, I, 1)
+    // Excluding confusing characters (0, O, I, 1)
+    private static final String CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int CODE_LENGTH = 8;
     private static final SecureRandom RANDOM = new SecureRandom();
 

@@ -53,9 +53,10 @@ public class LocationController {
 
   @Operation(
       summary = "Update participant location",
-      description = "Update the current user's location in a session. This endpoint allows participants to share their location."
+      description = "Update the current user's location in a session. "
+          + "This endpoint allows participants to share their location."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Location updated successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid location data"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -83,11 +84,13 @@ public class LocationController {
 
   @Operation(
       summary = "Calculate optimal meeting location",
-      description = "Calculate the optimal meeting location (geometric center) based on all participant locations."
+      description = "Calculate the optimal meeting location (geometric center) "
+          + "based on all participant locations."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Optimal location calculated successfully"),
-      @ApiResponse(responseCode = "400", description = "Cannot calculate - at least one participant must share location"),
+      @ApiResponse(responseCode = "400",
+          description = "Cannot calculate - at least one participant must share location"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "404", description = "Session not found")
   })
@@ -106,13 +109,15 @@ public class LocationController {
 
   @Operation(
       summary = "Update meeting location",
-      description = "Update the meeting location for a session. Only the session initiator can update the meeting location."
+      description = "Update the meeting location for a session. "
+          + "Only the session initiator can update the meeting location."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Meeting location updated successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid location data"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Only the session initiator can update meeting location"),
+      @ApiResponse(responseCode = "403",
+          description = "Only the session initiator can update meeting location"),
       @ApiResponse(responseCode = "404", description = "Session not found")
   })
   @PutMapping("/{sessionId}/meeting-location")

@@ -41,7 +41,7 @@ public class UpdateMeetingLocationUseCase {
 
         // Check if session is active
         if (!session.isActive()) {
-            throw ErrorCode.CANNOT_UPDATE_MEETING_LOCATION_ENDED.toException();
+            throw ErrorCode.CANNOT_UPDATE_MEETING_LOC_ENDED.toException();
         }
 
         // Create location value object

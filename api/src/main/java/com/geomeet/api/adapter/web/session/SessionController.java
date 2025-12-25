@@ -68,7 +68,7 @@ public class SessionController {
       summary = "Create a new session",
       description = "Create a new meeting session. The authenticated user becomes the session initiator."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Session created successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized")
   })
@@ -87,9 +87,10 @@ public class SessionController {
 
   @Operation(
       summary = "Generate invitation link",
-      description = "Generate an invitation link and code for a session. Only the session initiator can generate the invite link."
+      description = "Generate an invitation link and code for a session. "
+          + "Only the session initiator can generate the invite link."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Invitation link generated successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "403", description = "Only the session initiator can generate invite links"),
@@ -112,7 +113,7 @@ public class SessionController {
       summary = "Join a session",
       description = "Join a session using session ID and invitation code."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Successfully joined the session"),
       @ApiResponse(responseCode = "400", description = "Invalid request data or invalid invite code"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -137,7 +138,7 @@ public class SessionController {
       summary = "Get session details",
       description = "Get detailed information about a session including participants and their locations."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Session details retrieved successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "403", description = "Access denied - user is not a participant or initiator"),
@@ -160,7 +161,7 @@ public class SessionController {
       summary = "End a session",
       description = "End a session. Only the session initiator can end the session."
   )
-  @ApiResponses(value = {
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Session ended successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "403", description = "Only the session initiator can end the session"),

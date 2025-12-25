@@ -115,7 +115,7 @@ const SessionPage = () => {
 
     // Create a map of existing participants with their location info for quick lookup
     const existingParticipantsMap = new Map(
-      session.participants.map(p => [p.userId, p])
+      session.participants.map(p => [p.userId, p]),
     );
 
     // Merge participants: prioritize updated info, but preserve existing location info
@@ -163,7 +163,9 @@ const SessionPage = () => {
 
   // Update participant location in session object (defined early for use in other callbacks)
   const updateParticipantLocation = useCallback((userId: number, location: ParticipantLocation) => {
-    if (!session) return;
+    if (!session) {
+      return;
+    }
     
     // Check if participant exists in the list
     const existingParticipant = session.participants.find(p => p.userId === userId);
@@ -175,13 +177,13 @@ const SessionPage = () => {
         participants: session.participants.map(p =>
           p.userId === userId
             ? {
-                ...p,
-                latitude: location.latitude,
-                longitude: location.longitude,
-                accuracy: location.accuracy ?? null,
-                locationUpdatedAt: location.updatedAt,
-              }
-            : p
+              ...p,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              accuracy: location.accuracy ?? null,
+              locationUpdatedAt: location.updatedAt,
+            }
+            : p,
         ),
       });
     } else {
@@ -333,7 +335,7 @@ const SessionPage = () => {
         restoreLocation(
           currentUserParticipant.latitude,
           currentUserParticipant.longitude,
-          currentUserParticipant.accuracy ?? undefined
+          currentUserParticipant.accuracy ?? undefined,
         );
       }
     }

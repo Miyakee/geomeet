@@ -68,9 +68,6 @@ public class BroadcastSessionUpdateUseCase {
 
         // Get all participants (those who have joined the session)
         List<SessionParticipant> participants = sessionParticipantRepository.findBySessionId(session.getId());
-        Set<Long> participantUserIds = participants.stream()
-            .map(SessionParticipant::getUserId)
-            .collect(Collectors.toSet());
         
         // Build participant info list from actual participants
         List<GetSessionDetailsResult.ParticipantInfo> participantInfos = participants.stream()
@@ -84,7 +81,8 @@ public class BroadcastSessionUpdateUseCase {
                 // Get location for this participant if available
                 ParticipantLocation location = locationMap.get(participant.getUserId());
                 
-                GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
+                GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder =
+                    GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())
                     .username(user.getUsername().getValue())
@@ -114,8 +112,9 @@ public class BroadcastSessionUpdateUseCase {
             // Get location for initiator if available
             ParticipantLocation initiatorLocation = locationMap.get(session.getInitiatorId());
             
-            GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
-                .participantId(null) // Initiator doesn't have a participant ID
+            GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder =
+                GetSessionDetailsResult.ParticipantInfo.builder()
+                    .participantId(null) // Initiator doesn't have a participant ID
                 .userId(session.getInitiatorId())
                 .username(initiator.getUsername().getValue())
                 .email(initiator.getEmail().getValue())
@@ -150,7 +149,8 @@ public class BroadcastSessionUpdateUseCase {
             // Still include them with their last known location
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
-                GetSessionDetailsResult.ParticipantInfo disconnectedParticipant = GetSessionDetailsResult.ParticipantInfo.builder()
+                GetSessionDetailsResult.ParticipantInfo disconnectedParticipant =
+                    GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(null) // No participant record
                     .userId(userId)
                     .username(user.getUsername().getValue())

@@ -67,7 +67,7 @@ cd ui
     npm run lint
 
     if npm run | grep -q "test"; then
-        npm test -- --watchAll=false
+        npm test -- --run
     fi
 
     cd ..

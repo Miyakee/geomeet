@@ -94,7 +94,8 @@ public class Session {
         String createdBy,
         String updatedBy
     ) {
-        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, null);
+        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt,
+            createdBy, updatedBy, null);
     }
 
     /**
@@ -115,7 +116,8 @@ public class Session {
     ) {
         // Generate invite code for backward compatibility (tests only)
         InviteCode inviteCode = InviteCode.generate();
-        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt, createdBy, updatedBy, meetingLocation);
+        return reconstruct(id, sessionId, inviteCode, initiatorId, status, createdAt, updatedAt,
+            createdBy, updatedBy, meetingLocation);
     }
 
     /**

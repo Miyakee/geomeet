@@ -55,7 +55,9 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         String path = getPath(request);
-        logger.warn("IllegalArgumentException: {} - Path: {}", ex.getMessage(), path, ex);
+        if (logger.isWarnEnabled()) {
+            logger.warn("IllegalArgumentException: {} - Path: {}", ex.getMessage(), path, ex);
+        }
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
@@ -73,7 +75,9 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         String path = getPath(request);
-        logger.warn("Authentication failed: {} - Path: {}", ex.getMessage(), path);
+        if (logger.isWarnEnabled()) {
+            logger.warn("Authentication failed: {} - Path: {}", ex.getMessage(), path);
+        }
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.UNAUTHORIZED.value(),
@@ -91,7 +95,9 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         String path = getPath(request);
-        logger.warn("Geomeet DomainException exception: {} - Path: {}", ex.getMessage(), path, ex);
+        if (logger.isWarnEnabled()) {
+            logger.warn("Geomeet DomainException exception: {} - Path: {}", ex.getMessage(), path, ex);
+        }
 
         // Get error title based on HTTP status code
         HttpStatus httpStatus = HttpStatus.resolve(ex.getHttpStatus());

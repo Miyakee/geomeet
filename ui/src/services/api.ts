@@ -150,12 +150,7 @@ async function request<T>(
 
       // Apply error interceptors
       for (const interceptor of errorInterceptors) {
-        try {
-          await interceptor(error);
-        } catch (interceptedError) {
-          // If interceptor throws, use that error
-          throw interceptedError;
-        }
+        await interceptor(error);
       }
 
       // Re-throw the original error after interceptors have processed it

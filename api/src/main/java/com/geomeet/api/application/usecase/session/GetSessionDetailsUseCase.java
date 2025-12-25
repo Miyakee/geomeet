@@ -89,7 +89,8 @@ public class GetSessionDetailsUseCase {
                 // Get location for this participant if available
                 ParticipantLocation location = locationMap.get(participant.getUserId());
                 
-                GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
+                GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder =
+                    GetSessionDetailsResult.ParticipantInfo.builder()
                     .participantId(participant.getId())
                     .userId(participant.getUserId())
                     .username(user.getUsername().getValue())
@@ -118,7 +119,8 @@ public class GetSessionDetailsUseCase {
             // Get location for initiator if available
             ParticipantLocation initiatorLocation = locationMap.get(session.getInitiatorId());
             
-            GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder = GetSessionDetailsResult.ParticipantInfo.builder()
+            GetSessionDetailsResult.ParticipantInfo.ParticipantInfoBuilder builder =
+                GetSessionDetailsResult.ParticipantInfo.builder()
                 .participantId(null) // Initiator doesn't have a participant ID
                 .userId(session.getInitiatorId())
                 .username(initiator.getUsername().getValue())
