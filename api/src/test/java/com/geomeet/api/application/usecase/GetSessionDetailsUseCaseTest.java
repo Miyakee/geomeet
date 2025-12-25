@@ -520,5 +520,50 @@ class GetSessionDetailsUseCaseTest {
         assertNull(initiatorInfo.getAccuracy());
         assertNull(initiatorInfo.getLocationUpdatedAt());
     }
+
+    @Test
+    void shouldIncludeInitiatorLocationWhenAvailable() {
+        // Given - initiator has location
+        Long participantLocationId = 300L;
+        com.geomeet.api.domain.entity.ParticipantLocation initiatorLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                participantLocationId,
+                null,  // No participant ID for initiator
+                sessionId,
+                initiatorId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        GetSessionDetailsCommand command = GetSessionDetailsCommand.of(sessionIdString, initiatorId);
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(sessionParticipantRepository.existsBySessionIdAndUserId(sessionId, initiatorId))
+            .thenReturn(false);
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(initiatorLocation));
+
+        // When
+        GetSessionDetailsResult result = getSessionDetailsUseCase.execute(command);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getParticipants());
+        assertEquals(1, result.getParticipants().size());
+        
+        GetSessionDetailsResult.ParticipantInfo initiatorInfo = result.getParticipants().get(0);
+        assertEquals(initiatorId, initiatorInfo.getUserId());
+        assertNotNull(initiatorInfo.getLatitude());
+        assertNotNull(initiatorInfo.getLongitude());
+        assertEquals(1.3521, initiatorInfo.getLatitude());
+        assertEquals(103.8198, initiatorInfo.getLongitude());
+        assertEquals(10.5, initiatorInfo.getAccuracy());
+    }
 }
 

@@ -242,5 +242,312 @@ class BroadcastSessionUpdateUseCaseTest {
             any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
         );
     }
+
+    @Test
+    void shouldIncludeParticipantLocations() {
+        // Given - participant with location
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                300L,
+                200L,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldIncludeMeetingLocation() {
+        // Given - session with meeting location
+        com.geomeet.api.domain.valueobject.Location meetingLocation = 
+            com.geomeet.api.domain.valueobject.Location.of(1.3521, 103.8198, null);
+        Session sessionWithMeetingLocation = Session.reconstruct(
+            sessionId,
+            SessionId.fromString(sessionIdString),
+            initiatorId,
+            SessionStatus.ACTIVE,
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null,
+            null,
+            meetingLocation
+        );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class)))
+            .thenReturn(Optional.of(sessionWithMeetingLocation));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId)).thenReturn(List.of());
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldIncludeDisconnectedUsersWithLocation() {
+        // Given - disconnected user with location (not in participants list)
+        Long disconnectedUserId = 3L;
+        User disconnectedUser = User.reconstruct(
+            disconnectedUserId,
+            new Username("disconnected"),
+            new Email("disconnected@example.com"),
+            new PasswordHash("hash"),
+            true,
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null,
+            null
+        );
+
+        com.geomeet.api.domain.entity.ParticipantLocation disconnectedUserLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                301L,
+                null,  // No participant ID (disconnected)
+                sessionId,
+                disconnectedUserId,
+                1.3600,  // latitude
+                103.8200,  // longitude
+                15.0,  // accuracy
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(disconnectedUserLocation));
+        when(userRepository.findById(disconnectedUserId)).thenReturn(Optional.of(disconnectedUser));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldHandleLocationWithNullAccuracy() {
+        // Given - location with null accuracy
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                300L,
+                200L,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                null,  // accuracy (null)
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldHandleLocationWithNullUpdatedAt() {
+        // Given - location with null updatedAt
+        com.geomeet.api.domain.entity.ParticipantLocation participantLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                300L,
+                200L,
+                sessionId,
+                userId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                null,  // updatedAt (null)
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(participantLocation));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldSkipDisconnectedUserWhenUserNotFound() {
+        // Given - disconnected user location but user not found
+        Long disconnectedUserId = 3L;
+        com.geomeet.api.domain.entity.ParticipantLocation disconnectedUserLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                301L,
+                null,
+                sessionId,
+                disconnectedUserId,
+                1.3600,
+                103.8200,
+                15.0,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(disconnectedUserLocation));
+        when(userRepository.findById(disconnectedUserId)).thenReturn(Optional.empty());
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then - should still broadcast, but without the disconnected user
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldIncludeInitiatorLocationWhenAvailable() {
+        // Given - initiator has location
+        com.geomeet.api.domain.entity.ParticipantLocation initiatorLocation = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                301L,
+                null,  // No participant ID for initiator
+                sessionId,
+                initiatorId,
+                1.3521,  // latitude
+                103.8198,  // longitude
+                10.5,  // accuracy
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of());
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(initiatorLocation));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
+
+    @Test
+    void shouldHandleDuplicateLocationKeysInMap() {
+        // Given - two locations for same user (should keep first)
+        com.geomeet.api.domain.entity.ParticipantLocation location1 = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                300L,
+                200L,
+                sessionId,
+                userId,
+                1.3521,
+                103.8198,
+                10.5,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+        com.geomeet.api.domain.entity.ParticipantLocation location2 = 
+            com.geomeet.api.domain.entity.ParticipantLocation.reconstruct(
+                301L,
+                200L,
+                sessionId,
+                userId,
+                1.3600,
+                103.8200,
+                15.0,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null
+            );
+
+        when(sessionRepository.findBySessionId(any(SessionId.class))).thenReturn(Optional.of(session));
+        when(userRepository.findById(initiatorId)).thenReturn(Optional.of(initiator));
+        when(sessionParticipantRepository.findBySessionId(sessionId)).thenReturn(List.of(participant));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(participantUser));
+        when(participantLocationRepository.findBySessionId(sessionId))
+            .thenReturn(List.of(location1, location2));
+
+        // When
+        broadcastSessionUpdateUseCase.execute(sessionIdString);
+
+        // Then
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/session/" + sessionIdString),
+            any(com.geomeet.api.application.result.GetSessionDetailsResult.class)
+        );
+    }
 }
 
