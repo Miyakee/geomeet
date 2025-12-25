@@ -6,14 +6,14 @@ A real-time collaborative meeting platform built with Spring Boot and React, fol
 
 - [Key Design Decisions & Trade off](#-key-design-decisions--trade-off)
 - [Quick Start](#-quick-start)
-- [Development](#-development)
+- [Deployment](#-deployment)
 - [Improvement](#-improvement)
+- [Development](#-development)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [WebSocket](#-websocket)
 - [Project Structure](#-project-structure)
 - [Testing](#-testing)
-- [Infrastructure](#-infrastructure)
 - [Security](#-security)
 - [Additional Documentation](#-additional-documentation)
 
@@ -327,6 +327,111 @@ When running in `local` profile, the following test users are automatically crea
 
 Note : Also can register user in create account now button
 
+## 🚢 Deployment
+
+### Deploy env Overview
+0. **Production env**: https://ttyuuuuuuuuuuuu.us.ci/login
+
+1. **AWS Cloud**
+    - Terraform-based infrastructure as code
+    - EC2, RDS, ECR, VPC, and security groups
+    - See [infrastructure/README.md](infrastructure/README.md) for details
+
+2. **Docker Compose**
+    - Full containerization with Nginx reverse proxy
+    - Automatic HTTPS/SSL with Let's Encrypt
+    - Easy to deploy on any server with Docker
+
+
+### Production Deployment with Docker Compose
+
+The project includes a complete Docker Compose setup for production deployment with HTTPS support.
+
+#### 1. Build Docker Images (LOCAL)
+
+```bash
+# Build API image
+aws sso login --profile your-aws-profile-name
+cd infrastructure/scripts/deployment
+sh ./build-and-push-to-ecr.sh
+```
+
+#### 2. Configure Environment Variables (EC2)
+```bash
+cd geomeet
+vi .env
+set -a
+source .env
+set +a
+```
+```env
+# Database Configuration
+DB_ENDPOINT=your-rds-endpoint.region.rds.amazonaws.com
+DB_NAME=geomeet
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_db_password
+
+# Geocoding API Keys (Optional)
+OPENCAGE_API_KEY=your-opencage-api-key
+POSITIONSTACK_API_KEY=your-positionstack-api-key
+```
+
+#### 3. Initialize SSL Certificate (EC2)(just set up once)
+
+```bash
+cd geommet
+chmod +x init-ssl.sh
+cp nginx.conf nginx.conf.bak
+cp nginx.conf.http-only nginx.conf
+sh deploy-from-ecr.sh
+./init-ssl.sh
+cp nginx.conf nginx.conf.http-only
+cp nginx.conf.bak nginx.conf 
+sh deploy-from-ecr.sh
+```
+
+#### 4. Start Services
+
+```bash
+cd 
+sh deploy-from-ecr.sh
+```
+
+#### 6. Verify Deployment
+
+- **HTTPS**: https://ttyuuuuuuuuuuuu.us.ci
+
+### AWS Cloud Deployment
+
+For AWS deployment using Terraform (Infrastructure as Code):
+
+**Prerequisites:**
+- Terraform >= 1.5.0
+- AWS CLI configured
+- AWS account with appropriate permissions
+
+**Quick Start:**
+```bash
+cd infrastructure/terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+**What gets deployed:**
+- VPC with public/private subnets
+- EC2 instance for application hosting
+- RDS PostgreSQL database
+- ECR repositories for Docker images
+- Security groups and IAM roles
+- Internet gateway and route tables
+
+For detailed AWS deployment instructions, architecture diagrams, and troubleshooting, see [infrastructure/README.md](infrastructure/README.md).
+
+## 💻 Improvement
+1. audit log. (had add audit fields in table. but better to put audit log to trace data change in DB)
+2. websocket -> websocket + sqs (decoupling, scalability, and reliability) depends on requirements. if no so much user. maybe do it later.mentm
+
 ## 💻 Development
 
 ### Backend Development
@@ -426,9 +531,6 @@ Pre-push hooks automatically run these checks before pushing code. The hooks are
 
 If no relevant changes are detected, checks are skipped. Hooks are managed by Husky and located in `.husky/` directory.
 
-## 💻 Improvement
-1. audit log. (had add audit fields in table. but better to put audit log to trace data change in DB)
-2. websocket -> websocket + sqs (decoupling, scalability, and reliability) depends on requirements. if no so much user. maybe do it later.mentm
 
 ## 🛠 Tech Stack
 
@@ -768,107 +870,6 @@ npm run test:coverage
 # Run with UI
 npm run test:ui
 ```
-
-## 🚢 Infrastructure
-
-### Infrastructure Overview
-0. **Production env**: https://ttyuuuuuuuuuuuu.us.ci/login
-
-1. **AWS Cloud** 
-    - Terraform-based infrastructure as code
-    - EC2, RDS, ECR, VPC, and security groups
-    - See [infrastructure/README.md](infrastructure/README.md) for details
-
-2. **Docker Compose** 
-   - Full containerization with Nginx reverse proxy
-   - Automatic HTTPS/SSL with Let's Encrypt
-   - Easy to deploy on any server with Docker
-
-
-### Production Deployment with Docker Compose
-
-The project includes a complete Docker Compose setup for production deployment with HTTPS support.
-
-#### 1. Build Docker Images (LOCAL)
-
-```bash
-# Build API image
-aws sso login --profile your-aws-profile-name
-cd infrastructure/scripts/deployment
-sh ./build-and-push-to-ecr.sh
-```
-
-#### 2. Configure Environment Variables (EC2)
-```bash
-cd geomeet
-vi .env
-set -a
-source .env
-set +a
-```
-```env
-# Database Configuration
-DB_ENDPOINT=your-rds-endpoint.region.rds.amazonaws.com
-DB_NAME=geomeet
-DB_USERNAME=your_db_username
-DB_PASSWORD=your_db_password
-
-# Geocoding API Keys (Optional)
-OPENCAGE_API_KEY=your-opencage-api-key
-POSITIONSTACK_API_KEY=your-positionstack-api-key
-```
-
-#### 3. Initialize SSL Certificate (EC2)(just set up once)
-
-```bash
-cd geommet
-chmod +x init-ssl.sh
-cp nginx.conf nginx.conf.bak
-cp nginx.conf.http-only nginx.conf
-sh deploy-from-ecr.sh
-./init-ssl.sh
-cp nginx.conf nginx.conf.http-only
-cp nginx.conf.bak nginx.conf 
-sh deploy-from-ecr.sh
-```
-
-#### 4. Start Services
-
-```bash
-cd 
-sh deploy-from-ecr.sh
-```
-
-#### 6. Verify Deployment
-
-- **HTTPS**: https://ttyuuuuuuuuuuuu.us.ci
-
-### AWS Cloud Deployment
-
-For AWS deployment using Terraform (Infrastructure as Code):
-
-**Prerequisites:**
-- Terraform >= 1.5.0
-- AWS CLI configured
-- AWS account with appropriate permissions
-
-**Quick Start:**
-```bash
-cd infrastructure/terraform
-terraform init
-terraform plan
-terraform apply
-```
-
-**What gets deployed:**
-- VPC with public/private subnets
-- EC2 instance for application hosting
-- RDS PostgreSQL database
-- ECR repositories for Docker images
-- Security groups and IAM roles
-- Internet gateway and route tables
-
-For detailed AWS deployment instructions, architecture diagrams, and troubleshooting, see [infrastructure/README.md](infrastructure/README.md).
 
 ## 🔒 Security
 
