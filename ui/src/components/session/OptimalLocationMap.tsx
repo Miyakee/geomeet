@@ -14,9 +14,9 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
 
 const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconRetinaUrl: iconRetina,
+  iconUrl: icon as string,
+  shadowUrl: iconShadow as string,
+  iconRetinaUrl: iconRetina as string,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -235,7 +235,6 @@ function MarkerClusterComponent({
     }
 
     // Create marker cluster group with custom styling
-    // @ts-expect-error - leaflet.markercluster extends L.LayerGroup but types may not be fully compatible
     const clusterGroup = (L as any).markerClusterGroup({
       chunkedLoading: true,
       maxClusterRadius: 50,
