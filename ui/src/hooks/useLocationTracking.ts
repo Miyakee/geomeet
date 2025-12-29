@@ -213,6 +213,11 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
       return;
     }
 
+    // 如果位置跟踪正在运行，先停止它（手动输入位置后禁用自动跟踪）
+    if (locationEnabled) {
+      stopLocationTracking();
+    }
+
     try {
       setUpdatingLocation(true);
       setLocationError(null);
@@ -238,6 +243,11 @@ export const useLocationTracking = (sessionId: string | undefined, sessionStatus
       // 只有在明确要求启用跟踪时才启用，搜索位置时不自动启用跟踪 toggle
       if (enableTracking) {
         setLocationEnabled(true);
+        // 如果明确要求启用跟踪，重新启动位置跟踪
+        startLocationTracking();
+      } else {
+        // 确保位置跟踪被禁用（手动输入位置后禁用跟踪）
+        setLocationEnabled(false);
       }
       setShowManualInput(false);
     } catch (err: any) {

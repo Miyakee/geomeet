@@ -339,5 +339,163 @@ describe('useLocationTracking', () => {
     expect(result.current.locationError).toBe('Cannot start location tracking for an ended session');
     expect(result.current.locationEnabled).toBe(false);
   });
+
+  it('should disable location tracking when setting manual location', async () => {
+    vi.useRealTimers();
+    
+    Object.defineProperty(global.navigator, 'geolocation', {
+      value: mockGeolocation,
+      writable: true,
+    });
+
+    const mockPosition: GeolocationPosition = {
+      coords: {
+        latitude: 37.7749,
+        longitude: -122.4194,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    } as GeolocationPosition;
+
+    vi.mocked(sessionApi.updateLocation).mockResolvedValue({
+      participantId: 1,
+      sessionId: 1,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      accuracy: 10,
+      updatedAt: new Date().toISOString(),
+      message: 'Location updated successfully',
+    });
+
+    const watchId = 123;
+    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+      if (success) {
+        success(mockPosition);
+      }
+    });
+    mockGeolocation.watchPosition.mockReturnValue(watchId);
+
+    const { result } = renderHook(() => useLocationTracking('test-session-id'));
+
+    // First start tracking
+    await act(async () => {
+      result.current.handleLocationToggle({
+        target: { checked: true },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    // Wait for tracking to start
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(true);
+    }, { timeout: 2000 });
+
+    // Set manual location - should disable tracking
+    await act(async () => {
+      await result.current.setManualLocation(40.7128, -74.0060);
+    });
+
+    // Verify tracking is disabled
+    expect(result.current.locationEnabled).toBe(false);
+    expect(mockGeolocation.clearWatch).toHaveBeenCalledWith(watchId);
+    expect(result.current.currentLocation).not.toBeNull();
+    expect(result.current.currentLocation?.coords.latitude).toBe(40.7128);
+    expect(result.current.currentLocation?.coords.longitude).toBe(-74.0060);
+  });
+
+  it('should set manual location successfully when tracking is disabled', async () => {
+    vi.useRealTimers();
+    
+    vi.mocked(sessionApi.updateLocation).mockResolvedValue({
+      participantId: 1,
+      sessionId: 1,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      latitude: 40.7128,
+      longitude: -74.0060,
+      accuracy: 100,
+      updatedAt: new Date().toISOString(),
+      message: 'Location updated successfully',
+    });
+
+    const { result } = renderHook(() => useLocationTracking('test-session-id'));
+
+    // Set manual location when tracking is disabled
+    await act(async () => {
+      await result.current.setManualLocation(40.7128, -74.0060);
+    });
+
+    // Verify location is set and tracking remains disabled
+    expect(result.current.locationEnabled).toBe(false);
+    expect(result.current.currentLocation).not.toBeNull();
+    expect(result.current.currentLocation?.coords.latitude).toBe(40.7128);
+    expect(result.current.currentLocation?.coords.longitude).toBe(-74.0060);
+    expect(sessionApi.updateLocation).toHaveBeenCalledWith('test-session-id', {
+      latitude: 40.7128,
+      longitude: -74.0060,
+      accuracy: 100,
+    });
+  });
+
+  it('should re-enable tracking when enableTracking is true', async () => {
+    vi.useRealTimers();
+    
+    Object.defineProperty(global.navigator, 'geolocation', {
+      value: mockGeolocation,
+      writable: true,
+    });
+
+    const mockPosition: GeolocationPosition = {
+      coords: {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    } as GeolocationPosition;
+
+    vi.mocked(sessionApi.updateLocation).mockResolvedValue({
+      participantId: 1,
+      sessionId: 1,
+      sessionIdString: 'test-session-id',
+      userId: 1,
+      latitude: 40.7128,
+      longitude: -74.0060,
+      accuracy: 100,
+      updatedAt: new Date().toISOString(),
+      message: 'Location updated successfully',
+    });
+
+    const watchId = 456;
+    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+      if (success) {
+        success(mockPosition);
+      }
+    });
+    mockGeolocation.watchPosition.mockReturnValue(watchId);
+
+    const { result } = renderHook(() => useLocationTracking('test-session-id'));
+
+    // Set manual location with enableTracking = true
+    await act(async () => {
+      await result.current.setManualLocation(40.7128, -74.0060, true);
+    });
+
+    // Wait for tracking to start
+    await waitFor(() => {
+      expect(result.current.locationEnabled).toBe(true);
+    }, { timeout: 2000 });
+
+    expect(mockGeolocation.watchPosition).toHaveBeenCalled();
+  });
 });
 
