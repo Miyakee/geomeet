@@ -246,9 +246,9 @@ spring.datasource.password=postgres
 Create `ui/.env` for geocoding API keys (optional, will use free Nominatim if not provided):
 
 ```env
-# Geocoding Service Configuration
+# Geocoding Service Configuration (Recommended version)
 VITE_GEOCODING_PROVIDER=auto
-VITE_OPENCAGE_API_KEY=your-opencage-api-key  # Optional: Get at https://opencagedata.com/api
+VITE_OPENCAGE_API_KEY=5ba5079bcc8c4a99b794ab3feb6ee5ff  # Optional: Get at https://opencagedata.com/api
 VITE_POSITIONSTACK_API_KEY=your-positionstack-api-key  # Optional: Get at https://positionstack.com/
 ```
 
